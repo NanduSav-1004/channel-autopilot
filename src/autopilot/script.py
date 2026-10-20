@@ -37,13 +37,15 @@ SOURCE ({source_title}):
 
 def generate_script(
     topic: str, source: dict, niche: str, series: str | None = None, words: int = 1300,
-    gen: Callable[[str], dict] = llm.generate_json,
+    gen: Callable[[str], dict] = llm.generate_json, feedback: list[str] | None = None,
 ) -> dict:
     series = series or random.choice(list(SERIES))
     prompt = LONG_PROMPT.format(
         niche=niche, topic=topic, style=SERIES[series], words=words,
         source_title=source["title"], source_text=source["text"],
     )
+    if feedback:
+        prompt += "\nA previous attempt was rejected. Fix these problems:\n" + "\n".join(f"- {f}" for f in feedback)
     script = gen(prompt)
     script["series"] = series
     script["source_url"] = source["url"]
