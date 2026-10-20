@@ -164,8 +164,9 @@ def generate_json(
             if provider == "groq":
                 return _call_groq(m, prompt, groq_key, retries)
             return _call(m, gem_body, gemini_key, retries)
-        except ModelUnavailable:
+        except ModelUnavailable as exc:
             _unavailable.add(f"{provider}:{m}")
-        except ModelBusy:
-            continue
+            print(f"[llm] {provider}:{m} unavailable: {exc}", flush=True)
+        except ModelBusy as exc:
+            print(f"[llm] {provider}:{m} busy, trying next: {exc}", flush=True)
     raise LLMUnavailable("all LLM models are out of quota or busy")

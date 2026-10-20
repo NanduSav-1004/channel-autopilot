@@ -183,3 +183,28 @@ def test_structural_issues_are_not_repaired_in_place(tmp_path, monkeypatch):
     with pytest.raises(stages.StageError):
         st.qa(job)
     assert not called
+
+
+def test_discover_logs_why_each_candidate_was_rejected(tmp_path, capsys):
+    conn = _conn(tmp_path)
+    db.add_job(conn, "dup topic", "long", "Dup")
+    out = {"topics": [
+        {"topic": "dup topic", "wikipedia_title": "Dup"},
+        {"topic": "x", "wikipedia_title": "Nope"},
+        {"topic": "y", "wikipedia_title": "Stub"},
+    ]}
+    articles = {"Stub": {"title": "Stub", "text": "short"}}
+    assert topics.discover(conn, "science", 1, gen=lambda p: out, fetch=articles.get) == []
+    log = capsys.readouterr().out
+    assert "proposed 3 candidate" in log and "already covered" in log
+    assert "no Wikipedia article found" in log and "too thin" in log
+
+
+def test_discover_tolerates_renamed_key_and_bare_list(tmp_path):
+    conn = _conn(tmp_path)
+    good = {"title": "Transistor", "text": "x" * 3000}
+    cand = [{"topic": "How transistors work", "wikipedia_title": "Transistor"}]
+    ids = topics.discover(conn, "science", 1, gen=lambda p: {"suggestions": cand}, fetch=lambda t: good)
+    assert len(ids) == 1
+    conn2 = db.connect(tmp_path / "t2.db")
+    assert len(topics.discover(conn2, "science", 1, gen=lambda p: cand, fetch=lambda t: good)) == 1
