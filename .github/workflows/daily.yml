@@ -66,11 +66,11 @@ jobs:
 
       - name: Make today's video
         run: |
-          # Scheduled runs use the repo variable UPLOAD_PRIVACY (default private) and upload for real.
+          # Scheduled runs upload for real. Privacy comes from the repo variable UPLOAD_PRIVACY (default public).
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             LIVE="${{ inputs.live }}"; PRIVACY="${{ inputs.privacy }}"
           else
-            LIVE="true"; PRIVACY="${{ vars.UPLOAD_PRIVACY || 'private' }}"
+            LIVE="true"; PRIVACY="${{ vars.UPLOAD_PRIVACY || 'public' }}"
           fi
           ARGS="daily --privacy $PRIVACY"
           [ "$LIVE" = "true" ] && ARGS="$ARGS --live"
