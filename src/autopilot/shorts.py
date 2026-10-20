@@ -42,6 +42,24 @@ def _sentences(text: str) -> list[str]:
     return [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if len(s.split()) >= 3]
 
 
+def trim_to_limit(narration: str, max_words: int = TARGET_MAX) -> str | None:
+    """Fit a draft into max_words in code, because models cannot count: keep the hook (first sentence) and
+    the payoff (last sentence), then as many middle sentences as fit, in order. None if even those two don't."""
+    sents = [s for s in re.split(r"(?<=[.!?])\s+", narration.strip()) if s]
+    if len(sents) < 2:
+        return narration if _words(narration) <= max_words else None
+    first, last, middle = sents[0], sents[-1], sents[1:-1]
+    room = max_words - _words(first) - _words(last)
+    if room < 0:
+        return None
+    kept = []
+    for s in middle:
+        if _words(s) <= room:
+            kept.append(s)
+            room -= _words(s)
+    return " ".join([first, *kept, last])
+
+
 def _accept(raw, n_sections: int, used: set[int]) -> tuple[list[dict], list[dict]]:
     """Split the model's output into (usable, too long). Everything else is silently invalid."""
     ok, too_long = [], []
@@ -77,6 +95,14 @@ def plan_shorts(
         again, still_long = _accept(gen(SHORTEN_PROMPT.format(target_max=TARGET_MAX, items=items)), len(sections), used)
         print(f"[shorts] after asking to shorten: {len(again)} usable, {len(still_long)} still too long", flush=True)
         cands += again
+        too_long = still_long
+    if too_long and len(cands) < n:  # the model cannot count words: trim deterministically, fact-check after
+        for c in too_long:
+            trimmed = trim_to_limit(c["narration"])
+            if trimmed and MIN_WORDS <= _words(trimmed) <= MAX_WORDS and c["section_index"] not in used:
+                cands.append({**c, "narration": trimmed})
+                used.add(c["section_index"])
+        print(f"[shorts] after trimming in code: {len(cands)} usable", flush=True)
     if not cands:
         return []
     claims = "\n".join(f"- [short {i}] {sent}" for i, c in enumerate(cands) for sent in _sentences(c["narration"]))

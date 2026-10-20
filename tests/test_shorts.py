@@ -243,3 +243,34 @@ def test_empty_plan_is_not_saved_so_a_later_run_can_retry(tmp_path, monkeypatch)
     monkeypatch.setattr(shorts, "plan_shorts", lambda *a, **k: [])
     st.shorts(conn.execute("SELECT * FROM jobs WHERE id = ?", (pid,)).fetchone())
     assert not (d / "shorts.json").exists() and conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0] == 1
+
+
+def test_trim_keeps_hook_and_payoff_and_fits_the_limit():
+    sents = ["Hook sentence goes here now."] + [f"Middle fact number {i} has some words in it." for i in range(20)] + ["The payoff lands here."]
+    out = shorts.trim_to_limit(" ".join(sents), max_words=40)
+    assert out.startswith("Hook sentence") and out.endswith("The payoff lands here.")
+    assert len(out.split()) <= 40 and "Middle fact number 0" in out  # kept in order from the front
+
+
+def test_trim_gives_up_when_hook_and_payoff_alone_are_too_long_and_passes_short_text_through():
+    assert shorts.trim_to_limit("a " * 80 + ". " + "b " * 80 + ".", max_words=100) is None
+    assert shorts.trim_to_limit("Short one. Short two.", max_words=100) == "Short one. Short two."
+
+
+def test_plan_shorts_trims_in_code_when_the_model_will_not_comply():
+    def long_draft(i):
+        sents = ["Hook sentence goes here for this one."] + [f"Fact {i}-{j} is stated clearly in the section text." for j in range(24)] + ["The payoff is clear."]
+        return {"section_index": i, "title": f"T{i}", "narration": " ".join(sents)}
+
+    calls = []
+
+    def gen(prompt):
+        calls.append(prompt)
+        if "standalone" in prompt or "AT MOST" in prompt:
+            return {"shorts": [long_draft(0), long_draft(1), long_draft(2)]}  # never complies
+        return {"unsupported": [], "advice_given": False}
+
+    res = shorts.plan_shorts(SCRIPT, SOURCE, 3, gen=gen)
+    assert len(res) == 3 and all(shorts.MIN_WORDS <= len(s["narration"].split()) <= shorts.MAX_WORDS for s in res)
+    assert all(s["narration"].startswith("Hook sentence") and s["narration"].endswith("The payoff is clear.") for s in res)
+    assert sum("AT MOST" in c for c in calls) == 1  # one polite request, then code takes over
