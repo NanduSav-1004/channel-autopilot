@@ -1,76 +1,64 @@
-# Automated YouTube Channel: End-to-End Plan (v0.1 draft)
+# Brightwork Science: automated YouTube channel (plan, v1.0)
 
-## 0. Decisions locked
-| Item | Decision |
+Status: **built and running.** See `docs/RUNBOOK.md` for operations and `docs/niche_report.md` for the niche research.
+
+## What it is
+A free-stack pipeline that makes and publishes educational science and technology explainers every day, with
+no manual step, on GitHub Actions. Channel: **Brightwork Science** (@brightworkscience), English, US/UK audience.
+
+## Honest constraints
+1. **No guaranteed views or income.** Ad revenue needs the YouTube Partner Program: 1,000 subscribers and 4,000
+   public watch hours in 12 months (or 10M Shorts views in 90 days). Until then income is $0.
+2. **YouTube's "inauthentic content" policy.** Templated, mass-produced videos get demonetised, so every video is
+   grounded in a source, fact-checked, varied in structure, and disclosed as AI-assisted.
+3. **Free-tier limits.** Models have daily quotas (Groq, Gemini); the system falls back across providers and
+   models, and a day with every model exhausted fails visibly and retries on the next run.
+4. **One-time human steps** (done): channel, phone verification, Google Cloud OAuth, GitHub secrets.
+
+## Pipeline (per day)
+```
+topic (LLM brainstorm -> real search demand -> verified Wikipedia article)
+  -> script (outline, then one call per section for length control)
+  -> QA (fact-check narration + title + description; repair only the bad parts)
+  -> voice (Piper TTS, sentence timings) -> visuals (Wikimedia Commons + Pixabay, vision-rated)
+  -> render (1080p Ken Burns, boxed captions, generated ambient music with ducking) + thumbnail
+  -> upload (scheduled for 15:00 UTC prime time, chapters, source, credits, disclosure)
+  -> Shorts (up to 3 standalone 45 s scripts, fact-checked, 9:16 render, scheduled through the day)
+```
+Orchestrated by `autopilot daily`; state in SQLite on a `state` branch; failures never block the queue.
+
+## Tools (all free)
+| Stage | Tool |
 |---|---|
-| Format | Hybrid: 8-12 min long-form (watch hours, ad RPM) + auto-clipped Shorts (discovery) |
-| Audience | English, US/UK |
-| Budget | **Free stack ($0/month)** |
-| Niche | Chosen by data in Phase 0 (not guessed) |
-| Host | GitHub Actions (free cron). Dev machine is i5-1035G1, 7 GB RAM, no GPU, so it is not a production server |
+| Orchestration | GitHub Actions cron, Python 3.12 |
+| Text LLM | Groq (gpt-oss-120b, qwen, gpt-oss-20b), Gemini free tier as fallback |
+| Vision rating | Gemini (images) |
+| Voice | Piper TTS (CPU, offline) |
+| Media | Wikimedia Commons (CC0/PD/CC BY/CC BY-SA), Pixabay stock video |
+| Music | generated in code (no licence or Content ID risk) |
+| Demand | YouTube autocomplete (US) |
+| Render | FFmpeg, Pillow |
+| Publish | YouTube Data API v3 |
 
-## 1. Honest constraints (design around these, don't ignore them)
-1. **No guaranteed views or income.** The system maximizes odds and measures itself. Revenue is gated by YPP.
-2. **YouTube "inauthentic content" policy (July 2025).** Mass-produced, templated, repetitive videos get demonetized. Every video needs original script, varied visuals, a consistent voice and a real angle. Quality gates are a core feature.
-3. **YPP threshold:** 1,000 subs + 4,000 watch hours (12 mo), or 1,000 subs + 10M Shorts views (90 d). Until then: $0 ad income, so the bridge is affiliate links.
-4. **API quota (measured):** Video Uploads is its own bucket at 100/day (and 100/min), 1 unit per upload, so quota is not a constraint at about 4 uploads a day. Other calls use the general pool.
-5. **New API projects:** uploads from unverified API projects are locked to private. We must pass the YouTube API compliance audit, or the project needs to be verified, before public uploads work. **This is the biggest technical risk and is tested first (Phase 1).**
-6. **One-time human steps (unavoidable, then zero manual):** create Google account and channel, phone verification, OAuth consent, GitHub secrets.
-7. **Free-tier limits:** GitHub Actions gives 2,000 min/month on private repos (unlimited on public). Free LLM tiers rate-limit. Design for retries and queueing.
+## Done
+- [x] Niche research and choice (evergreen science and tech explainers)
+- [x] Content engine with fact-check and targeted repair; title and description checked too
+- [x] Voice, visuals, music, captions, thumbnails, chapters, credits
+- [x] Upload, scheduling, duplicate-upload protection, thumbnail retry
+- [x] Daily GitHub Actions run, state persistence, loud failure alerts, schedule keepalive
+- [x] Shorts (planner with fact-check, vertical renderer, scheduling)
+- [x] Reach: prime-time scheduling, topics ranked by search demand
+- [x] Brand: name, logo, banner, description (applied)
+- [x] Runbook
 
-## 2. Free tool stack
-| Stage | Tool | Cost |
-|---|---|---|
-| Orchestration | GitHub Actions cron + Python 3.12 | free |
-| State/queue | SQLite committed to repo (or Actions cache / a `data` branch) | free |
-| Topic research | YouTube Data API (search, outlier detection), Google Trends (pytrends), Reddit/HN/RSS | free |
-| Script LLM | Gemini API free tier (primary), Groq free tier (fallback) | free |
-| Fact/policy check | Second LLM pass with a rubric + source retrieval via Wikipedia/RSS | free |
-| Voiceover | Kokoro-82M or Piper TTS (CPU, offline, commercial-friendly licenses) | free |
-| Captions/timing | faster-whisper (CPU, `small` model) | free |
-| Visuals | Pexels + Pixabay APIs (video/photo), Wikimedia Commons, Pollinations/HF free image gen, code-rendered charts and kinetic text (Pillow/Matplotlib/Remotion) | free |
-| Music/SFX | YouTube Audio Library, Pixabay Music, Free Music Archive (license-tracked per video) | free |
-| Editing | FFmpeg + MoviePy | free |
-| Thumbnails | Pillow templates + free image gen, A/B via YouTube Test & Compare | free |
-| Upload/analytics | YouTube Data API v3 + Analytics API | free |
-| Alerts | Telegram bot or email on failure/weekly report | free |
+## Next
+1. **Weekly analytics report** (views, watch time, CTR, retention, subscribers) and a **Partner Program tracker**,
+   after the first week of data. Use it to tune topic choice toward what the audience actually watches.
+2. Tune topic selection toward mid-demand, lower-competition topics once there is data.
+3. Better visual relevance when vision quota allows; caption chunking polish for Shorts.
+4. Optional: Telegram alerts, subtitles and translated metadata for wider reach, cross-posting Shorts.
+5. When eligible: apply to the Partner Program (manual).
 
-## 3. Architecture
-```
- [scheduler: GH Actions cron]
-        |
- research -> topic scoring -> script -> QA gate -> TTS -> visuals -> edit(long)
-                                                                        |-> clip -> Shorts
-        -> thumbnail/title -> policy+copyright gate -> upload/schedule -> analytics
-                  ^                                                           |
-                  +-------------- feedback loop (retention/CTR/RPM) <---------+
-```
-Each stage is an idempotent module with a typed input/output, stored artifacts per video ID, retries, and a dead-letter state so one failure never blocks the queue.
-
-## 4. Phases
-**Phase 0: Niche selection (data-driven).** Score candidate niches on RPM, competition, faceless-fit, topic supply, and policy risk. Use YouTube API outlier analysis (small channels with big views) plus public CPM data. Output: `docs/niche_report.md` and one chosen niche plus a channel brand and persona.
-
-**Phase 1: Foundations and risk spike.** Repo scaffold, config, secrets, CI. Prove the OAuth + upload flow, including the private-upload lock and audit path. Prove the CPU-only TTS + FFmpeg render of one 60 s video.
-
-**Phase 2: Content engine.** Research, scoring, script generation (hook, retention beats, CTA), fact/policy gate, series formats so output is varied and not templated.
-
-**Phase 3: Production engine.** TTS, visuals, captions, music, long-form render, auto-clipping to Shorts, thumbnails.
-
-**Phase 4: Publishing and ops.** Scheduler, upload, metadata, playlists, affiliate-link injection, alerts, cost/quota tracking, kill switch.
-
-**Phase 5: Feedback loop.** Daily analytics pull; auto-tune topics, hooks, title style, upload times; retire losers.
-
-**Phase 6: Monetization.** YPP readiness tracker, AdSense link, affiliate program, cross-posting (TikTok/Reels), optional digital product.
-
-**Phase 7: Hardening.** Tests, dry-run mode, duplicate-content detection, copyright/licence ledger, monitoring.
-
-## 5. Milestones and exit criteria
-- M1: one video generated end-to-end locally (private upload).
-- M2: pipeline runs unattended on GitHub Actions for 7 days.
-- M3: 1-2 long + 3-5 Shorts per day, fully unattended for 30 days.
-- M4: YPP eligibility reached, then revenue tracking.
-
-## 6. Open items needing you
-1. A Google account for the channel (new, dedicated).
-2. A GitHub repo (public gives unlimited free Actions minutes; private gives 2,000 min).
-3. Confirmation that the public-repo tradeoff is OK, since the code would be visible. Secrets stay in GitHub Secrets.
+## Success criteria
+- Daily run green for 30 days, one long video and its Shorts per day, no manual step.
+- Partner Program thresholds reached; then revenue tracking begins.
