@@ -274,3 +274,13 @@ def test_plan_shorts_trims_in_code_when_the_model_will_not_comply():
     assert len(res) == 3 and all(shorts.MIN_WORDS <= len(s["narration"].split()) <= shorts.MAX_WORDS for s in res)
     assert all(s["narration"].startswith("Hook sentence") and s["narration"].endswith("The payoff is clear.") for s in res)
     assert sum("AT MOST" in c for c in calls) == 1  # one polite request, then code takes over
+
+
+def test_planner_prompt_includes_each_sections_verified_claims_and_forbids_embellishment():
+    script = {"title": "T", "sections": [
+        {"heading": "A", "narration": "alpha text", "claims": ["claim one", "claim two"]},
+        {"heading": "B", "narration": "beta text"}]}
+    prompts = []
+    shorts.plan_shorts(script, SOURCE, 1, gen=lambda p: prompts.append(p) or {"shorts": []})
+    assert "Verified facts: claim one | claim two" in prompts[0]
+    assert prompts[0].count("Verified facts") == 1 and "superlatives" in prompts[0]

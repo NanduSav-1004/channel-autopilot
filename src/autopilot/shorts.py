@@ -15,7 +15,9 @@ Rules for every Short:
 - {target_min}-{target_max} spoken words. This is a HARD limit: count the words. Plain, vivid, conversational.
 - The first sentence is a hook: a surprising fact or a real question the Short answers. Never start with
   "In this video" or "Today".
-- Use ONLY facts stated in that section. No new claims, no predictions, no advice.
+- Use ONLY the verified facts listed for that section. Do NOT add evaluations, significance, predictions or
+  superlatives ("the only way", "fundamentally changes", "revolutionary"). State what is known and stop.
+- No advice.
 - It must make sense on its own, and end on a clear payoff sentence.
 - title: under 60 characters, curiosity-driven and honest.
 
@@ -82,7 +84,10 @@ def plan_shorts(
     """Up to n fact-checked Shorts. Over-long drafts get one request to shorten; a Short with an
     unsupported sentence is dropped, not repaired: fewer Shorts is better than a wrong one."""
     sections = script["sections"]
-    listing = "\n".join(f"[{i}] {s['heading']}: {s['narration']}" for i, s in enumerate(sections))
+    listing = "\n".join(
+        f"[{i}] {s['heading']}: {s['narration']}"
+        + (f"\n    Verified facts: {' | '.join(s['claims'])}" if s.get("claims") else "")
+        for i, s in enumerate(sections))
     out = gen(PLAN_PROMPT.format(title=script["title"], n=n + 1, target_min=TARGET_MIN, target_max=TARGET_MAX,
                                  sections=listing))  # ask for one extra: some will not survive
     used: set[int] = set()
@@ -115,7 +120,8 @@ def plan_shorts(
         print("[shorts] dropped all: unsupported claims that could not be attributed to a Short", flush=True)
         return []
     if bad:
-        print(f"[shorts] dropped {len(bad)} Short(s) with unsupported claims", flush=True)
+        print(f"[shorts] dropped {len(bad)} Short(s) with unsupported claims, e.g.: "
+              f"{'; '.join(str(u)[:110] for u in verdict.get('unsupported', [])[:3])}", flush=True)
     return [c for i, c in enumerate(cands) if i not in bad][:n]
 
 

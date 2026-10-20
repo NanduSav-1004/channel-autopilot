@@ -119,7 +119,8 @@ def _call_groq(model: str, prompt: str, key: str, retries: int) -> dict:
                     raise ModelUnavailable(f"{model} daily quota exhausted") from exc
                 wait = after + 1
             elif exc.code in (400, 413):
-                raise ModelBusy(f"{model} rejected the request (HTTP {exc.code})") from exc
+                detail = exc.read().decode(errors="replace").replace("\n", " ")[:160]
+                raise ModelBusy(f"{model} rejected the request (HTTP {exc.code}): {detail}") from exc
             elif exc.code in (401, 403, 404):
                 raise ModelUnavailable(f"{model} HTTP {exc.code}") from exc
             elif exc.code not in RETRY_CODES:
