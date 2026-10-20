@@ -36,7 +36,7 @@ def test_plan_shorts_drops_bad_lengths_duplicates_and_out_of_range():
 
     res = shorts.plan_shorts(SCRIPT, SOURCE, 3, gen=gen)
     assert [s["section_index"] for s in res] == [0, 3]
-    assert "Write 4 standalone" in calls[0]  # asks for one extra to survive filtering
+    assert "Write 4 standalone" in calls[0] and "HARD limit" in calls[0]  # asks for one extra, with a hard word limit
 
 
 def test_plan_shorts_drops_only_the_short_the_factchecker_flagged():
@@ -207,3 +207,39 @@ def test_render_short_end_to_end_makes_a_1080x1920_video(tmp_path):
                           capture_output=True, text=True, check=True).stdout
     assert "width=1080" in info and "height=1920" in info
     assert 3.5 < float(info.split("duration=")[1]) < 4.6
+
+
+def test_overlong_drafts_get_one_request_to_shorten_then_pass():
+    calls = []
+
+    def gen(prompt):
+        calls.append(prompt)
+        if "standalone" in prompt:
+            return _plan_out((0, 100), (1, 160), (2, 170))  # two are over the limit
+        if "AT MOST" in prompt:
+            return _plan_out((1, 100), (2, 105))
+        return {"unsupported": [], "advice_given": False}
+
+    res = shorts.plan_shorts(SCRIPT, SOURCE, 3, gen=gen)
+    assert sorted(s["section_index"] for s in res) == [0, 1, 2]
+    assert sum("AT MOST" in c for c in calls) == 1  # asked once, not in a loop
+
+
+def test_no_shorten_request_when_enough_usable_shorts_already():
+    calls = []
+
+    def gen(prompt):
+        calls.append(prompt)
+        if "standalone" in prompt:
+            return _plan_out((0, 100), (1, 100), (2, 100), (3, 200))
+        return {"unsupported": [], "advice_given": False}
+
+    shorts.plan_shorts(SCRIPT, SOURCE, 3, gen=gen)
+    assert not any("AT MOST" in c for c in calls)
+
+
+def test_empty_plan_is_not_saved_so_a_later_run_can_retry(tmp_path, monkeypatch):
+    conn, st, pid, d = _setup(tmp_path)
+    monkeypatch.setattr(shorts, "plan_shorts", lambda *a, **k: [])
+    st.shorts(conn.execute("SELECT * FROM jobs WHERE id = ?", (pid,)).fetchone())
+    assert not (d / "shorts.json").exists() and conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0] == 1

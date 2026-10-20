@@ -5,14 +5,14 @@ from datetime import datetime, timedelta, timezone
 
 from autopilot import llm, qa
 
-MIN_WORDS, MAX_WORDS = 70, 130  # ~30-55 s at the Piper voice's pace; Shorts must stay under 60 s
+MIN_WORDS, MAX_WORDS = 70, 128  # ~30-55 s at the Piper voice's pace; Shorts must stay under 60 s
 MAX_SECONDS = 58
 
 PLAN_PROMPT = """Below are the narrated sections of a science explainer video titled "{title}".
 Write {n} standalone YouTube Shorts scripts, each built from ONE different section.
 
 Rules for every Short:
-- {min_words}-{max_words} spoken words. Plain, vivid, conversational.
+- {target_min}-{target_max} spoken words. This is a HARD limit: count the words. Plain, vivid, conversational.
 - The first sentence is a hook: a surprising fact or a real question the Short answers. Never start with
   "In this video" or "Today".
 - Use ONLY facts stated in that section. No new claims, no predictions, no advice.
@@ -24,6 +24,15 @@ Sections:
 
 Return JSON: {{"shorts": [{{"section_index": int, "title": str, "narration": str}}]}}"""
 
+SHORTEN_PROMPT = """These YouTube Shorts scripts are too long to be read aloud in under 55 seconds.
+Rewrite each so it has AT MOST {target_max} words. Keep the opening hook and the closing payoff, keep only
+facts already stated in the script, and cut the least important details. Count the words.
+
+{items}
+
+Return JSON: {{"shorts": [{{"section_index": int, "title": str, "narration": str}}]}}"""
+TARGET_MIN, TARGET_MAX = 85, 110
+
 
 def _words(text: str) -> int:
     return len(text.split())
@@ -33,33 +42,54 @@ def _sentences(text: str) -> list[str]:
     return [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if len(s.split()) >= 3]
 
 
+def _accept(raw, n_sections: int, used: set[int]) -> tuple[list[dict], list[dict]]:
+    """Split the model's output into (usable, too long). Everything else is silently invalid."""
+    ok, too_long = [], []
+    for s in raw.get("shorts", []) if isinstance(raw, dict) else []:
+        idx, narration, title = s.get("section_index"), str(s.get("narration", "")).strip(), str(s.get("title", "")).strip()
+        if not isinstance(idx, int) or not 0 <= idx < n_sections or idx in used or not title:
+            continue
+        item = {"section_index": idx, "title": title[:90], "narration": narration}
+        if _words(narration) > MAX_WORDS:
+            too_long.append(item)
+        elif _words(narration) >= MIN_WORDS:
+            ok.append(item)
+            used.add(idx)
+    return ok, too_long
+
+
 def plan_shorts(
     script: dict, source: dict, n: int, gen: Callable = llm.generate_json,
 ) -> list[dict]:
-    """Up to n fact-checked Shorts. A Short with an unsupported sentence is dropped, not repaired:
-    fewer Shorts is better than a wrong one."""
+    """Up to n fact-checked Shorts. Over-long drafts get one request to shorten; a Short with an
+    unsupported sentence is dropped, not repaired: fewer Shorts is better than a wrong one."""
     sections = script["sections"]
     listing = "\n".join(f"[{i}] {s['heading']}: {s['narration']}" for i, s in enumerate(sections))
-    out = gen(PLAN_PROMPT.format(title=script["title"], n=n + 1, min_words=MIN_WORDS, max_words=MAX_WORDS,
+    out = gen(PLAN_PROMPT.format(title=script["title"], n=n + 1, target_min=TARGET_MIN, target_max=TARGET_MAX,
                                  sections=listing))  # ask for one extra: some will not survive
-    cands, used = [], set()
-    for s in out.get("shorts", []) if isinstance(out, dict) else []:
-        idx, narration, title = s.get("section_index"), str(s.get("narration", "")).strip(), str(s.get("title", "")).strip()
-        if not isinstance(idx, int) or not 0 <= idx < len(sections) or idx in used or not title:
-            continue
-        if not MIN_WORDS <= _words(narration) <= MAX_WORDS:
-            continue
-        used.add(idx)
-        cands.append({"section_index": idx, "title": title[:90], "narration": narration})
+    used: set[int] = set()
+    cands, too_long = _accept(out, len(sections), used)
+    print(f"[shorts] model proposed {len(out.get('shorts', [])) if isinstance(out, dict) else 0}: "
+          f"{len(cands)} usable, {len(too_long)} too long", flush=True)
+    if too_long and len(cands) < n:
+        items = "\n\n".join(f"[{c['section_index']}] {c['title']} ({_words(c['narration'])} words):\n{c['narration']}"
+                            for c in too_long)
+        again, still_long = _accept(gen(SHORTEN_PROMPT.format(target_max=TARGET_MAX, items=items)), len(sections), used)
+        print(f"[shorts] after asking to shorten: {len(again)} usable, {len(still_long)} still too long", flush=True)
+        cands += again
     if not cands:
         return []
     claims = "\n".join(f"- [short {i}] {sent}" for i, c in enumerate(cands) for sent in _sentences(c["narration"]))
     verdict = gen(qa.FACTCHECK_PROMPT.format(source=source["text"], claims=claims))
     if verdict.get("advice_given"):
+        print("[shorts] dropped all: the fact-checker saw advice", flush=True)
         return []
     bad = {int(m.group(1)) for u in verdict.get("unsupported", []) if (m := re.search(r"\[short (\d+)\]", u))}
     if verdict.get("unsupported") and not bad:  # could not tell which Short: be safe, drop them all
+        print("[shorts] dropped all: unsupported claims that could not be attributed to a Short", flush=True)
         return []
+    if bad:
+        print(f"[shorts] dropped {len(bad)} Short(s) with unsupported claims", flush=True)
     return [c for i, c in enumerate(cands) if i not in bad][:n]
 
 

@@ -197,6 +197,9 @@ class Stages:
             plans = _read(d / "shorts.json")
         else:
             plans = shorts.plan_shorts(_read(d / "script.json"), _read(d / "source.json"), n)
+            if not plans:  # do not save an empty plan: it would block a later retry
+                print(f"[job {job['id']}] WARNING: no usable Shorts this time (see [shorts] lines above)", flush=True)
+                return
             _write(d / "shorts.json", plans)
         for i, plan in enumerate(plans):
             db.add_job(self.conn, plan["title"], "short", job["source_title"], parent_id=job["id"], short_idx=i)
