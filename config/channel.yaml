@@ -3,6 +3,10 @@ audience: English, US/UK
 formats:
   long:
     target_minutes: [8, 12]
+    target_words: 1500   # ~10 min at the Piper voice's pace
+    min_words: 1150      # QA floor; below ~8 min there are no mid-roll ads
+    min_sections: 6
+    min_source_chars: 6000   # thin Wikipedia articles cannot ground a 10-minute script
     per_day: 1
   short:
     per_day: 3

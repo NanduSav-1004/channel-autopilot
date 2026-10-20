@@ -16,13 +16,17 @@ CLAIMS:
 """
 
 
-def deterministic_checks(script: dict, forbidden: list[str], min_words: int = 600) -> list[str]:
+def deterministic_checks(
+    script: dict, forbidden: list[str], min_words: int = 600, min_sections: int = 1
+) -> list[str]:
     issues = []
     sections = script.get("sections") or []
     if not script.get("title") or len(script["title"]) > 100:
         issues.append("missing or too-long title")
     if not sections:
         issues.append("no sections")
+    elif len(sections) < min_sections:
+        issues.append(f"too few sections: {len(sections)} < {min_sections}")
     text = " ".join(s.get("narration", "") for s in sections).lower()
     if len(text.split()) < min_words:
         issues.append(f"too short: {len(text.split())} words < {min_words}")
@@ -36,10 +40,10 @@ def deterministic_checks(script: dict, forbidden: list[str], min_words: int = 60
 
 def check_script(
     script: dict, source: dict, forbidden: list[str],
-    gen: Callable[[str], dict] = llm.generate_json, min_words: int = 600,
+    gen: Callable[[str], dict] = llm.generate_json, min_words: int = 600, min_sections: int = 1,
 ) -> list[str]:
     """Return a list of issues; empty means the script passes."""
-    issues = deterministic_checks(script, forbidden, min_words)
+    issues = deterministic_checks(script, forbidden, min_words, min_sections)
     if issues:
         return issues
     claims = "\n".join(f"- {c}" for c in script.get("claims", []))

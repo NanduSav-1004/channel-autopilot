@@ -12,7 +12,7 @@ def _get(params: dict) -> dict:
     return json.load(urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=30))
 
 
-def fetch_source(topic: str, max_chars: int = 9000) -> dict | None:
+def fetch_source(topic: str, max_chars: int = 20000) -> dict | None:
     """Return {title, url, text} for the best-matching article, or None."""
     hits = _get({"action": "query", "list": "search", "srsearch": topic, "srlimit": 1})
     results = hits["query"]["search"]

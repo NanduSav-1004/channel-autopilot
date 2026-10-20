@@ -21,7 +21,7 @@ def _same_article(wanted: str, found: str) -> bool:
 
 def discover(
     conn: sqlite3.Connection, niche: str, n: int, gen: Callable = llm.generate_json,
-    fetch: Callable = wiki.fetch_source, forbidden: list[str] | None = None,
+    fetch: Callable = wiki.fetch_source, forbidden: list[str] | None = None, min_source_chars: int = 2500,
 ) -> list[int]:
     """Queue up to n verified, non-duplicate long-form jobs. Returns the new job ids."""
     known = db.known_topics(conn)
@@ -36,7 +36,7 @@ def discover(
         if topic.lower() in known or title.lower() in known:
             continue
         src = fetch(title)
-        if not src or not _same_article(title, src["title"]) or len(src["text"]) < 2500:
+        if not src or not _same_article(title, src["title"]) or len(src["text"]) < min_source_chars:
             continue  # no real article, or too thin to ground a full script
         known |= {topic.lower(), src["title"].lower()}
         added.append(db.add_job(conn, topic, "long", src["title"]))

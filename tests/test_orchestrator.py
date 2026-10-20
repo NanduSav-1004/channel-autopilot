@@ -6,7 +6,7 @@ from autopilot import db, stages, topics
 from autopilot.config import Config
 from autopilot.pipeline import STAGES, run_pending
 
-CFG = Config(niche="science", audience="en", formats={"long": {"per_day": 1}}, forbidden_topics=["medicine"])
+CFG = Config(niche="science", audience="en", formats={"long": {"per_day": 1, "target_words": 1500, "min_words": 1150, "min_sections": 6}}, forbidden_topics=["medicine"])
 BIG = {"title": "Laser", "text": "x" * 3000}
 
 

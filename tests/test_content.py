@@ -40,3 +40,8 @@ def test_unsupported_claim_and_advice_flagged():
 
 def test_clean_script_passes():
     assert check_script(_script(), SOURCE, [], gen=lambda p: {"unsupported": [], "advice_given": False}) == []
+
+
+def test_too_few_sections_rejected():
+    s = _script(words=2000)  # one long section
+    assert any("too few sections" in i for i in deterministic_checks(s, [], min_words=100, min_sections=6))

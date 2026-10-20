@@ -22,7 +22,8 @@ def main() -> None:
     if args.command in ("topics", "daily"):
         want = cfg.formats["long"]["per_day"] - db.pending_count(conn, "long")
         if want > 0:
-            ids = topics.discover(conn, cfg.niche, want, forbidden=cfg.forbidden_topics)
+            ids = topics.discover(conn, cfg.niche, want, forbidden=cfg.forbidden_topics,
+                                  min_source_chars=cfg.formats["long"]["min_source_chars"])
             print(f"queued {len(ids)} new topic(s)")
     if args.command in ("run", "daily"):
         n = run_pending(conn, Stages(conn, cfg, privacy=args.privacy).handlers())

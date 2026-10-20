@@ -50,11 +50,14 @@ class Stages:
             raise StageError(f"no Wikipedia source for {job['topic']!r}")
         feedback = _read(d / "qa_issues.json") if (d / "qa_issues.json").exists() else None
         _write(d / "source.json", src)
-        _write(d / "script.json", generate_script(job["topic"], src, self.cfg.niche, feedback=feedback))
+        _write(d / "script.json", generate_script(
+            job["topic"], src, self.cfg.niche, words=self.cfg.formats["long"]["target_words"], feedback=feedback))
 
     def qa(self, job) -> None:
         d = self.dir(job)
-        issues = qa.check_script(_read(d / "script.json"), _read(d / "source.json"), self.cfg.forbidden_topics)
+        long = self.cfg.formats["long"]
+        issues = qa.check_script(_read(d / "script.json"), _read(d / "source.json"), self.cfg.forbidden_topics,
+                                 min_words=long["min_words"], min_sections=long["min_sections"])
         if not issues:
             return
         _write(d / "qa_issues.json", issues)
