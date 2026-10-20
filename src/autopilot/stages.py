@@ -8,7 +8,7 @@ from pathlib import Path
 from autopilot import audio, metadata, qa, shots, thumbnail, tts, wiki
 from autopilot.config import Config
 from autopilot.render import render_photo_video
-from autopilot.script import generate_script
+from autopilot.script import generate_script, repair_sections
 
 
 class StageError(RuntimeError):
@@ -53,11 +53,26 @@ class Stages:
         _write(d / "script.json", generate_script(
             job["topic"], src, self.cfg.niche, words=self.cfg.formats["long"]["target_words"], feedback=feedback))
 
+    REPAIR_ROUNDS = 2
+
     def qa(self, job) -> None:
         d = self.dir(job)
+        script, source = _read(d / "script.json"), _read(d / "source.json")
         long = self.cfg.formats["long"]
-        issues = qa.check_script(_read(d / "script.json"), _read(d / "source.json"), self.cfg.forbidden_topics,
-                                 min_words=long["min_words"], min_sections=long["min_sections"])
+        check = lambda s: qa.check_script(
+            s, source, self.cfg.forbidden_topics, min_words=long["min_words"], min_sections=long["min_sections"])
+        issues = check(script)
+        for _ in range(self.REPAIR_ROUNDS):
+            bad = [i.removeprefix("unsupported claim: ") for i in issues if i.startswith("unsupported claim: ")]
+            if not bad or len(bad) != len(issues):  # only unsupported claims are repairable in place
+                break
+            targets = qa.locate_sections(script, bad)
+            if not targets:
+                break
+            print(f"[job {job['id']}] repairing sections {targets} ({len(bad)} unsupported claim(s))", flush=True)
+            script = repair_sections(script, source, targets, bad)
+            _write(d / "script.json", script)
+            issues = check(script)
         if not issues:
             return
         _write(d / "qa_issues.json", issues)

@@ -39,6 +39,8 @@ Cover these points, using ONLY facts in the SOURCE: {points}
 Rules:
 - Write AT LEAST {words} spoken words (aim for {words}-{max_words}). Conversational, vivid, concrete. No filler.
 - {ending}
+- Every sentence must be directly supported by the SOURCE. Do not add general conclusions, predictions or claims
+  about significance that the SOURCE does not state; end by restating what the SOURCE established.
 - Do not mention "section" or "chapter". Do not say like/subscribe. No medical, financial or legal advice.
 
 Return JSON: {{"narration": str, "claims": [str]}}  // claims: each factual claim you made, one per item
@@ -52,6 +54,38 @@ SECTIONS = 7
 
 def _words(text: str) -> int:
     return len(text.split())
+
+
+def _write_section(
+    script: dict, i: int, source: dict, style: str, per: int, gen: Callable[[str], dict],
+    avoid: list[str] | None = None,
+) -> dict:
+    """Write (or rewrite) section i. `avoid` lists claims judged unsupported by the source."""
+    secs = script["sections"]
+    n, sec = len(secs), secs[i]
+    prev = " ".join(secs[i - 1]["narration"].split()[-30:]) if i and secs[i - 1].get("narration") else ""
+    prompt = SECTION_PROMPT.format(
+        title=script["title"], style=style, headings=" | ".join(s["heading"] for s in secs), num=i + 1, n=n,
+        heading=sec["heading"], points="; ".join(sec.get("key_points", [])), words=per,
+        max_words=round(per * 1.3), source_title=source["title"], source_text=source["text"],
+        previous=(f"The previous section ended with: \"{prev}\" Continue naturally from it.\n" if prev
+                  else "This is the opening of the video.\n"),
+        ending=("End with a satisfying payoff that answers the opening question." if i == n - 1
+                else "End with a mini open-loop that makes the viewer want the next section."),
+    )
+    if avoid:
+        prompt += ("\nThe fact-checker judged these claims UNSUPPORTED by the SOURCE. Do not state them or anything "
+                   "like them:\n" + "\n".join(f"- {c}" for c in avoid))
+    out = gen(prompt)
+    if _words(out.get("narration", "")) < per * 0.8:  # one targeted retry for an undershoot
+        out = gen(prompt + f"\nYour last draft had only {_words(out.get('narration', ''))} words. Write at least {per}.")
+    return {"heading": sec["heading"], "key_points": sec.get("key_points", []),
+            "visual_query": sec.get("visual_query", ""), "narration": out.get("narration", "").strip(),
+            "claims": out.get("claims", [])}
+
+
+def _collect_claims(script: dict) -> list[str]:
+    return [c for sec in script["sections"] for c in sec.get("claims", [])]
 
 
 def generate_script(
@@ -69,26 +103,22 @@ def generate_script(
     if feedback:
         outline_prompt += "\nA previous attempt was rejected. Fix these problems:\n" + "\n".join(f"- {f}" for f in feedback)
     script = gen(outline_prompt)
-    planned = script["sections"]
-    per = round(words / len(planned))
-    headings = " | ".join(s["heading"] for s in planned)
-    done, claims, prev = [], list(script.get("claims", [])), ""
-    for i, sec in enumerate(planned):
-        last = i == len(planned) - 1
-        prompt = SECTION_PROMPT.format(
-            title=script["title"], style=style, headings=headings, num=i + 1, n=len(planned),
-            heading=sec["heading"], points="; ".join(sec.get("key_points", [])), words=per,
-            max_words=round(per * 1.3), source_title=source["title"], source_text=source["text"],
-            previous=f"The previous section ended with: \"{prev}\" Continue naturally from it.\n" if prev else "This is the opening of the video.\n",
-            ending="End with a satisfying payoff that answers the opening question." if last
-            else "End with a mini open-loop that makes the viewer want the next section.",
-        )
-        out = gen(prompt)
-        if _words(out.get("narration", "")) < per * 0.8:  # one targeted retry for an undershoot
-            out = gen(prompt + f"\nYour last draft had only {_words(out.get('narration', ''))} words. Write at least {per}.")
-        narration = out.get("narration", "").strip()
-        done.append({"heading": sec["heading"], "narration": narration, "visual_query": sec.get("visual_query", "")})
-        claims += out.get("claims", [])
-        prev = " ".join(narration.split()[-30:])
-    script.update({"sections": done, "claims": claims, "series": series, "source_url": source["url"]})
+    per = round(words / len(script["sections"]))
+    for i in range(len(script["sections"])):
+        script["sections"][i] = _write_section(script, i, source, style, per, gen)
+        # later sections read the earlier narration for continuity, so write strictly in order
+    script.update({"claims": _collect_claims(script), "series": series, "source_url": source["url"]})
+    return script
+
+
+def repair_sections(
+    script: dict, source: dict, indexes: list[int], bad_claims: list[str],
+    gen: Callable[[str], dict] = llm.generate_json,
+) -> dict:
+    """Rewrite only the given sections, telling the writer which claims to avoid."""
+    style = SERIES.get(script.get("series", ""), "")
+    for i in indexes:
+        per = max(150, _words(script["sections"][i]["narration"]))
+        script["sections"][i] = _write_section(script, i, source, style, per, gen, avoid=bad_claims)
+    script["claims"] = _collect_claims(script)
     return script

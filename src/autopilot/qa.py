@@ -52,3 +52,24 @@ def check_script(
     if verdict.get("advice_given"):
         issues.append("script gives medical/financial/legal advice")
     return issues
+
+
+def _tokens(text: str) -> set[str]:
+    return {w for w in "".join(c.lower() if c.isalnum() else " " for c in text).split() if len(w) > 3}
+
+
+def locate_sections(script: dict, unsupported: list[str]) -> list[int]:
+    """Which sections made these claims? Matches by word overlap, since the fact-checker may paraphrase."""
+    found: set[int] = set()
+    for claim in unsupported:
+        ct = _tokens(claim)
+        best, best_score = None, 0.0
+        for i, sec in enumerate(script.get("sections", [])):
+            for c in sec.get("claims", []) + [sec.get("narration", "")]:
+                st = _tokens(c)
+                score = len(ct & st) / (len(ct) or 1)
+                if score > best_score:
+                    best, best_score = i, score
+        if best is not None and best_score >= 0.5:
+            found.add(best)
+    return sorted(found)

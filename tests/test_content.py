@@ -89,3 +89,28 @@ def test_clean_script_passes():
 def test_too_few_sections_rejected():
     s = _script(words=2000)  # one long section
     assert any("too few sections" in i for i in deterministic_checks(s, [], min_words=100, min_sections=6))
+
+
+def test_locate_sections_matches_paraphrased_claims_and_ignores_unrelated():
+    from autopilot.qa import locate_sections
+    s = {"sections": [{"claims": ["lasers emit coherent light"], "narration": "x"},
+                      {"claims": ["the concept drives research into energy limits"], "narration": "y"}]}
+    assert locate_sections(s, ["Even if never built, the concept drives research into energy limits"]) == [1]
+    assert locate_sections(s, ["bananas are yellow fruit"]) == []
+
+
+def test_repair_rewrites_only_target_sections_and_forwards_avoid_claims():
+    from autopilot.script import repair_sections
+    script = {"title": "T", "series": "what_if", "sections": [
+        {"heading": "A", "narration": "keep " * 200, "claims": ["c0"], "key_points": ["k"]},
+        {"heading": "B", "narration": "old " * 200, "claims": ["bad"], "key_points": ["k"]}]}
+    prompts = []
+
+    def gen(prompt):
+        prompts.append(prompt)
+        return {"narration": "new " * 200, "claims": ["good"]}
+
+    out = repair_sections(script, SOURCE, [1], ["the bad claim"], gen=gen)
+    assert len(prompts) == 1 and "the bad claim" in prompts[0] and "UNSUPPORTED" in prompts[0]
+    assert out["sections"][0]["narration"].startswith("keep") and out["sections"][1]["narration"].startswith("new")
+    assert out["claims"] == ["c0", "good"]

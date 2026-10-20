@@ -129,3 +129,57 @@ def test_db_migration_adds_thumbnail_column_to_old_database(tmp_path):
     old.close()
     conn = db.connect(path)
     assert "thumbnail_set" in {r[1] for r in conn.execute("PRAGMA table_info(jobs)")}
+
+
+def _repair_setup(tmp_path, monkeypatch, check_results):
+    cfg = Config(niche="s", audience="en", formats={"long": {"per_day": 1, "target_words": 1500, "min_words": 10, "min_sections": 2}})
+    conn = _conn(tmp_path)
+    db.add_job(conn, "lasers", "long", "Laser")
+    st = stages.Stages(conn, cfg, root=tmp_path / "out", work=tmp_path / "work")
+    job = conn.execute("SELECT * FROM jobs").fetchone()
+    d = st.dir(job)
+    script = {"title": "T", "series": "how_it_works", "sections": [
+        {"heading": "A", "narration": "alpha " * 200, "claims": ["lasers emit coherent light"], "key_points": []},
+        {"heading": "B", "narration": "beta " * 200, "claims": ["the concept drives research into energy limits"], "key_points": []},
+    ]}
+    (d / "script.json").write_text(json.dumps(script))
+    (d / "source.json").write_text(json.dumps(BIG))
+    results = iter(check_results)
+    monkeypatch.setattr(stages.qa, "check_script", lambda *a, **k: next(results))
+    return conn, st, job, d
+
+
+def test_qa_repairs_flagged_section_in_place_without_regenerating(tmp_path, monkeypatch):
+    conn, st, job, d = _repair_setup(tmp_path, monkeypatch, [
+        ["unsupported claim: concept drives research into energy limits"], []])
+    seen = {}
+
+    def fake_repair(script, source, targets, bad):
+        seen.update(targets=targets, bad=bad)
+        script["sections"][1]["narration"] = "fixed " * 200
+        return script
+
+    monkeypatch.setattr(stages, "repair_sections", fake_repair)
+    st.qa(job)  # no exception: repaired and re-checked clean
+    saved = json.loads((d / "script.json").read_text())
+    assert seen["targets"] == [1] and saved["sections"][1]["narration"].startswith("fixed")
+    assert saved["sections"][0]["narration"].startswith("alpha")  # untouched
+    assert conn.execute("SELECT stage FROM jobs").fetchone()[0] == "new"  # stage never advanced or reset
+
+
+def test_qa_rejects_after_repair_rounds_are_exhausted(tmp_path, monkeypatch):
+    bad = ["unsupported claim: concept drives research into energy limits"]
+    _conn, st, job, d = _repair_setup(tmp_path, monkeypatch, [bad, bad, bad])
+    monkeypatch.setattr(stages, "repair_sections", lambda script, *a: script)
+    with pytest.raises(stages.StageError):
+        st.qa(job)
+    assert not (d / "script.json").exists() and (d / "qa_issues.json").exists()
+
+
+def test_structural_issues_are_not_repaired_in_place(tmp_path, monkeypatch):
+    _conn, st, job, _d = _repair_setup(tmp_path, monkeypatch, [["too short: 10 words < 1150"]])
+    called = []
+    monkeypatch.setattr(stages, "repair_sections", lambda *a: called.append(1))
+    with pytest.raises(stages.StageError):
+        st.qa(job)
+    assert not called
