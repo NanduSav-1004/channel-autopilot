@@ -1,7 +1,6 @@
-"""Gemini REST client (free tier) with retry/backoff and model fallback. Returns parsed JSON.
-
-The free tier caps requests per model per day, so a daily-quota 429 moves on to the next model
-(each has its own pool); a short per-minute 429 just waits."""
+"""LLM client returning parsed JSON. Text calls try Groq first (1,000 requests/day free), then Gemini;
+vision calls go to Gemini only. Each model has its own quota pool, so a daily-quota 429 moves on to the
+next one; a short per-minute 429 just waits."""
 import base64
 import json
 import os
@@ -14,6 +13,9 @@ from autopilot.errors import TransientError
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 # Order: fast models first. (3.7/3.8-flash have no free-tier quota; lite models are slower but have pools.)
 DEFAULT_MODELS = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.1-flash-lite", "gemini-3.5-flash-lite"]
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b"]
+UA = {"User-Agent": "channel-autopilot/0.1 (https://github.com/NanduSav-1004/channel-autopilot)"}
 RETRY_CODES = {500, 502, 503, 504}
 MAX_WAIT = 90  # a 429 asking us to wait longer than this is treated as a daily quota
 
@@ -37,11 +39,18 @@ class LLMUnavailable(LLMError, TransientError):
 _unavailable: set[str] = set()  # per process: models already known to be exhausted
 
 
-def _models(model: str | None) -> list[str]:
+def _gemini_models(model: str | None) -> list[str]:
     if model:
         return [model]
     env = os.environ.get("GEMINI_MODELS")
     return [m.strip() for m in env.split(",") if m.strip()] if env else DEFAULT_MODELS
+
+
+def _groq_models() -> list[str]:
+    if not os.environ.get("GROQ_API_KEY"):
+        return []
+    env = os.environ.get("GROQ_MODELS")
+    return [m.strip() for m in env.split(",") if m.strip()] if env else GROQ_MODELS
 
 
 def _retry_delay(body: bytes) -> tuple[float, bool]:
@@ -89,28 +98,74 @@ def _call(model: str, body: bytes, key: str, retries: int) -> dict:
     raise LLMError("unreachable")
 
 
+def _call_groq(model: str, prompt: str, key: str, retries: int) -> dict:
+    payload = {"model": model, "messages": [{"role": "user", "content": prompt}],
+               "response_format": {"type": "json_object"}, "temperature": 0.8}
+    if model.startswith("openai/gpt-oss"):
+        payload["reasoning_effort"] = "low"  # fewer reasoning tokens: the free tier is token-limited
+    body = json.dumps(payload).encode()
+    for attempt in range(retries):
+        req = urllib.request.Request(GROQ_URL, data=body, headers={
+            **UA, "Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+        wait = min(2 ** attempt * 2, 60)
+        try:
+            data = json.load(urllib.request.urlopen(req, timeout=240))
+            return json.loads(data["choices"][0]["message"]["content"])
+        except urllib.error.HTTPError as exc:
+            if exc.code == 429:
+                msg = exc.read().decode(errors="replace").lower()
+                after = float(exc.headers.get("retry-after") or 30)
+                if "per day" in msg or after > MAX_WAIT:
+                    raise ModelUnavailable(f"{model} daily quota exhausted") from exc
+                wait = after + 1
+            elif exc.code in (400, 413):
+                raise ModelBusy(f"{model} rejected the request (HTTP {exc.code})") from exc
+            elif exc.code in (401, 403, 404):
+                raise ModelUnavailable(f"{model} HTTP {exc.code}") from exc
+            elif exc.code not in RETRY_CODES:
+                raise LLMError(f"Groq HTTP {exc.code}") from exc
+            if attempt == retries - 1:
+                raise ModelBusy(f"{model} HTTP {exc.code}") from exc
+        except (KeyError, IndexError, json.JSONDecodeError) as exc:
+            if attempt == retries - 1:
+                raise ModelBusy(f"{model} bad response: {exc!r}") from exc
+        except OSError as exc:
+            if attempt == retries - 1:
+                raise ModelBusy(f"{model} network error: {exc!r}") from exc
+        time.sleep(wait)
+    raise LLMError("unreachable")
+
+
 def generate_json(
     prompt: str, model: str | None = None, retries: int = 4, images: list[bytes] | None = None
 ) -> dict:
-    """`images` are JPEG bytes sent after the prompt text, for vision tasks."""
-    key = os.environ.get("GEMINI_API_KEY")
-    if not key:
-        raise LLMError("GEMINI_API_KEY is not set")
+    """`images` are JPEG bytes sent after the prompt text (vision tasks, Gemini only)."""
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    groq_key = os.environ.get("GROQ_API_KEY")
+    if not gemini_key and not (groq_key and not images):
+        raise LLMError("no API key set for this request (GEMINI_API_KEY, or GROQ_API_KEY for text)")
+    attempts: list[tuple[str, str]] = []
+    if not images and not model:
+        attempts += [("groq", m) for m in _groq_models()]
+    if gemini_key:
+        attempts += [("gemini", m) for m in _gemini_models(model)]
     parts = [{"text": prompt}] + [
         {"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(b).decode()}}
         for b in images or []
     ]
-    body = json.dumps({
+    gem_body = json.dumps({
         "contents": [{"parts": parts}],
         "generationConfig": {"responseMimeType": "application/json", "temperature": 0.9},
     }).encode()
-    for m in _models(model):
-        if m in _unavailable:
+    for provider, m in attempts:
+        if f"{provider}:{m}" in _unavailable:
             continue
         try:
-            return _call(m, body, key, retries)
+            if provider == "groq":
+                return _call_groq(m, prompt, groq_key, retries)
+            return _call(m, gem_body, gemini_key, retries)
         except ModelUnavailable:
-            _unavailable.add(m)
+            _unavailable.add(f"{provider}:{m}")
         except ModelBusy:
             continue
-    raise LLMUnavailable("all Gemini models are out of quota or busy")
+    raise LLMUnavailable("all LLM models are out of quota or busy")
