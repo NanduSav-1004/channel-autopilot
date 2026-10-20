@@ -27,3 +27,4 @@ work/
 .claude/
 *.egg-info/
 models/
+data/

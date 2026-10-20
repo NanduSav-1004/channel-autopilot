@@ -9,7 +9,7 @@ from autopilot.stages import Stages
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="autopilot")
-    parser.add_argument("command", choices=["topics", "run", "daily", "status", "retry"])
+    parser.add_argument("command", choices=["topics", "run", "daily", "status", "retry", "thumbnails"])
     parser.add_argument("--privacy", choices=["private", "unlisted", "public"], default="private")
     parser.add_argument("--live", action="store_true", help="really upload (overrides dry_run in config)")
     args = parser.parse_args()
@@ -34,6 +34,11 @@ def main() -> None:
         ).rowcount
         conn.commit()
         print(f"reset {n} failed job(s)")
+    if args.command == "thumbnails":
+        st = Stages(conn, cfg)
+        rows = conn.execute("SELECT * FROM jobs WHERE video_id IS NOT NULL AND thumbnail_set = 0").fetchall()
+        ok = sum(st.set_thumbnail(r["id"], r["video_id"], st.dir(r) / "thumbnail.jpg") for r in rows)
+        print(f"thumbnails set for {ok}/{len(rows)} video(s)")
     if args.command == "status":
         for row in conn.execute("SELECT id, kind, stage, status, attempts, video_id, topic, error FROM jobs"):
             print(dict(row))

@@ -100,14 +100,29 @@ class Stages:
         if self.cfg.dry_run:
             print(f"[dry_run] would upload {d / 'final.mp4'}")
             return
-        if job["video_id"]:
-            return
-        from autopilot.upload import upload_video  # lazy: needs Google credentials
+        from autopilot import upload  # lazy: needs Google credentials
 
-        script, timings = _read(d / "script.json"), _read(d / "timings.json")
-        script["chapters"] = metadata.chapter_marks(timings)
-        description = metadata.build_description(script, _read(d / "credits.json"))
-        video_id = upload_video(d / "final.mp4", script["title"], description, script.get("tags", []),
-                                d / "thumbnail.jpg", privacy=self.privacy)
-        self.conn.execute("UPDATE jobs SET video_id = ? WHERE id = ?", (video_id, job["id"]))
+        video_id = job["video_id"]
+        if not video_id:
+            script, timings = _read(d / "script.json"), _read(d / "timings.json")
+            script["chapters"] = metadata.chapter_marks(timings)
+            description = metadata.build_description(script, _read(d / "credits.json"))
+            video_id = upload.insert_video(d / "final.mp4", script["title"], description,
+                                           script.get("tags", []), privacy=self.privacy)
+            # Persist at once: if anything after this fails, a retry must never upload the video again.
+            self.conn.execute("UPDATE jobs SET video_id = ? WHERE id = ?", (video_id, job["id"]))
+            self.conn.commit()
+        self.set_thumbnail(job["id"], video_id, d / "thumbnail.jpg")
+
+    def set_thumbnail(self, job_id: int, video_id: str, thumb: Path) -> bool:
+        """Best effort: a thumbnail problem (e.g. channel not yet eligible) must not fail the upload."""
+        from autopilot import upload
+
+        try:
+            upload.set_thumbnail(video_id, thumb)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[job {job_id}] thumbnail not set ({type(exc).__name__}); retry with `autopilot thumbnails`", flush=True)
+            return False
+        self.conn.execute("UPDATE jobs SET thumbnail_set = 1 WHERE id = ?", (job_id,))
         self.conn.commit()
+        return True

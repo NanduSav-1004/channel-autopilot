@@ -14,9 +14,17 @@ def build_description(script: dict, credits: list[str], source_url: str | None =
     if src:
         parts.append(f"Source: {src}")
     parts.append("This video uses AI-assisted scripting and a synthetic voice.")
-    if credits:
-        parts.append("Image and video credits:\n" + "\n".join(credits))
     text = "\n\n".join(p for p in parts if p)
+    if credits:
+        header, kept = "\n\nImage and video credits:\n", []
+        room = DESC_LIMIT - len(text) - len(header) - 40  # 40 = room for the "and N more" line
+        for i, line in enumerate(credits):
+            if len(line) + 1 > room:
+                kept.append(f"...and {len(credits) - i} more (see the source pages)")
+                break
+            kept.append(line)
+            room -= len(line) + 1
+        text += header + "\n".join(kept)
     return text[:DESC_LIMIT]
 
 

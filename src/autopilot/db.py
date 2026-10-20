@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     attempts INTEGER NOT NULL DEFAULT 0,
     error TEXT,
     video_id TEXT,
+    thumbnail_set INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 """
@@ -23,6 +24,10 @@ def connect(path: str | Path = "data/autopilot.db") -> sqlite3.Connection:
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(jobs)")}
+    if "thumbnail_set" not in cols:  # databases created before this column existed
+        conn.execute("ALTER TABLE jobs ADD COLUMN thumbnail_set INTEGER NOT NULL DEFAULT 0")
+        conn.commit()
     return conn
 
 

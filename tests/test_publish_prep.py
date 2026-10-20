@@ -36,3 +36,12 @@ def test_make_thumbnail_without_and_with_background(tmp_path):
     Image.new("RGB", (2000, 900), (200, 50, 50)).save(bg)
     out2 = make_thumbnail(s, bg, tmp_path / "t2.jpg")
     assert Image.open(out2).size == (1280, 720) and out2.stat().st_size < 2_000_000
+
+
+def test_description_drops_whole_credit_lines_instead_of_cutting_mid_line():
+    credits = [f"credit line number {i} " + "x" * 60 for i in range(200)]
+    d = build_description({"description": "About."}, credits, "https://x")
+    assert len(d) <= 5000 and "more (see the source pages)" in d
+    assert all(line.startswith(("credit line number", "...and")) or not line.startswith("credit")
+               for line in d.splitlines())
+    assert d.splitlines()[-2].endswith("x" * 60)  # the last kept credit line is intact

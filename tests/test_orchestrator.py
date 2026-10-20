@@ -76,3 +76,56 @@ def test_qa_failure_loops_back_then_job_fails_after_three_attempts(tmp_path, mon
     row = conn.execute("SELECT * FROM jobs").fetchone()
     assert row["status"] == "failed" and row["attempts"] == 3 and "QA rejected" in row["error"]
     assert set(st.handlers()) == set(STAGES)
+
+
+def _upload_setup(tmp_path, monkeypatch):
+    from autopilot import upload as up
+
+    cfg = Config(niche="s", audience="en", formats={"long": {"per_day": 1}}, dry_run=False)
+    conn = _conn(tmp_path)
+    jid = db.add_job(conn, "lasers", "long", "Laser")
+    st = stages.Stages(conn, cfg, root=tmp_path / "out", work=tmp_path / "work")
+    d = st.dir(conn.execute("SELECT * FROM jobs").fetchone())
+    (d / "script.json").write_text(json.dumps({"title": "T", "description": "d", "tags": []}))
+    (d / "timings.json").write_text(json.dumps([{"start": 0, "heading": "a"}]))
+    (d / "credits.json").write_text("[]")
+    return up, conn, st, jid
+
+
+def test_upload_saves_video_id_before_thumbnail_and_never_reuploads(tmp_path, monkeypatch):
+    up, conn, st, _jid = _upload_setup(tmp_path, monkeypatch)
+    inserts = []
+    monkeypatch.setattr(up, "insert_video", lambda *a, **k: inserts.append(1) or "VID1")
+
+    def boom(video_id, thumb):
+        raise RuntimeError("403 forbidden")
+
+    monkeypatch.setattr(up, "set_thumbnail", boom)
+    for _ in range(3):  # simulates the retry loop; thumbnail failure is non-fatal, so run each time
+        st.upload(conn.execute("SELECT * FROM jobs").fetchone())
+    row = conn.execute("SELECT * FROM jobs").fetchone()
+    assert inserts == [1] and row["video_id"] == "VID1" and row["thumbnail_set"] == 0
+
+
+def test_thumbnail_retry_sets_flag_when_it_finally_works(tmp_path, monkeypatch):
+    up, conn, st, jid = _upload_setup(tmp_path, monkeypatch)
+    monkeypatch.setattr(up, "insert_video", lambda *a, **k: "VID1")
+    monkeypatch.setattr(up, "set_thumbnail", lambda v, t: (_ for _ in ()).throw(RuntimeError("403")))
+    st.upload(conn.execute("SELECT * FROM jobs").fetchone())
+    monkeypatch.setattr(up, "set_thumbnail", lambda v, t: None)
+    assert st.set_thumbnail(jid, "VID1", tmp_path / "t.jpg") is True
+    assert conn.execute("SELECT thumbnail_set FROM jobs").fetchone()[0] == 1
+
+
+def test_db_migration_adds_thumbnail_column_to_old_database(tmp_path):
+    import sqlite3
+
+    path = tmp_path / "old.db"
+    old = sqlite3.connect(path)
+    old.execute("CREATE TABLE jobs (id INTEGER PRIMARY KEY, topic TEXT NOT NULL, kind TEXT NOT NULL, "
+                "stage TEXT NOT NULL DEFAULT 'new', status TEXT NOT NULL DEFAULT 'pending', "
+                "attempts INTEGER NOT NULL DEFAULT 0, error TEXT, video_id TEXT, source_title TEXT, created_at TEXT)")
+    old.commit()
+    old.close()
+    conn = db.connect(path)
+    assert "thumbnail_set" in {r[1] for r in conn.execute("PRAGMA table_info(jobs)")}

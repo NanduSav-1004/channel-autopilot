@@ -1,4 +1,4 @@
-"""YouTube upload (videos.insert, resumable) plus custom thumbnail."""
+"""YouTube upload (videos.insert, resumable) and custom thumbnails, as separate retryable steps."""
 from pathlib import Path
 
 from googleapiclient.discovery import build
@@ -8,16 +8,19 @@ from autopilot.metadata import EDU_CATEGORY, clean_tags, clean_title
 from autopilot.youtube_auth import load_credentials
 
 
-def upload_video(
-    video: Path, title: str, description: str, tags: list[str], thumbnail: Path | None = None,
+def _client():
+    return build("youtube", "v3", credentials=load_credentials())
+
+
+def insert_video(
+    video: Path, title: str, description: str, tags: list[str],
     privacy: str = "private", publish_at: str | None = None,
 ) -> str:
-    """Return the new video id. `publish_at` (RFC 3339 UTC) schedules it; requires privacy 'private'."""
-    yt = build("youtube", "v3", credentials=load_credentials())
+    """Upload the video and return its id. `publish_at` (RFC 3339 UTC) schedules it as private first."""
     status = {"privacyStatus": privacy, "selfDeclaredMadeForKids": False}
     if publish_at:
         status.update({"privacyStatus": "private", "publishAt": publish_at})
-    req = yt.videos().insert(
+    req = _client().videos().insert(
         part="snippet,status",
         body={
             "snippet": {"title": clean_title(title), "description": description,
@@ -29,6 +32,8 @@ def upload_video(
     resp = None
     while resp is None:
         _, resp = req.next_chunk()
-    if thumbnail:
-        yt.thumbnails().set(videoId=resp["id"], media_body=MediaFileUpload(str(thumbnail))).execute()
     return resp["id"]
+
+
+def set_thumbnail(video_id: str, thumbnail: Path) -> None:
+    _client().thumbnails().set(videoId=video_id, media_body=MediaFileUpload(str(thumbnail))).execute()
