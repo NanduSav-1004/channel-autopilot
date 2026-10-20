@@ -1,4 +1,5 @@
 """QA gate: deterministic checks first (cheap), then an LLM fact-check against the source."""
+import re
 from collections.abc import Callable
 
 from autopilot import llm
@@ -38,6 +39,17 @@ def deterministic_checks(
     return issues
 
 
+def metadata_claims(script: dict) -> list[str]:
+    """The title and each description sentence, tagged so a failure is routed to a metadata rewrite."""
+    claims = []
+    if script.get("title"):
+        claims.append(f"[title] {script['title']}")
+    for sentence in re.split(r"(?<=[.!?])\s+", script.get("description", "").strip()):
+        if len(sentence.split()) >= 4:
+            claims.append(f"[description] {sentence}")
+    return claims
+
+
 def check_script(
     script: dict, source: dict, forbidden: list[str],
     gen: Callable[[str], dict] = llm.generate_json, min_words: int = 600, min_sections: int = 1,
@@ -46,7 +58,7 @@ def check_script(
     issues = deterministic_checks(script, forbidden, min_words, min_sections)
     if issues:
         return issues
-    claims = "\n".join(f"- {c}" for c in script.get("claims", []))
+    claims = "\n".join(f"- {c}" for c in script.get("claims", []) + metadata_claims(script))
     verdict = gen(FACTCHECK_PROMPT.format(source=source["text"], claims=claims))
     issues += [f"unsupported claim: {c}" for c in verdict.get("unsupported", [])]
     if verdict.get("advice_given"):

@@ -208,3 +208,12 @@ def test_discover_tolerates_renamed_key_and_bare_list(tmp_path):
     assert len(ids) == 1
     conn2 = db.connect(tmp_path / "t2.db")
     assert len(topics.discover(conn2, "science", 1, gen=lambda p: cand, fetch=lambda t: good)) == 1
+
+
+def test_qa_routes_metadata_claims_to_metadata_rewrite_not_section_repair(tmp_path, monkeypatch):
+    _conn, st, job, _d = _repair_setup(tmp_path, monkeypatch, [["unsupported claim: [description] made practical"], []])
+    calls = {"meta": 0, "sections": 0}
+    monkeypatch.setattr(stages, "repair_metadata", lambda s, *a: calls.__setitem__("meta", calls["meta"] + 1) or s)
+    monkeypatch.setattr(stages, "repair_sections", lambda s, *a: calls.__setitem__("sections", calls["sections"] + 1) or s)
+    st.qa(job)
+    assert calls == {"meta": 1, "sections": 0}

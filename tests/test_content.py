@@ -114,3 +114,30 @@ def test_repair_rewrites_only_target_sections_and_forwards_avoid_claims():
     assert len(prompts) == 1 and "the bad claim" in prompts[0] and "UNSUPPORTED" in prompts[0]
     assert out["sections"][0]["narration"].startswith("keep") and out["sections"][1]["narration"].startswith("new")
     assert out["claims"] == ["c0", "good"]
+
+
+def test_metadata_claims_tag_title_and_description_sentences():
+    from autopilot.qa import metadata_claims
+    s = {"title": "T title", "description": "Short. This sentence has enough words to count. Another long enough sentence here."}
+    claims = metadata_claims(s)
+    assert claims[0] == "[title] T title" and len(claims) == 3 and all(c.startswith(("[title]", "[description]")) for c in claims)
+
+
+def test_check_script_sends_metadata_to_the_fact_checker():
+    seen = {}
+
+    def gen(prompt):
+        seen["p"] = prompt
+        return {"unsupported": ["[description] Lasers were invented in 1850 by someone."], "advice_given": False}
+
+    s = _script(description="Lasers were invented in 1850 by someone.")
+    issues = check_script(s, SOURCE, [], gen=gen)
+    assert "[description] Lasers were invented" in seen["p"]
+    assert issues == ["unsupported claim: [description] Lasers were invented in 1850 by someone."]
+
+
+def test_repair_metadata_rewrites_title_and_description_only():
+    from autopilot.script import repair_metadata
+    s = {"title": "Old", "description": "Old desc", "sections": [{"narration": "keep"}]}
+    out = repair_metadata(s, SOURCE, ["[description] bad"], gen=lambda p: {"title": " New ", "description": "New desc"})
+    assert out["title"] == "New" and out["description"] == "New desc" and out["sections"] == [{"narration": "keep"}]

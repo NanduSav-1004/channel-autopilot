@@ -8,7 +8,7 @@ from pathlib import Path
 from autopilot import audio, metadata, qa, shots, thumbnail, tts, wiki
 from autopilot.config import Config
 from autopilot.render import render_photo_video
-from autopilot.script import generate_script, repair_sections
+from autopilot.script import generate_script, repair_metadata, repair_sections
 
 
 class StageError(RuntimeError):
@@ -66,11 +66,17 @@ class Stages:
             bad = [i.removeprefix("unsupported claim: ") for i in issues if i.startswith("unsupported claim: ")]
             if not bad or len(bad) != len(issues):  # only unsupported claims are repairable in place
                 break
-            targets = qa.locate_sections(script, bad)
-            if not targets:
+            meta = [b for b in bad if b.startswith(("[title]", "[description]"))]
+            body = [b for b in bad if b not in meta]
+            targets = qa.locate_sections(script, body) if body else []
+            if (body and not targets) or not (meta or targets):
                 break
-            print(f"[job {job['id']}] repairing sections {targets} ({len(bad)} unsupported claim(s))", flush=True)
-            script = repair_sections(script, source, targets, bad)
+            if meta:
+                print(f"[job {job['id']}] rewriting title/description ({len(meta)} unsupported statement(s))", flush=True)
+                script = repair_metadata(script, source, meta)
+            if targets:
+                print(f"[job {job['id']}] repairing sections {targets} ({len(body)} unsupported claim(s))", flush=True)
+                script = repair_sections(script, source, targets, body)
             _write(d / "script.json", script)
             issues = check(script)
         if not issues:

@@ -122,3 +122,33 @@ def repair_sections(
         script["sections"][i] = _write_section(script, i, source, style, per, gen, avoid=bad_claims)
     script["claims"] = _collect_claims(script)
     return script
+
+
+METADATA_PROMPT = """Rewrite the YouTube title and description for a video about "{topic}".
+Use ONLY facts stated in the SOURCE. Keep the title under 70 characters and the description to 2-3
+sentences. Honest and curious, no exaggeration. Do not claim anything about significance, practicality or
+future impact that the SOURCE does not state.
+The fact-checker rejected these statements as unsupported:
+{bad}
+
+Current title: {title}
+Current description: {description}
+
+Return JSON: {{"title": str, "description": str}}
+
+SOURCE ({source_title}):
+{source_text}
+"""
+
+
+def repair_metadata(
+    script: dict, source: dict, bad_claims: list[str], gen: Callable[[str], dict] = llm.generate_json,
+) -> dict:
+    out = gen(METADATA_PROMPT.format(
+        topic=script.get("title", ""), bad="\n".join(f"- {c}" for c in bad_claims), title=script.get("title", ""),
+        description=script.get("description", ""), source_title=source["title"], source_text=source["text"]))
+    if out.get("title"):
+        script["title"] = out["title"].strip()
+    if out.get("description"):
+        script["description"] = out["description"].strip()
+    return script
