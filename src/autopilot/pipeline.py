@@ -39,7 +39,12 @@ def run_job(conn: sqlite3.Connection, job: sqlite3.Row, handlers: dict[str, Stag
 
 
 def run_pending(conn: sqlite3.Connection, handlers: dict[str, StageFn]) -> int:
-    rows = conn.execute("SELECT * FROM jobs WHERE status = 'pending' ORDER BY id").fetchall()
-    for row in rows:
-        run_job(conn, row, handlers)
-    return len(rows)
+    """Run every pending job, retrying a failed job within this run until it succeeds or hits the cap."""
+    ids = [r["id"] for r in conn.execute("SELECT id FROM jobs WHERE status = 'pending' ORDER BY id")]
+    for job_id in ids:
+        for _ in range(MAX_ATTEMPTS):
+            job = conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
+            if job["status"] != "pending":
+                break
+            run_job(conn, job, handlers)
+    return len(ids)

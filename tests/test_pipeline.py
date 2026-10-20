@@ -27,7 +27,8 @@ def test_failure_is_recorded_and_does_not_block_other_jobs(tmp_path):
     handlers["script"] = script
     run_pending(conn, handlers)
     rows = {r["topic"]: r for r in conn.execute("SELECT * FROM jobs")}
-    assert rows["bad"]["attempts"] == 1 and "boom" in rows["bad"]["error"]
+    assert rows["bad"]["attempts"] == 3 and rows["bad"]["status"] == "failed"
+    assert "boom" in rows["bad"]["error"]
     assert rows["good"]["status"] == "done"
 
 
@@ -38,3 +39,20 @@ def test_job_marked_failed_after_max_attempts(tmp_path):
     for _ in range(3):
         run_pending(conn, handlers)
     assert conn.execute("SELECT status FROM jobs").fetchone()["status"] == "failed"
+
+
+def test_flaky_job_succeeds_on_retry_within_one_run(tmp_path):
+    conn = _conn(tmp_path)
+    db.add_job(conn, "flaky", "long")
+    calls = {"n": 0}
+
+    def script(job):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("transient")
+
+    handlers = {s: (lambda job: None) for s in STAGES}
+    handlers["script"] = script
+    run_pending(conn, handlers)
+    row = conn.execute("SELECT * FROM jobs").fetchone()
+    assert row["status"] == "done" and row["attempts"] == 1
