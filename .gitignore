@@ -1,0 +1,26 @@
+# secrets: never commit
+.env
+.env.*
+*.pem
+*.key
+client_secret*.json
+token*.json
+credentials*.json
+secrets/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# generated artifacts
+output/
+work/
+*.mp4
+*.wav
+*.mp3
+
+# local
+.DS_Store
+.claude/
