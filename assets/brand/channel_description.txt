@@ -1,0 +1,5 @@
+Brightwork Science explains how the world really works: the physics, chemistry, engineering and history behind everyday things and big ideas. Each video follows one question from the first spark of curiosity to a clear answer, in plain language.
+
+How these videos are made, openly: scripts are written with AI assistance from public sources such as Wikipedia and checked against those sources, then narrated with a synthetic voice. Images and footage come from openly licensed libraries, and every video's description lists its source and credits.
+
+New videos are published regularly. If you spot a mistake, please say so in the comments.
