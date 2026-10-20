@@ -24,7 +24,8 @@ Requirements:
 - Re-hook every section with a mini open-loop. Finish with a satisfying payoff, not "like and subscribe".
 - Each section needs a short visual_query (2-4 words) for stock footage/image search.
 
-Return JSON: {{"title": str (<=70 chars), "description": str, "tags": [str],
+Return JSON: {{"title": str (<=70 chars), "thumbnail_text": str (<=4 words, curiosity-driven, honest),
+"description": str, "tags": [str],
 "sections": [{{"heading": str, "narration": str, "visual_query": str}}],
 "claims": [str]  // every factual claim made, one per item, for fact-checking
 }}
