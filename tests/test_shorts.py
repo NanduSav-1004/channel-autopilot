@@ -284,3 +284,24 @@ def test_planner_prompt_includes_each_sections_verified_claims_and_forbids_embel
     shorts.plan_shorts(script, SOURCE, 1, gen=lambda p: prompts.append(p) or {"shorts": []})
     assert "Verified facts: claim one | claim two" in prompts[0]
     assert prompts[0].count("Verified facts") == 1 and "superlatives" in prompts[0]
+
+
+def test_unsupported_claims_are_attributed_by_overlap_when_the_tag_is_lost():
+    cands = [{"narration": "Lasers emit coherent light of a single wavelength today."},
+             {"narration": "A transistor switches current using a small control voltage."}]
+    bad, unknown = shorts.attribute_unsupported(
+        ["A transistor switches current using a control voltage", "[short 0] anything at all"], cands)
+    assert bad == {0, 1} and unknown == []
+    bad, unknown = shorts.attribute_unsupported(["bananas grow in warm tropical climates"], cands)
+    assert bad == set() and unknown == ["bananas grow in warm tropical climates"]
+
+
+def test_plan_shorts_drops_only_the_attributed_short_when_tags_are_missing():
+    def gen(prompt):
+        if "standalone" in prompt:
+            return _plan_out((0, 100), (1, 100))
+        return {"unsupported": [_narr(100).split(".")[0] + " word word word"], "advice_given": False}
+
+    # both drafts share the same opening sentence, so the first best match (index 0) is the one dropped
+    res = shorts.plan_shorts(SCRIPT, SOURCE, 2, gen=gen)
+    assert len(res) == 1

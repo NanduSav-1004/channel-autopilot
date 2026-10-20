@@ -78,6 +78,27 @@ def _accept(raw, n_sections: int, used: set[int]) -> tuple[list[dict], list[dict
     return ok, too_long
 
 
+def attribute_unsupported(unsupported: list[str], cands: list[dict]) -> tuple[set[int], list[str]]:
+    """Map each rejected sentence to the Short it came from: by its [short N] tag when present, otherwise
+    by word overlap (the fact-checker often paraphrases). Returns (bad Short indexes, unattributable)."""
+    bad: set[int] = set()
+    unknown: list[str] = []
+    for u in unsupported:
+        u = str(u)
+        m = re.search(r"\[short (\d+)\]", u)
+        if m and int(m.group(1)) < len(cands):
+            bad.add(int(m.group(1)))
+            continue
+        ut = qa._tokens(re.sub(r"\[short \d+\]", "", u))
+        scores = [len(ut & qa._tokens(c["narration"])) / (len(ut) or 1) for c in cands]
+        best = max(range(len(cands)), key=scores.__getitem__) if cands else None
+        if best is not None and scores[best] >= 0.5:
+            bad.add(best)
+        else:
+            unknown.append(u)
+    return bad, unknown
+
+
 def plan_shorts(
     script: dict, source: dict, n: int, gen: Callable = llm.generate_json,
 ) -> list[dict]:
@@ -115,13 +136,15 @@ def plan_shorts(
     if verdict.get("advice_given"):
         print("[shorts] dropped all: the fact-checker saw advice", flush=True)
         return []
-    bad = {int(m.group(1)) for u in verdict.get("unsupported", []) if (m := re.search(r"\[short (\d+)\]", u))}
-    if verdict.get("unsupported") and not bad:  # could not tell which Short: be safe, drop them all
-        print("[shorts] dropped all: unsupported claims that could not be attributed to a Short", flush=True)
+    unsupported = verdict.get("unsupported", [])
+    bad, unknown = attribute_unsupported(unsupported, cands)
+    if unknown:  # a rejected sentence that matches no Short: be safe and drop them all
+        print(f"[shorts] dropped all: could not attribute {len(unknown)} unsupported claim(s), e.g.: "
+              f"{'; '.join(u[:120] for u in unknown[:3])}", flush=True)
         return []
     if bad:
         print(f"[shorts] dropped {len(bad)} Short(s) with unsupported claims, e.g.: "
-              f"{'; '.join(str(u)[:110] for u in verdict.get('unsupported', [])[:3])}", flush=True)
+              f"{'; '.join(str(u)[:110] for u in unsupported[:3])}", flush=True)
     return [c for i, c in enumerate(cands) if i not in bad][:n]
 
 
