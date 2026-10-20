@@ -1,6 +1,6 @@
 """Stage runner: each stage is idempotent; failures are recorded and never block the queue."""
 import sqlite3
-from typing import Callable
+from collections.abc import Callable
 
 # Ordered pipeline. Real implementations are added phase by phase.
 STAGES = ["script", "qa", "voice", "visuals", "render", "upload"]

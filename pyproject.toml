@@ -5,6 +5,8 @@ description = "Automated YouTube channel pipeline (free stack)"
 requires-python = ">=3.10"
 dependencies = [
     "pyyaml>=6.0",
+    "google-auth-oauthlib>=1.2",
+    "google-api-python-client>=2.130",
 ]
 
 [project.optional-dependencies]

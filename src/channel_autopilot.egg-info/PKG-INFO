@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: channel-autopilot
+Version: 0.1.0
+Summary: Automated YouTube channel pipeline (free stack)
+Requires-Python: >=3.10
+Requires-Dist: pyyaml>=6.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Requires-Dist: ruff>=0.5; extra == "dev"
