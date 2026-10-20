@@ -20,7 +20,7 @@ def write_ass(timings: list[dict], path: Path) -> None:
         "[Script Info]\nScriptType: v4.00+\nPlayResX: 1280\nPlayResY: 720\nWrapStyle: 0\n\n"
         "[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,OutlineColour,BackColour,Bold,"
         "BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV\n"
-        "Style: Cap,Lato,40,&H00FFFFFF,&H00000000,&H80000000,1,1,3,0,2,90,90,70\n\n"
+        "Style: Cap,Lato,40,&H00FFFFFF,&HA0000000,&HA0000000,1,3,9,0,2,90,90,60\n\n"
         "[Events]\nFormat: Layer,Start,End,Style,Text\n"
     )
     lines = []
@@ -121,7 +121,9 @@ def _render_stock_clip(src: Path, frames: int, out: Path) -> None:
     )
 
 
-def render_photo_video(script, timings, images, plan, narration: Path, out_mp4: Path, work: Path) -> None:
+def render_photo_video(
+    script, timings, images, plan, narration: Path, out_mp4: Path, work: Path, music: Path | None = None,
+) -> None:
     """Ken Burns over gathered images; sections without images fall back to title cards."""
     from concurrent.futures import ThreadPoolExecutor
 
@@ -151,10 +153,23 @@ def render_photo_video(script, timings, images, plan, narration: Path, out_mp4: 
         list(ex.map(run, jobs))
     (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
     write_ass(timings, work / "captions.ass")
-    subprocess.run(
-        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(work / "clips.txt"),
-         "-i", str(narration), "-vf", f"ass={work / 'captions.ass'}",
-         "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p",
-         "-c:a", "aac", "-b:a", "128k", "-shortest", str(out_mp4)],
-        check=True, capture_output=True,
-    )
+    _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music)
+
+
+def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: Path | None) -> None:
+    """Burn captions and mix audio. Music is ducked under the narration by sidechain compression."""
+    cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(clips), "-i", str(narration)]
+    if music:
+        cmd += ["-stream_loop", "-1", "-i", str(music)]
+        audio = (
+            "[1:a]asplit=2[nar][sc];[2:a]volume=0.5,lowpass=f=3000[mus];"
+            "[mus][sc]sidechaincompress=threshold=0.02:ratio=10:attack=30:release=600[duck];"
+            "[nar][duck]amix=inputs=2:duration=first:normalize=0[a]"
+        )
+        graph = f"[0:v]ass={ass}[v];{audio}"
+        cmd += ["-filter_complex", graph, "-map", "[v]", "-map", "[a]"]
+    else:
+        cmd += ["-vf", f"ass={ass}"]
+    cmd += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-b:a", "160k", "-shortest", str(out_mp4)]
+    subprocess.run(cmd, check=True, capture_output=True)
