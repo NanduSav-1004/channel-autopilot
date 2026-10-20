@@ -11,15 +11,59 @@ def _script(words=700, **over):
     return s
 
 
-def test_generate_script_tags_series_and_source():
-    out = generate_script("lasers", SOURCE, "science", series="how_it_works", gen=lambda p: {"title": "t"})
+def _fake_llm(words_per_call=None, short_first=False):
+    """Outline for 3 planned sections; each section call returns `words_per_call` words."""
+    calls = {"prompts": [], "sections": 0}
+
+    def gen(prompt):
+        calls["prompts"].append(prompt)
+        if "Plan exactly" in prompt:
+            return {"title": "T", "thumbnail_text": "x", "description": "d", "tags": ["a"],
+                    "sections": [{"heading": f"H{i}", "key_points": ["p"], "visual_query": f"q{i}"} for i in range(3)]}
+        calls["sections"] += 1
+        n = words_per_call
+        if short_first and prompt.count("Your last draft") == 0 and calls["sections"] % 2 == 1:
+            n = 5  # undershoot on the first try of every section
+        return {"narration": ("word " * n).strip() + " end.", "claims": [f"claim{calls['sections']}"]}
+
+    return gen, calls
+
+
+def test_generate_script_assembles_sections_and_tags_series_and_source():
+    gen, _calls = _fake_llm(words_per_call=500)
+    out = generate_script("lasers", SOURCE, "science", series="how_it_works", words=1500, gen=gen)
     assert out["series"] == "how_it_works" and out["source_url"] == SOURCE["url"]
+    assert [s["heading"] for s in out["sections"]] == ["H0", "H1", "H2"]
+    assert [s["visual_query"] for s in out["sections"]] == ["q0", "q1", "q2"]
+    assert out["claims"] == ["claim1", "claim2", "claim3"]
+    assert sum(len(s["narration"].split()) for s in out["sections"]) >= 1500
 
 
-def test_prompt_contains_source_and_style():
-    seen = {}
-    generate_script("lasers", SOURCE, "science", series="what_if", gen=lambda p: seen.setdefault("p", p) and {})
-    assert "A laser emits light." in seen["p"] and "what if" in seen["p"].lower()
+def test_outline_prompt_contains_source_and_style():
+    gen, calls = _fake_llm(words_per_call=500)
+    generate_script("lasers", SOURCE, "science", series="what_if", gen=gen)
+    assert "A laser emits light." in calls["prompts"][0] and "what if" in calls["prompts"][0].lower()
+
+
+def test_short_section_is_retried_once_with_a_word_target():
+    gen, calls = _fake_llm(words_per_call=500, short_first=True)
+    generate_script("lasers", SOURCE, "science", gen=gen, words=1500)
+    retried = [p for p in calls["prompts"] if "Your last draft" in p]
+    assert retried and "at least 500" in retried[0]
+
+
+def test_later_sections_get_continuity_from_previous_ending():
+    gen, calls = _fake_llm(words_per_call=500)
+    generate_script("lasers", SOURCE, "science", gen=gen)
+    sec_prompts = [p for p in calls["prompts"] if "Write section" in p]
+    assert "opening of the video" in sec_prompts[0] and "previous section ended with" in sec_prompts[1]
+    assert "payoff" in sec_prompts[2]
+
+
+def test_qa_feedback_goes_into_the_outline_prompt():
+    gen, calls = _fake_llm(words_per_call=500)
+    generate_script("lasers", SOURCE, "science", gen=gen, feedback=["too short"])
+    assert "too short" in calls["prompts"][0]
 
 
 def test_too_short_script_rejected():

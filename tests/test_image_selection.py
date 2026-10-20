@@ -1,7 +1,7 @@
 from PIL import Image
 
 from autopilot import llm
-from autopilot.shots import MIN_SCORE, plan_queries, rate_candidates
+from autopilot.shots import MIN_SCORE, plan_queries
 
 SCRIPT = {"title": "T", "sections": [
     {"heading": "A", "narration": "alpha " * 50, "visual_query": "alpha thing"},
@@ -23,11 +23,29 @@ def test_plan_queries_falls_back_on_llm_error_or_wrong_count():
     assert plan_queries(SCRIPT, "topic", gen=lambda p: {"sections": [{"queries": ["only one"]}]})[0]["commons"][0] == "alpha thing"
 
 
-def test_rate_candidates_returns_scores_and_neutral_on_failure(tmp_path):
+def test_rate_sections_batches_sections_into_few_calls_and_splits_scores(tmp_path):
+    from autopilot.shots import SECTIONS_PER_RATING_CALL, rate_sections
     p = tmp_path / "a.jpg"
     Image.new("RGB", (64, 64)).save(p)
-    assert rate_candidates(SCRIPT["sections"][0], [p], ["t"], gen=lambda prompt, images: {"scores": [9]}) == [9]
-    assert rate_candidates(SCRIPT["sections"][0], [p], ["t"], gen=lambda prompt, images: {"scores": [1, 2]}) == [MIN_SCORE]
+    calls = []
+
+    def gen(prompt, images):
+        calls.append(len(images))
+        return {"scores": list(range(len(images)))}
+
+    groups = [({"heading": f"S{i}", "narration": "n"}, [p, p], ["t1", "t2"]) for i in range(5)]
+    out = rate_sections(groups, gen=gen)
+    assert len(calls) == 2 and calls[0] == 2 * SECTIONS_PER_RATING_CALL  # 5 sections -> 2 requests, not 5
+    assert out[0] == [0, 1] and out[1] == [2, 3]  # scores split back per section in order
+
+
+def test_rate_sections_neutral_scores_on_bad_response_and_empty_groups(tmp_path):
+    from autopilot.shots import rate_sections
+    p = tmp_path / "a.jpg"
+    Image.new("RGB", (64, 64)).save(p)
+    sec = {"heading": "S", "narration": "n"}
+    out = rate_sections([(sec, [p], ["t"]), (sec, [], [])], gen=lambda prompt, images: {"scores": [1, 2, 3]})
+    assert out == [[MIN_SCORE], []]
 
 
 def test_interleave_alternates_kinds():

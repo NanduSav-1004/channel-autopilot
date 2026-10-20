@@ -31,15 +31,15 @@ corridor") for atmospheric b-roll that fits the topic.
 Return JSON: {{"sections": [{{"queries": [str, str, str, str, str], "stock": [str, str, str]}}]}}
 (same order and count)."""
 
-RATE_PROMPT = """You are choosing footage for a section of a science explainer video.
-Section: "{heading}". Narration excerpt: {excerpt}
+RATE_PROMPT = """You are choosing footage for sections of a science explainer video.
+Below are {n} candidate images/video thumbnails, numbered 1..{n} in the order attached, grouped by section.
 
-Below are {n} candidate images, in order, with their Commons titles:
-{titles}
+{groups}
 
-Score each 0-10 for how well it illustrates this section. Give 0-3 to: wrong subject, logos,
+Score every candidate 0-10 for how well it illustrates ITS OWN section. Give 0-3 to: wrong subject, logos,
 slides/posters full of text, unrelated people or scenes. Give 8-10 only to clearly on-topic, clean,
-good-looking images. Return JSON: {{"scores": [int, ...]}} with exactly {n} integers."""
+good-looking images. Return JSON: {{"scores": [int, ...]}} with exactly {n} integers, in order."""
+SECTIONS_PER_RATING_CALL = 4  # one vision request covers several sections to save free-tier quota
 
 
 def plan_shots(timings: list[dict], fps: int = 24) -> list[list[tuple[int, int]]]:
@@ -83,19 +83,37 @@ def _jpeg_small(path: Path, side: int = 512) -> bytes:
     return buf.getvalue()
 
 
-def rate_candidates(section: dict, paths: list[Path], titles: list[str], gen: Callable = llm.generate_json) -> list[int]:
-    """Vision-rate candidates; on failure return neutral scores so the pipeline still runs."""
-    prompt = RATE_PROMPT.format(
-        heading=section["heading"], excerpt=section["narration"][:400], n=len(paths),
-        titles="\n".join(f"{i + 1}. {t}" for i, t in enumerate(titles)),
-    )
-    try:
-        scores = gen(prompt, images=[_jpeg_small(p) for p in paths])["scores"]
-        if len(scores) == len(paths):
-            return [int(s) for s in scores]
-    except (llm.LLMError, KeyError, TypeError, ValueError):
-        pass
-    return [MIN_SCORE] * len(paths)
+def rate_sections(
+    groups: list[tuple[dict, list[Path], list[str]]], gen: Callable = llm.generate_json,
+) -> list[list[int]]:
+    """groups: [(section, image files, titles)]. One vision call per SECTIONS_PER_RATING_CALL sections.
+    Returns scores per group; on failure falls back to neutral scores so the pipeline still runs."""
+    out: list[list[int]] = []
+    for i in range(0, len(groups), SECTIONS_PER_RATING_CALL):
+        batch = groups[i:i + SECTIONS_PER_RATING_CALL]
+        files = [f for _, fs, _ in batch for f in fs]
+        if not files:
+            out += [[] for _ in batch]
+            continue
+        lines, k = [], 1
+        for sec, fs, titles in batch:
+            lines.append(f'SECTION "{sec["heading"]}": {sec["narration"][:250]}')
+            for title in titles:
+                lines.append(f"  {k}. {title}")
+                k += 1
+        scores = None
+        try:
+            scores = gen(RATE_PROMPT.format(n=len(files), groups="\n".join(lines)),
+                         images=[_jpeg_small(f, 448) for f in files])["scores"]
+        except (llm.LLMError, KeyError, TypeError, ValueError):
+            pass
+        if not scores or len(scores) != len(files):
+            scores = [MIN_SCORE] * len(files)
+        pos = 0
+        for _, fs, _ in batch:
+            out.append([int(s) for s in scores[pos:pos + len(fs)]])
+            pos += len(fs)
+    return out
 
 
 def _interleave(items: list[dict]) -> list[dict]:
@@ -133,9 +151,8 @@ def gather_images(
     A section with no items gets [] (title-card fallback)."""
     queries = plan_queries(script, topic, gen)
     seen: set[str] = set()
-    credits: list[str] = []
-    per_section: list[list[dict]] = []
-    for section, spans, qs in zip(script["sections"], plan, queries):
+    pools: list[tuple[list[dict], list[Path]]] = []
+    for qs in queries:
         pool = (_search_pool(qs["commons"], commons.search, COMMONS_CANDIDATES, seen)
                 + _search_pool(qs["stock"], stock.search, STOCK_CANDIDATES, seen))
         files, ok = [], []
@@ -146,8 +163,16 @@ def gather_images(
                 ok.append(item)
             except OSError:
                 continue
-        scores = rate_candidates(section, files, [c["title"] for c in ok], gen) if files else []
-        ranked = sorted(zip(scores, range(len(ok))), reverse=True)
+        pools.append((ok, files))
+        seen |= {c["thumb"] for c in ok}  # a candidate is only offered to one section
+
+    scores = rate_sections(
+        [(sec, files, [c["title"] for c in ok]) for sec, (ok, files) in zip(script["sections"], pools)], gen)
+
+    credits: list[str] = []
+    per_section: list[list[dict]] = []
+    for (ok, files), sc, spans in zip(pools, scores, plan):
+        ranked = sorted(zip(sc, range(len(ok))), reverse=True)
         keep = [ok[i] for s, i in ranked if s >= MIN_SCORE][:len(spans)]
         chosen = []
         for item in _interleave(keep):
@@ -155,9 +180,7 @@ def gather_images(
                 path = files[ok.index(item)] if item["kind"] == "image" else stock.download_video(item, cache)
             except OSError:
                 continue
-            seen.add(item["thumb"])
-            line = commons.credit_line(item) if item["kind"] == "image" else stock.credit_line(item)
-            credits.append(line)
+            credits.append(commons.credit_line(item) if item["kind"] == "image" else stock.credit_line(item))
             chosen.append({"kind": item["kind"], "path": path})
         per_section.append(chosen)
     return per_section, credits
