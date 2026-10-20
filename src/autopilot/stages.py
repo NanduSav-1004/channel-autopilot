@@ -6,7 +6,7 @@ import sqlite3
 from pathlib import Path
 from typing import ClassVar
 
-from autopilot import audio, db, metadata, qa, shorts, shots, thumbnail, tts, wiki
+from autopilot import audio, db, metadata, qa, schedule, shorts, shots, thumbnail, tts, wiki
 from autopilot.config import Config
 from autopilot.errors import RestartJob, TransientError
 from autopilot.render import render_photo_video, render_short
@@ -163,11 +163,18 @@ class Stages:
             script, timings = _read(d / "script.json"), _read(d / "timings.json")
             script["chapters"] = metadata.chapter_marks(timings)
             description = metadata.build_description(script, _read(d / "credits.json"))
+            publish_at = None
+            hour = self.cfg.formats["long"].get("publish_hour_utc")
+            if self.privacy == "public" and hour is not None:  # go live at US/UK prime time, not at run time
+                publish_at = schedule.rfc3339(schedule.next_slot(hour))
             video_id = upload.insert_video(d / "final.mp4", script["title"], description,
-                                           script.get("tags", []), privacy=self.privacy)
+                                           script.get("tags", []), privacy=self.privacy, publish_at=publish_at)
             # Persist at once: if anything after this fails, a retry must never upload the video again.
-            self.conn.execute("UPDATE jobs SET video_id = ? WHERE id = ?", (video_id, job["id"]))
+            self.conn.execute("UPDATE jobs SET video_id = ?, publish_at = ? WHERE id = ?",
+                              (video_id, publish_at, job["id"]))
             self.conn.commit()
+            if publish_at:
+                print(f"[job {job['id']}] scheduled to go public at {publish_at}", flush=True)
         self.set_thumbnail(job["id"], video_id, d / "thumbnail.jpg")
 
     def set_thumbnail(self, job_id: int, video_id: str, thumb: Path) -> bool:
@@ -268,7 +275,8 @@ class Stages:
         offsets = self.cfg.formats.get("short", {}).get("publish_offsets_hours", [2, 6, 10])
         publish_at = None
         if self.privacy == "public":  # spread them through the day; other privacies upload as asked
-            publish_at = shorts.publish_times(len(sibs), offsets)[sibs.index(job["id"])]
+            base = schedule.parse(parent["publish_at"]) if parent["publish_at"] else None  # follow the long video
+            publish_at = shorts.publish_times(len(sibs), offsets, base)[sibs.index(job["id"])]
         description = shorts.short_description(s["narration"].split(". ")[0] + ".", parent["video_id"], source_url, credits)
         video_id = upload.insert_video(d / "final.mp4", f"{s['title']} #Shorts", description,
                                        ["shorts", "science", "explained"], privacy=self.privacy, publish_at=publish_at)

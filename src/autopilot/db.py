@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     thumbnail_set INTEGER NOT NULL DEFAULT 0,
     parent_id INTEGER,             -- for shorts: the long job they were cut from
     short_idx INTEGER,             -- for shorts: index into the parent's shorts.json
+    publish_at TEXT,               -- scheduled go-live time (RFC 3339 UTC), if scheduled
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 """
@@ -27,7 +28,7 @@ def connect(path: str | Path = "data/autopilot.db") -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
     cols = {r[1] for r in conn.execute("PRAGMA table_info(jobs)")}
-    for name, ddl in (("thumbnail_set", "INTEGER NOT NULL DEFAULT 0"), ("parent_id", "INTEGER"), ("short_idx", "INTEGER")):
+    for name, ddl in (("thumbnail_set", "INTEGER NOT NULL DEFAULT 0"), ("parent_id", "INTEGER"), ("short_idx", "INTEGER"), ("publish_at", "TEXT")):
         if name not in cols:  # databases created before this column existed
             conn.execute(f"ALTER TABLE jobs ADD COLUMN {name} {ddl}")
     conn.commit()
