@@ -1,5 +1,6 @@
 """Stage runner: each stage is idempotent; failures are recorded and never block the queue."""
 import sqlite3
+import time
 from collections.abc import Callable
 
 # Ordered pipeline. Real implementations are added phase by phase.
@@ -16,9 +17,12 @@ def run_job(conn: sqlite3.Connection, job: sqlite3.Row, handlers: dict[str, Stag
         handler = handlers.get(stage)
         if handler is None:
             return  # stage not implemented yet; leave job where it is
+        started = time.time()
+        print(f"[job {job['id']}] {stage} ...", flush=True)
         try:
             handler(job)
         except Exception as exc:  # noqa: BLE001 - recorded, not swallowed
+            print(f"[job {job['id']}] {stage} FAILED: {exc}", flush=True)
             conn.execute(
                 "UPDATE jobs SET attempts = attempts + 1, error = ?, "
                 "status = CASE WHEN attempts + 1 >= ? THEN 'failed' ELSE 'pending' END "
@@ -27,6 +31,7 @@ def run_job(conn: sqlite3.Connection, job: sqlite3.Row, handlers: dict[str, Stag
             )
             conn.commit()
             return
+        print(f"[job {job['id']}] {stage} done in {time.time() - started:.0f}s", flush=True)
         conn.execute("UPDATE jobs SET stage = ?, error = NULL WHERE id = ?", (stage, job["id"]))
         conn.commit()
     conn.execute("UPDATE jobs SET status = 'done' WHERE id = ?", (job["id"],))
