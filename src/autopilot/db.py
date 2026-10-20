@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS jobs (
     error TEXT,
     video_id TEXT,
     thumbnail_set INTEGER NOT NULL DEFAULT 0,
+    parent_id INTEGER,             -- for shorts: the long job they were cut from
+    short_idx INTEGER,             -- for shorts: index into the parent's shorts.json
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 """
@@ -25,15 +27,20 @@ def connect(path: str | Path = "data/autopilot.db") -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
     cols = {r[1] for r in conn.execute("PRAGMA table_info(jobs)")}
-    if "thumbnail_set" not in cols:  # databases created before this column existed
-        conn.execute("ALTER TABLE jobs ADD COLUMN thumbnail_set INTEGER NOT NULL DEFAULT 0")
-        conn.commit()
+    for name, ddl in (("thumbnail_set", "INTEGER NOT NULL DEFAULT 0"), ("parent_id", "INTEGER"), ("short_idx", "INTEGER")):
+        if name not in cols:  # databases created before this column existed
+            conn.execute(f"ALTER TABLE jobs ADD COLUMN {name} {ddl}")
+    conn.commit()
     return conn
 
 
-def add_job(conn: sqlite3.Connection, topic: str, kind: str, source_title: str | None = None) -> int:
+def add_job(
+    conn: sqlite3.Connection, topic: str, kind: str, source_title: str | None = None,
+    parent_id: int | None = None, short_idx: int | None = None,
+) -> int:
     cur = conn.execute(
-        "INSERT INTO jobs (topic, kind, source_title) VALUES (?, ?, ?)", (topic, kind, source_title)
+        "INSERT INTO jobs (topic, kind, source_title, parent_id, short_idx) VALUES (?, ?, ?, ?, ?)",
+        (topic, kind, source_title, parent_id, short_idx),
     )
     conn.commit()
     return cur.lastrowid

@@ -42,12 +42,14 @@ good-looking images. Return JSON: {{"scores": [int, ...]}} with exactly {n} inte
 SECTIONS_PER_RATING_CALL = 4  # one vision request covers several sections to save free-tier quota
 
 
-def plan_shots(timings: list[dict], fps: int = 24) -> list[list[tuple[int, int]]]:
+def plan_shots(
+    timings: list[dict], fps: int = 24, shot_seconds: float = SHOT_SECONDS,
+) -> list[list[tuple[int, int]]]:
     """Per section, a list of (start_frame, end_frame) spans. Boundaries come from cumulative
     rounding, so total frames match the narration exactly and nothing drifts."""
     plan = []
     for sec in timings:
-        n = max(1, min(MAX_SHOTS_PER_SECTION, round((sec["end"] - sec["start"]) / SHOT_SECONDS)))
+        n = max(1, min(MAX_SHOTS_PER_SECTION, round((sec["end"] - sec["start"]) / shot_seconds)))
         edges = [round((sec["start"] + (sec["end"] - sec["start"]) * i / n) * fps) for i in range(n + 1)]
         plan.append(list(itertools.pairwise(edges)))
     return plan

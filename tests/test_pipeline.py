@@ -11,13 +11,13 @@ def test_job_completes_when_all_stages_succeed(tmp_path):
     db.add_job(conn, "how lasers work", "long")
     run_pending(conn, {s: (lambda job: None) for s in STAGES})
     row = conn.execute("SELECT * FROM jobs").fetchone()
-    assert row["status"] == "done" and row["stage"] == "upload"
+    assert row["status"] == "done" and row["stage"] == "shorts"
 
 
 def test_failure_is_recorded_and_does_not_block_other_jobs(tmp_path):
     conn = _conn(tmp_path)
     bad = db.add_job(conn, "bad", "long")
-    db.add_job(conn, "good", "short")
+    db.add_job(conn, "good", "long")
 
     def script(job):
         if job["id"] == bad:

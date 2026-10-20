@@ -6,10 +6,10 @@ import sqlite3
 from pathlib import Path
 from typing import ClassVar
 
-from autopilot import audio, metadata, qa, shots, thumbnail, tts, wiki
+from autopilot import audio, db, metadata, qa, shorts, shots, thumbnail, tts, wiki
 from autopilot.config import Config
-from autopilot.errors import RestartJob
-from autopilot.render import render_photo_video
+from autopilot.errors import RestartJob, TransientError
+from autopilot.render import render_photo_video, render_short
 from autopilot.script import generate_script, repair_metadata, repair_sections
 
 
@@ -42,16 +42,24 @@ class Stages:
         "visuals": ["script.json", "timings.json"],
         "render": ["script.json", "timings.json", "items.json", "narration.wav"],
         "upload": ["final.mp4", "script.json", "timings.json", "credits.json"],
+        "shorts": [],  # handled inside: if the long video's files are gone, skip (never regenerate it)
+        "short_script": [],
+        "short_voice": ["script.json"],
+        "short_render": ["script.json", "timings.json", "narration.wav"],
+        "short_upload": ["final.mp4", "script.json"],
     }
 
     def handlers(self) -> dict:
         raw = {"script": self.script, "qa": self.qa, "voice": self.voice,
-               "visuals": self.visuals, "render": self.render, "upload": self.upload}
+               "visuals": self.visuals, "render": self.render, "upload": self.upload, "shorts": self.shorts,
+               "short_script": self.short_script, "short_voice": self.short_voice,
+               "short_render": self.short_render, "short_upload": self.short_upload}
         return {name: self._guarded(name, fn) for name, fn in raw.items()}
 
     def _guarded(self, stage: str, fn):
         def run(job) -> None:
-            need = [] if (stage == "upload" and job["video_id"]) else self.NEEDS[stage]  # already uploaded
+            uploaded = stage in ("upload", "short_upload") and job["video_id"]
+            need = [] if uploaded else self.NEEDS[stage]  # an uploaded video needs no files
             d = self.dir(job)
             missing = [f for f in need if not (d / f).exists()]
             if missing:
@@ -60,7 +68,11 @@ class Stages:
         return run
 
     def dir(self, job) -> Path:
-        d = self.root / f"{job['id']:04d}-{slugify(job['topic'])}"
+        if job["kind"] == "short":  # a Short lives inside its parent's folder
+            parent = self.conn.execute("SELECT * FROM jobs WHERE id = ?", (job["parent_id"],)).fetchone()
+            d = self.dir(parent) / f"short{job['short_idx']}"
+        else:
+            d = self.root / f"{job['id']:04d}-{slugify(job['topic'])}"
         d.mkdir(parents=True, exist_ok=True)
         return d
 
@@ -170,3 +182,92 @@ class Stages:
         self.conn.execute("UPDATE jobs SET thumbnail_set = 1 WHERE id = ?", (job_id,))
         self.conn.commit()
         return True
+
+    # ---------- Shorts ----------
+    def shorts(self, job) -> None:
+        """Last stage of a long job: plan its Shorts and queue each as its own job."""
+        d = self.dir(job)
+        n = self.cfg.formats.get("short", {}).get("per_day", 0)
+        if not n or self.conn.execute("SELECT 1 FROM jobs WHERE parent_id = ?", (job["id"],)).fetchone():
+            return
+        if not (d / "script.json").exists() or not (d / "source.json").exists():
+            print(f"[job {job['id']}] shorts skipped: the long video's files are gone", flush=True)
+            return
+        if (d / "shorts.json").exists():
+            plans = _read(d / "shorts.json")
+        else:
+            plans = shorts.plan_shorts(_read(d / "script.json"), _read(d / "source.json"), n)
+            _write(d / "shorts.json", plans)
+        for i, plan in enumerate(plans):
+            db.add_job(self.conn, plan["title"], "short", job["source_title"], parent_id=job["id"], short_idx=i)
+        print(f"[job {job['id']}] queued {len(plans)} Short(s)", flush=True)
+
+    def _parent(self, job):
+        return self.conn.execute("SELECT * FROM jobs WHERE id = ?", (job["parent_id"],)).fetchone()
+
+    def short_script(self, job) -> None:
+        d = self.dir(job)
+        if (d / "script.json").exists():
+            return
+        parent_dir = self.dir(self._parent(job))
+        if not (parent_dir / "shorts.json").exists():
+            raise StageError("the long video's shorts.json is gone")
+        _write(d / "script.json", _read(parent_dir / "shorts.json")[job["short_idx"]])
+
+    def short_voice(self, job) -> None:
+        d = self.dir(job)
+        if (d / "timings.json").exists() and (d / "narration.wav").exists():
+            return
+        s = _read(d / "script.json")
+        timings = tts.synthesize_script({"sections": [{"heading": s["title"], "narration": s["narration"]}]},
+                                        d / "narration.wav")
+        if timings[-1]["end"] > shorts.MAX_SECONDS:
+            (d / "narration.wav").unlink()
+            raise StageError(f"Short is {timings[-1]['end']:.0f}s, over the {shorts.MAX_SECONDS}s limit")
+        _write(d / "timings.json", timings)
+
+    def short_render(self, job) -> None:
+        d = self.dir(job)
+        if (d / "final.mp4").exists():
+            return
+        s, timings = _read(d / "script.json"), _read(d / "timings.json")
+        parent_dir = self.dir(self._parent(job))
+        if not (parent_dir / "items.json").exists():
+            raise StageError("the long video's media list is gone")
+        sections = _read(parent_dir / "items.json")
+        idx = s["section_index"]
+        order = [idx] + [j for _, j in sorted((abs(j - idx), j) for j in range(len(sections)) if j != idx)]
+        pool = next((sections[j] for j in order if sections[j]), [])  # this section's media, else the nearest
+        items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]
+        music = audio.generate_ambient(timings[-1]["end"] + 3, d / "music.wav", seed=job["id"] + 1000)
+        wd = self.work / f"{self.dir(self._parent(job)).name}-{d.name}"
+        render_short(s, timings, items, d / "narration.wav", d / "final.mp4", wd, music=music)
+        shutil.rmtree(wd, ignore_errors=True)
+
+    def short_upload(self, job) -> None:
+        d = self.dir(job)
+        parent = self._parent(job)
+        if self.cfg.dry_run:
+            print(f"[dry_run] would upload Short {d / 'final.mp4'}")
+            return
+        if job["video_id"]:
+            return
+        if not parent["video_id"]:
+            raise TransientError("the long video is not uploaded yet, so there is nothing to link to")
+        from autopilot import upload
+
+        s = _read(d / "script.json")
+        pdir = self.dir(parent)
+        credits = _read(pdir / "credits.json") if (pdir / "credits.json").exists() else []
+        source_url = _read(pdir / "script.json").get("source_url") if (pdir / "script.json").exists() else None
+        sibs = [r["id"] for r in self.conn.execute(
+            "SELECT id FROM jobs WHERE parent_id = ? ORDER BY short_idx", (job["parent_id"],))]
+        offsets = self.cfg.formats.get("short", {}).get("publish_offsets_hours", [2, 6, 10])
+        publish_at = None
+        if self.privacy == "public":  # spread them through the day; other privacies upload as asked
+            publish_at = shorts.publish_times(len(sibs), offsets)[sibs.index(job["id"])]
+        description = shorts.short_description(s["narration"].split(". ")[0] + ".", parent["video_id"], source_url, credits)
+        video_id = upload.insert_video(d / "final.mp4", f"{s['title']} #Shorts", description,
+                                       ["shorts", "science", "explained"], privacy=self.privacy, publish_at=publish_at)
+        self.conn.execute("UPDATE jobs SET video_id = ? WHERE id = ?", (video_id, job["id"]))
+        self.conn.commit()

@@ -11,6 +11,7 @@ formats:
   short:
     per_day: 3
     max_seconds: 58
+    publish_offsets_hours: [2, 6, 10]   # hours after the run; spreads Shorts through the day
 # Safety rails from the Phase 0 policy findings
 forbidden_topics:
   - medical advice

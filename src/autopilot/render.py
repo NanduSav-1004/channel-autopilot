@@ -173,3 +173,119 @@ def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: P
     cmd += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p",
             "-c:a", "aac", "-b:a", "160k", "-shortest", str(out_mp4)]
     subprocess.run(cmd, check=True, capture_output=True)
+
+
+# ---------- vertical 9:16 renderer for Shorts ----------
+VW, VH = 1080, 1920
+VSCALE = 1.5  # prep at 1.5x so slow zoom stays smooth
+
+
+def write_ass_vertical(chunks: list[tuple[str, float, float]], path: Path) -> None:
+    header = (
+        "[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\nWrapStyle: 0\n\n"
+        "[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,OutlineColour,BackColour,Bold,"
+        "BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV\n"
+        "Style: Cap,Lato,84,&H00FFFFFF,&HB0000000,&HB0000000,1,3,14,0,2,70,70,430\n\n"
+        "[Events]\nFormat: Layer,Start,End,Style,Text\n"
+    )
+    lines = []
+    for text, start, end in chunks:
+        text = text.replace("\n", " ").replace("{", "(").replace("}", ")")
+        lines.append(f"Dialogue: 0,{_ass_time(start)},{_ass_time(end)},Cap,{text}")
+    path.write_text(header + "\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _prep_vertical(src: Path, dst: Path) -> None:
+    """Blurred, darkened cover of the image as background, the sharp image fitted over it (nothing cropped)."""
+    from PIL import ImageEnhance, ImageFilter
+
+    cw, ch = round(VW * VSCALE), round(VH * VSCALE)
+    img = Image.open(src).convert("RGB")
+    s = max(cw / img.width, ch / img.height)
+    bg = img.resize((round(img.width * s), round(img.height * s)), Image.LANCZOS)
+    left, top = (bg.width - cw) // 2, (bg.height - ch) // 2
+    bg = bg.crop((left, top, left + cw, top + ch)).filter(ImageFilter.GaussianBlur(40))
+    bg = ImageEnhance.Brightness(bg).enhance(0.45)
+    f = min(cw / img.width, round(ch * 0.62) / img.height)
+    fg = img.resize((round(img.width * f), round(img.height * f)), Image.LANCZOS)
+    bg.paste(fg, ((cw - fg.width) // 2, round(ch * 0.40) - fg.height // 2))
+    bg.save(dst, quality=92)
+
+
+def make_vertical_card(title: str, path: Path) -> None:
+    img = Image.new("RGB", (VW, VH), (14, 27, 61))
+    d = ImageDraw.Draw(img)
+    for y in range(VH):
+        f = y / VH
+        d.line([(0, y), (VW, y)], fill=(int(14 - 7 * f), int(27 - 13 * f), int(61 - 25 * f)))
+    font = ImageFont.truetype(FONT_BOLD, 76)
+    words, lines, cur = title.split(), [], ""
+    for w in words:
+        if len(cur) + len(w) > 16:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = f"{cur} {w}".strip()
+    lines.append(cur)
+    y = 560
+    for ln in lines[:5]:
+        d.text((80, y), ln, font=font, fill=(255, 255, 255))
+        y += 100
+    img.save(path)
+
+
+def _render_vclip(img: Path, frames: int, idx: int, out: Path) -> None:
+    z = f"1+0.06*on/{frames}" if idx % 2 == 0 else f"1.06-0.06*on/{frames}"
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(img), "-vf",
+         f"zoompan=z='{z}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={frames}:s={VW}x{VH}:fps={FPS},format=yuv420p",
+         "-frames:v", str(frames), "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", str(out)],
+        check=True, capture_output=True,
+    )
+
+
+def _render_vstock(src: Path, frames: int, out: Path) -> None:
+    graph = (f"[0:v]split[a][b];[a]scale={VW}:{VH}:force_original_aspect_ratio=increase,crop={VW}:{VH},"
+             "boxblur=30:3,eq=brightness=-0.2[bg];"
+             f"[b]scale={VW}:-2[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2-160,fps={FPS},format=yuv420p[v]")
+    subprocess.run(
+        ["ffmpeg", "-y", "-stream_loop", "-1", "-i", str(src), "-an", "-filter_complex", graph, "-map", "[v]",
+         "-frames:v", str(frames), "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", str(out)],
+        check=True, capture_output=True,
+    )
+
+
+def render_short(script: dict, timings: list[dict], items: list[dict], narration: Path,
+                 out_mp4: Path, work: Path, music: Path | None = None) -> None:
+    """script: {"title"}; timings: one section with timed sentences; items: [{"kind","path"}]."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    from autopilot.shorts import caption_chunks
+    from autopilot.shots import plan_shots
+
+    work.mkdir(parents=True, exist_ok=True)
+    out_mp4.parent.mkdir(parents=True, exist_ok=True)
+    spans = plan_shots([{"start": 0.0, "end": timings[-1]["end"]}], FPS, shot_seconds=4.5)[0]
+    jobs = []
+    for i, (a, b) in enumerate(spans):
+        out = work / f"vclip_{i:03d}.mp4"
+        item = items[i % len(items)] if items else None
+        if item and item["kind"] == "video":
+            jobs.append(("video", item["path"], b - a, i, out))
+            continue
+        src = item["path"] if item else work / "vcard.png"
+        if not item:
+            make_vertical_card(script["title"], src)
+        prepped = work / f"vprep_{i:03d}.jpg"
+        _prep_vertical(src, prepped)
+        jobs.append(("image", prepped, b - a, i, out))
+
+    def run(job):
+        kind, src, frames, i, out = job
+        _render_vstock(src, frames, out) if kind == "video" else _render_vclip(src, frames, i, out)
+
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        list(ex.map(run, jobs))
+    (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
+    write_ass_vertical(caption_chunks(timings[0]["sentences"]), work / "captions.ass")
+    _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music)

@@ -4,7 +4,7 @@ import pytest
 
 from autopilot import db, stages, topics
 from autopilot.config import Config
-from autopilot.pipeline import STAGES, run_pending
+from autopilot.pipeline import SHORT_STAGES, STAGES, run_pending
 
 CFG = Config(niche="science", audience="en", formats={"long": {"per_day": 1, "target_words": 1500, "min_words": 1150, "min_sections": 6}}, forbidden_topics=["medicine"])
 BIG = {"title": "Laser", "text": "x" * 3000}
@@ -75,7 +75,7 @@ def test_qa_failure_loops_back_then_job_fails_after_three_attempts(tmp_path, mon
         run_pending(conn, st.handlers())
     row = conn.execute("SELECT * FROM jobs").fetchone()
     assert row["status"] == "failed" and row["attempts"] == 3 and "QA rejected" in row["error"]
-    assert set(st.handlers()) == set(STAGES)
+    assert set(st.handlers()) == set(STAGES) | set(SHORT_STAGES)
 
 
 def _upload_setup(tmp_path, monkeypatch):
