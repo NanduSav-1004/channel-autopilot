@@ -3,7 +3,7 @@ import sqlite3
 import time
 from collections.abc import Callable
 
-from autopilot.errors import TransientError
+from autopilot.errors import RestartJob, TransientError
 
 # Ordered pipeline. Real implementations are added phase by phase.
 STAGES = ["script", "qa", "voice", "visuals", "render", "upload"]
@@ -13,7 +13,9 @@ MAX_ATTEMPTS = 3
 StageFn = Callable[[sqlite3.Row], None]
 
 
-def run_job(conn: sqlite3.Connection, job: sqlite3.Row, handlers: dict[str, StageFn]) -> str:
+def run_job(
+    conn: sqlite3.Connection, job: sqlite3.Row, handlers: dict[str, StageFn], _restarted: bool = False,
+) -> str:
     """Returns 'done', 'stalled' (no handler yet), 'failed' (attempt recorded) or 'transient'."""
     start = 0 if job["stage"] == "new" else STAGES.index(job["stage"]) + 1
     for stage in STAGES[start:]:
@@ -25,6 +27,12 @@ def run_job(conn: sqlite3.Connection, job: sqlite3.Row, handlers: dict[str, Stag
         try:
             handler(job)
         except Exception as exc:  # noqa: BLE001 - recorded, not swallowed
+            if isinstance(exc, RestartJob) and not _restarted:
+                print(f"[job {job['id']}] {stage}: {exc}; rewinding to the start", flush=True)
+                conn.execute("UPDATE jobs SET stage = 'new' WHERE id = ?", (job["id"],))
+                conn.commit()
+                fresh = conn.execute("SELECT * FROM jobs WHERE id = ?", (job["id"],)).fetchone()
+                return run_job(conn, fresh, handlers, _restarted=True)
             print(f"[job {job['id']}] {stage} FAILED: {exc}", flush=True)
             if isinstance(exc, TransientError):
                 conn.execute("UPDATE jobs SET error = ? WHERE id = ?", (f"{stage}: {exc} (will retry)", job["id"]))

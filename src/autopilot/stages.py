@@ -4,9 +4,11 @@ import re
 import shutil
 import sqlite3
 from pathlib import Path
+from typing import ClassVar
 
 from autopilot import audio, metadata, qa, shots, thumbnail, tts, wiki
 from autopilot.config import Config
+from autopilot.errors import RestartJob
 from autopilot.render import render_photo_video
 from autopilot.script import generate_script, repair_metadata, repair_sections
 
@@ -32,9 +34,30 @@ class Stages:
                  work: Path = Path("work"), privacy: str = "private"):
         self.conn, self.cfg, self.root, self.work, self.privacy = conn, cfg, root, work, privacy
 
+    # Files each stage reads. If one is missing (fresh CI runner after an interrupted run) the job rewinds.
+    NEEDS: ClassVar[dict[str, list[str]]] = {
+        "script": [],
+        "qa": ["script.json", "source.json"],
+        "voice": ["script.json"],
+        "visuals": ["script.json", "timings.json"],
+        "render": ["script.json", "timings.json", "items.json", "narration.wav"],
+        "upload": ["final.mp4", "script.json", "timings.json", "credits.json"],
+    }
+
     def handlers(self) -> dict:
-        return {"script": self.script, "qa": self.qa, "voice": self.voice,
-                "visuals": self.visuals, "render": self.render, "upload": self.upload}
+        raw = {"script": self.script, "qa": self.qa, "voice": self.voice,
+               "visuals": self.visuals, "render": self.render, "upload": self.upload}
+        return {name: self._guarded(name, fn) for name, fn in raw.items()}
+
+    def _guarded(self, stage: str, fn):
+        def run(job) -> None:
+            need = [] if (stage == "upload" and job["video_id"]) else self.NEEDS[stage]  # already uploaded
+            d = self.dir(job)
+            missing = [f for f in need if not (d / f).exists()]
+            if missing:
+                raise RestartJob(f"missing {', '.join(missing)}")
+            fn(job)
+        return run
 
     def dir(self, job) -> Path:
         d = self.root / f"{job['id']:04d}-{slugify(job['topic'])}"

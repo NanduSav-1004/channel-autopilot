@@ -217,3 +217,27 @@ def test_qa_routes_metadata_claims_to_metadata_rewrite_not_section_repair(tmp_pa
     monkeypatch.setattr(stages, "repair_sections", lambda s, *a: calls.__setitem__("sections", calls["sections"] + 1) or s)
     st.qa(job)
     assert calls == {"meta": 1, "sections": 0}
+
+
+def test_stage_with_missing_input_files_raises_restart_job(tmp_path):
+    from autopilot.errors import RestartJob
+
+    cfg = Config(niche="s", audience="en", formats={"long": {"per_day": 1}})
+    conn = _conn(tmp_path)
+    db.add_job(conn, "lasers", "long", "Laser")
+    st = stages.Stages(conn, cfg, root=tmp_path / "out", work=tmp_path / "work")
+    job = conn.execute("SELECT * FROM jobs").fetchone()
+    with pytest.raises(RestartJob):
+        st.handlers()["render"](job)  # a fresh runner: nothing on disk yet
+
+
+def test_upload_of_an_already_uploaded_video_does_not_need_files(tmp_path, monkeypatch):
+    cfg = Config(niche="s", audience="en", formats={"long": {"per_day": 1}}, dry_run=False)
+    conn = _conn(tmp_path)
+    jid = db.add_job(conn, "lasers", "long", "Laser")
+    conn.execute("UPDATE jobs SET video_id = 'VID' WHERE id = ?", (jid,))
+    conn.commit()
+    st = stages.Stages(conn, cfg, root=tmp_path / "out", work=tmp_path / "work")
+    from autopilot import upload as up
+    monkeypatch.setattr(up, "set_thumbnail", lambda v, t: None)
+    st.handlers()["upload"](conn.execute("SELECT * FROM jobs").fetchone())  # no RestartJob, no re-upload

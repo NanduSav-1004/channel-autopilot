@@ -72,3 +72,41 @@ def test_transient_error_does_not_burn_attempts_and_stays_pending(tmp_path):
     run_pending(conn, handlers)
     row = conn.execute("SELECT * FROM jobs").fetchone()
     assert row["status"] == "pending" and row["attempts"] == 0 and "will retry" in row["error"]
+
+
+def test_restart_job_rewinds_to_start_without_counting_an_attempt(tmp_path):
+    from autopilot.errors import RestartJob
+
+    conn = _conn(tmp_path)
+    jid = db.add_job(conn, "resume", "long")
+    conn.execute("UPDATE jobs SET stage = 'voice' WHERE id = ?", (jid,))
+    conn.commit()
+    ran, state = [], {"restarted": False}
+
+    def render(job):
+        ran.append("render")
+        if not state["restarted"]:
+            state["restarted"] = True
+            raise RestartJob("missing items.json")
+
+    handlers = {s: (lambda job, s=s: ran.append(s)) for s in STAGES}
+    handlers["render"] = render
+    run_pending(conn, handlers)
+    row = conn.execute("SELECT * FROM jobs").fetchone()
+    assert row["status"] == "done" and row["attempts"] == 0
+    assert ran[:3] == ["visuals", "render", "script"] and ran.count("script") == 1  # rewound to the very start
+
+
+def test_restart_job_twice_is_a_failure_not_an_infinite_loop(tmp_path):
+    from autopilot.errors import RestartJob
+
+    conn = _conn(tmp_path)
+    db.add_job(conn, "stuck", "long")
+    calls = []
+
+    def script(job):
+        calls.append(1)
+        raise RestartJob("missing forever")
+
+    run_pending(conn, {"script": script})
+    assert len(calls) <= 8 and conn.execute("SELECT status FROM jobs").fetchone()[0] == "failed"
