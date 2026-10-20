@@ -79,3 +79,64 @@ def render_video(script: dict, timings: list[dict], narration: Path, out_mp4: Pa
          "-c:a", "aac", "-b:a", "128k", "-shortest", str(out_mp4)],
         check=True, capture_output=True,
     )
+
+
+def _prep_image(src: Path, dst: Path) -> None:
+    """Cover-fit to 1920x1080 so zoompan has headroom and smooth motion."""
+    img = Image.open(src).convert("RGB")
+    scale = max(1920 / img.width, 1080 / img.height)
+    img = img.resize((round(img.width * scale), round(img.height * scale)), Image.LANCZOS)
+    left, top = (img.width - 1920) // 2, (img.height - 1080) // 2
+    img.crop((left, top, left + 1920, top + 1080)).save(dst, quality=92)
+
+
+def _motion(idx: int, n: int) -> tuple[str, str, str]:
+    """Rotate Ken Burns variants so consecutive shots don't repeat the same move."""
+    centre_x, centre_y = "iw/2-(iw/zoom/2)", "ih/2-(ih/zoom/2)"
+    variant = idx % 3
+    if variant == 0:
+        return f"1+0.12*on/{n}", centre_x, centre_y          # slow zoom in
+    if variant == 1:
+        return f"1.12-0.12*on/{n}", centre_x, centre_y       # slow zoom out
+    return "1.12", f"(iw-iw/zoom)*on/{n}", centre_y          # pan left to right
+
+
+def _render_clip(img: Path, frames: int, idx: int, out: Path) -> None:
+    z, x, y = _motion(idx, frames)
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(img), "-vf",
+         f"zoompan=z='{z}':x='{x}':y='{y}':d={frames}:s={W}x{H}:fps={FPS},format=yuv420p",
+         "-frames:v", str(frames), "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", str(out)],
+        check=True, capture_output=True,
+    )
+
+
+def render_photo_video(script, timings, images, plan, narration: Path, out_mp4: Path, work: Path) -> None:
+    """Ken Burns over gathered images; sections without images fall back to title cards."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    work.mkdir(parents=True, exist_ok=True)
+    out_mp4.parent.mkdir(parents=True, exist_ok=True)
+    jobs = []
+    for si, (sec, spans) in enumerate(zip(timings, plan)):
+        pool = images[si]
+        for ji, (a, b) in enumerate(spans):
+            if pool:
+                src = pool[ji % len(pool)]
+            else:
+                src = work / f"card_{si:02d}.png"
+                make_card(script["title"], sec["heading"], si, len(timings), src)
+            prepped = work / f"prep_{len(jobs):04d}.jpg"
+            _prep_image(src, prepped)
+            jobs.append((prepped, b - a, len(jobs), work / f"clip_{len(jobs):04d}.mp4"))
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        list(ex.map(lambda j: _render_clip(*j), jobs))
+    (work / "clips.txt").write_text("".join(f"file '{j[3].name}'\n" for j in jobs))
+    write_ass(timings, work / "captions.ass")
+    subprocess.run(
+        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(work / "clips.txt"),
+         "-i", str(narration), "-vf", f"ass={work / 'captions.ass'}",
+         "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p",
+         "-c:a", "aac", "-b:a", "128k", "-shortest", str(out_mp4)],
+        check=True, capture_output=True,
+    )
