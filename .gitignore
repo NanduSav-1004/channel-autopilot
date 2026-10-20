@@ -26,3 +26,4 @@ work/
 .DS_Store
 .claude/
 *.egg-info/
+models/
