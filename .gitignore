@@ -25,3 +25,4 @@ work/
 # local
 .DS_Store
 .claude/
+*.egg-info/
