@@ -13,7 +13,7 @@
 1. **No guaranteed views or income.** The system maximizes odds and measures itself. Revenue is gated by YPP.
 2. **YouTube "inauthentic content" policy (July 2025).** Mass-produced, templated, repetitive videos get demonetized. Every video needs original script, varied visuals, a consistent voice and a real angle. Quality gates are a core feature.
 3. **YPP threshold:** 1,000 subs + 4,000 watch hours (12 mo), or 1,000 subs + 10M Shorts views (90 d). Until then: $0 ad income, so the bridge is affiliate links.
-4. **API quota:** 10,000 units/day by default; one upload costs about 1,600, so about 6 uploads/day. A quota-extension audit can be requested later.
+4. **API quota (measured):** Video Uploads is its own bucket at 100/day (and 100/min), 1 unit per upload, so quota is not a constraint at about 4 uploads a day. Other calls use the general pool.
 5. **New API projects:** uploads from unverified API projects are locked to private. We must pass the YouTube API compliance audit, or the project needs to be verified, before public uploads work. **This is the biggest technical risk and is tested first (Phase 1).**
 6. **One-time human steps (unavoidable, then zero manual):** create Google account and channel, phone verification, OAuth consent, GitHub secrets.
 7. **Free-tier limits:** GitHub Actions gives 2,000 min/month on private repos (unlimited on public). Free LLM tiers rate-limit. Design for retries and queueing.
