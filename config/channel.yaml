@@ -1,0 +1,15 @@
+niche: evergreen science and technology explainers
+audience: English, US/UK
+formats:
+  long:
+    target_minutes: [8, 12]
+    per_day: 1
+  short:
+    per_day: 3
+    max_seconds: 58
+# Safety rails from the Phase 0 policy findings
+forbidden_topics:
+  - medical advice
+  - financial advice
+  - legal advice
+dry_run: true   # no public upload until the upload spike passes and this is set to false
