@@ -9,11 +9,11 @@ import time
 import urllib.error
 import urllib.request
 
+from autopilot.errors import TransientError
+
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-DEFAULT_MODELS = [
-    "gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash",
-    "gemini-3.1-flash-lite", "gemini-3.5-flash-lite",
-]
+# Order: fast models first. (3.7/3.8-flash have no free-tier quota; lite models are slower but have pools.)
+DEFAULT_MODELS = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.1-flash-lite", "gemini-3.5-flash-lite"]
 RETRY_CODES = {500, 502, 503, 504}
 MAX_WAIT = 90  # a 429 asking us to wait longer than this is treated as a daily quota
 
@@ -23,7 +23,15 @@ class LLMError(RuntimeError):
 
 
 class ModelUnavailable(LLMError):
-    """This model is out of quota or does not exist; try the next one."""
+    """This model is out of quota or does not exist; try the next one (and remember it)."""
+
+
+class ModelBusy(LLMError):
+    """Overloaded or unreachable right now; try the next model but do not remember it."""
+
+
+class LLMUnavailable(LLMError, TransientError):
+    """Every model is out of quota or overloaded. Retry on a later run."""
 
 
 _unavailable: set[str] = set()  # per process: models already known to be exhausted
@@ -70,19 +78,19 @@ def _call(model: str, body: bytes, key: str, retries: int) -> dict:
             elif exc.code not in RETRY_CODES:
                 raise LLMError(f"Gemini HTTP {exc.code}") from exc
             if attempt == retries - 1:
-                raise LLMError(f"Gemini HTTP {exc.code}") from exc
+                raise ModelBusy(f"{model} HTTP {exc.code}") from exc
         except (KeyError, IndexError, json.JSONDecodeError) as exc:
             if attempt == retries - 1:
                 raise LLMError(f"bad Gemini response: {exc!r}") from exc
         except OSError as exc:  # timeouts, connection resets, DNS (URLError is an OSError)
             if attempt == retries - 1:
-                raise LLMError(f"network error: {exc!r}") from exc
+                raise ModelBusy(f"{model} network error: {exc!r}") from exc
         time.sleep(wait)
     raise LLMError("unreachable")
 
 
 def generate_json(
-    prompt: str, model: str | None = None, retries: int = 5, images: list[bytes] | None = None
+    prompt: str, model: str | None = None, retries: int = 4, images: list[bytes] | None = None
 ) -> dict:
     """`images` are JPEG bytes sent after the prompt text, for vision tasks."""
     key = os.environ.get("GEMINI_API_KEY")
@@ -103,4 +111,6 @@ def generate_json(
             return _call(m, body, key, retries)
         except ModelUnavailable:
             _unavailable.add(m)
-    raise LLMError("all Gemini models are out of quota or unavailable")
+        except ModelBusy:
+            continue
+    raise LLMUnavailable("all Gemini models are out of quota or busy")

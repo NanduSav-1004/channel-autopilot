@@ -91,3 +91,31 @@ def test_all_models_exhausted_raises(monkeypatch):
                         lambda req, timeout: (_ for _ in ()).throw(_http_error(429, _quota_body())))
     with pytest.raises(llm.LLMError):
         llm.generate_json("hi")
+
+
+def test_overloaded_model_falls_through_without_being_remembered(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    monkeypatch.setenv("GEMINI_MODELS", "a,b")
+    monkeypatch.setattr(llm, "_unavailable", set())
+    monkeypatch.setattr(llm.time, "sleep", lambda s: None)
+
+    def fake(req, timeout):
+        if "/a:" in req.full_url:
+            raise _http_error(503)
+        return _ok()
+
+    monkeypatch.setattr(llm.urllib.request, "urlopen", fake)
+    assert llm.generate_json("hi") == {"a": 1}
+    assert "a" not in llm._unavailable  # 503 is temporary
+
+
+def test_all_busy_raises_transient(monkeypatch):
+    from autopilot.errors import TransientError
+
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    monkeypatch.setenv("GEMINI_MODELS", "a")
+    monkeypatch.setattr(llm, "_unavailable", set())
+    monkeypatch.setattr(llm.time, "sleep", lambda s: None)
+    monkeypatch.setattr(llm.urllib.request, "urlopen", lambda req, timeout: (_ for _ in ()).throw(_http_error(503)))
+    with pytest.raises(TransientError):
+        llm.generate_json("hi")

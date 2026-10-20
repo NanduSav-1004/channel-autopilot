@@ -56,3 +56,19 @@ def test_flaky_job_succeeds_on_retry_within_one_run(tmp_path):
     run_pending(conn, handlers)
     row = conn.execute("SELECT * FROM jobs").fetchone()
     assert row["status"] == "done" and row["attempts"] == 1
+
+
+def test_transient_error_does_not_burn_attempts_and_stays_pending(tmp_path):
+    from autopilot.errors import TransientError
+
+    conn = _conn(tmp_path)
+    db.add_job(conn, "outage", "long")
+
+    def script(job):
+        raise TransientError("gemini down")
+
+    handlers = {s: (lambda job: None) for s in STAGES}
+    handlers["script"] = script
+    run_pending(conn, handlers)
+    row = conn.execute("SELECT * FROM jobs").fetchone()
+    assert row["status"] == "pending" and row["attempts"] == 0 and "will retry" in row["error"]

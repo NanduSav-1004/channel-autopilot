@@ -9,7 +9,7 @@ from autopilot.stages import Stages
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="autopilot")
-    parser.add_argument("command", choices=["topics", "run", "daily", "status"])
+    parser.add_argument("command", choices=["topics", "run", "daily", "status", "retry"])
     parser.add_argument("--privacy", choices=["private", "unlisted", "public"], default="private")
     parser.add_argument("--live", action="store_true", help="really upload (overrides dry_run in config)")
     args = parser.parse_args()
@@ -27,6 +27,12 @@ def main() -> None:
     if args.command in ("run", "daily"):
         n = run_pending(conn, Stages(conn, cfg, privacy=args.privacy).handlers())
         print(f"processed {n} job(s); dry_run={cfg.dry_run}")
+    if args.command == "retry":
+        n = conn.execute(
+            "UPDATE jobs SET status = 'pending', attempts = 0, error = NULL WHERE status = 'failed'"
+        ).rowcount
+        conn.commit()
+        print(f"reset {n} failed job(s)")
     if args.command == "status":
         for row in conn.execute("SELECT id, kind, stage, status, attempts, video_id, topic, error FROM jobs"):
             print(dict(row))
