@@ -1,4 +1,5 @@
 """Gemini REST client (free tier) with retry/backoff. Returns parsed JSON."""
+import base64
 import json
 import os
 import time
@@ -14,13 +15,20 @@ class LLMError(RuntimeError):
     pass
 
 
-def generate_json(prompt: str, model: str | None = None, retries: int = 5) -> dict:
+def generate_json(
+    prompt: str, model: str | None = None, retries: int = 5, images: list[bytes] | None = None
+) -> dict:
+    """`images` are JPEG bytes sent after the prompt text, for vision tasks."""
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
         raise LLMError("GEMINI_API_KEY is not set")
     url = ENDPOINT.format(model=model or os.environ.get("GEMINI_MODEL", DEFAULT_MODEL))
+    parts = [{"text": prompt}] + [
+        {"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(b).decode()}}
+        for b in images or []
+    ]
     body = json.dumps({
-        "contents": [{"parts": [{"text": prompt}]}],
+        "contents": [{"parts": parts}],
         "generationConfig": {"responseMimeType": "application/json", "temperature": 0.9},
     }).encode()
     for attempt in range(retries):

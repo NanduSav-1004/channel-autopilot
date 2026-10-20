@@ -34,7 +34,7 @@ def parse_results(data: dict, min_width: int = 1000) -> list[dict]:
         if w < min_width or h == 0 or w / h < 1.2:  # landscape only, avoids ugly crops
             continue
         out.append({
-            "title": page["title"], "thumb": info.get("thumburl") or info["url"],
+            "kind": "image", "title": page["title"], "thumb": info.get("thumburl") or info["url"],
             "page": info.get("descriptionurl", ""), "license": lic,
             "artist": _strip_tags(meta.get("Artist", {}).get("value", "")) or "unknown",
         })

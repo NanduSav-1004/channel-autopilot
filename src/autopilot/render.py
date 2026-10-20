@@ -111,6 +111,16 @@ def _render_clip(img: Path, frames: int, idx: int, out: Path) -> None:
     )
 
 
+def _render_stock_clip(src: Path, frames: int, out: Path) -> None:
+    """Loop/trim a stock clip to the shot length, cover-crop to 16:9, strip its audio."""
+    subprocess.run(
+        ["ffmpeg", "-y", "-stream_loop", "-1", "-i", str(src), "-an", "-vf",
+         f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS},format=yuv420p",
+         "-frames:v", str(frames), "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", str(out)],
+        check=True, capture_output=True,
+    )
+
+
 def render_photo_video(script, timings, images, plan, narration: Path, out_mp4: Path, work: Path) -> None:
     """Ken Burns over gathered images; sections without images fall back to title cards."""
     from concurrent.futures import ThreadPoolExecutor
@@ -121,17 +131,25 @@ def render_photo_video(script, timings, images, plan, narration: Path, out_mp4: 
     for si, (sec, spans) in enumerate(zip(timings, plan)):
         pool = images[si]
         for ji, (a, b) in enumerate(spans):
-            if pool:
-                src = pool[ji % len(pool)]
-            else:
-                src = work / f"card_{si:02d}.png"
+            n, out = len(jobs), work / f"clip_{len(jobs):04d}.mp4"
+            item = pool[ji % len(pool)] if pool else None
+            if item and item["kind"] == "video":
+                jobs.append(("video", item["path"], b - a, n, out))
+                continue
+            src = item["path"] if item else work / f"card_{si:02d}.png"
+            if not item:
                 make_card(script["title"], sec["heading"], si, len(timings), src)
-            prepped = work / f"prep_{len(jobs):04d}.jpg"
+            prepped = work / f"prep_{n:04d}.jpg"
             _prep_image(src, prepped)
-            jobs.append((prepped, b - a, len(jobs), work / f"clip_{len(jobs):04d}.mp4"))
+            jobs.append(("image", prepped, b - a, n, out))
+
+    def run(job):
+        kind, src, frames, n, out = job
+        _render_stock_clip(src, frames, out) if kind == "video" else _render_clip(src, frames, n, out)
+
     with ThreadPoolExecutor(max_workers=2) as ex:
-        list(ex.map(lambda j: _render_clip(*j), jobs))
-    (work / "clips.txt").write_text("".join(f"file '{j[3].name}'\n" for j in jobs))
+        list(ex.map(run, jobs))
+    (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
     write_ass(timings, work / "captions.ass")
     subprocess.run(
         ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(work / "clips.txt"),
