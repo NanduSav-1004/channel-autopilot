@@ -27,13 +27,14 @@ def make_test_video() -> None:
 
 
 def main() -> None:
+    privacy = "public" if "--public" in sys.argv else "private"
     make_test_video()
     yt = build("youtube", "v3", credentials=load_credentials())
     req = yt.videos().insert(
         part="snippet,status",
         body={
-            "snippet": {"title": "API upload test (private)", "description": "spike", "categoryId": "28"},
-            "status": {"privacyStatus": "private", "selfDeclaredMadeForKids": False},
+            "snippet": {"title": f"API upload test ({privacy})", "description": "spike", "categoryId": "28"},
+            "status": {"privacyStatus": privacy, "selfDeclaredMadeForKids": False},
         },
         media_body=MediaFileUpload(str(OUT), resumable=True),
     )
