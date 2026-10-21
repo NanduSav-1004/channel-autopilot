@@ -4,8 +4,11 @@ from collections.abc import Callable
 
 from autopilot import llm
 
-FACTCHECK_PROMPT = """You are a strict fact-checker. Using ONLY the SOURCE text, check each CLAIM.
-Mark a claim unsupported if the source does not state or clearly imply it.
+FACTCHECK_PROMPT = """You are a fact-checker. Using ONLY the SOURCE text, check each CLAIM.
+Flag a claim as unsupported ONLY if it asserts something specific that the SOURCE does not state or clearly
+imply, or that contradicts it: a number, date, name, place, quantity, cause, mechanism, ranking, or comparison.
+Do NOT flag: rhetorical questions, hooks, transitions, sentences that only introduce or frame a topic, a common
+misconception mentioned for contrast, or a paraphrase or reasonable summary of facts the SOURCE supports.
 Return JSON: {{"unsupported": [str], "advice_given": bool, "notes": str}}
 advice_given is true if the script gives medical, financial or legal advice.
 

@@ -141,3 +141,35 @@ def test_repair_metadata_rewrites_title_and_description_only():
     s = {"title": "Old", "description": "Old desc", "sections": [{"narration": "keep"}]}
     out = repair_metadata(s, SOURCE, ["[description] bad"], gen=lambda p: {"title": " New ", "description": "New desc"})
     assert out["title"] == "New" and out["description"] == "New desc" and out["sections"] == [{"narration": "keep"}]
+
+
+def test_relevant_excerpt_keeps_the_lead_and_best_matching_paragraphs_in_order_within_budget():
+    from autopilot.script import relevant_excerpt
+
+    paras = [f"Lead paragraph {i} about the general topic." for i in range(2)]
+    paras += [f"Filler paragraph number {i} about unrelated things entirely." * 3 for i in range(30)]
+    paras.insert(20, "Stimulated emission occurs when a photon triggers excited atoms to emit coherent photons.")
+    text = "\n".join(paras)
+    out = relevant_excerpt(text, "stimulated emission coherent photons", max_chars=700)
+    assert out.startswith("Lead paragraph 0") and "Stimulated emission occurs" in out
+    assert len(out) <= 700 + len(paras[0]) and out.index("Lead paragraph 1") < out.index("Stimulated emission")
+
+
+def test_short_sources_are_sent_whole():
+    from autopilot.script import relevant_excerpt
+    assert relevant_excerpt("short text", "anything") == "short text"
+
+
+def test_section_prompt_uses_the_excerpt_not_the_whole_article():
+    big = "\n".join(f"Paragraph {i} " + "word " * 60 for i in range(200))  # ~60,000 chars
+    seen = []
+    script = {"title": "T", "sections": [{"heading": "H", "key_points": ["paragraph 7"], "visual_query": "q", "narration": ""}]}
+    from autopilot.script import _write_section
+    _write_section(script, 0, {"title": "S", "text": big}, "", 200, lambda p: seen.append(p) or {"narration": "w " * 200, "claims": []})
+    assert len(seen[0]) < 12000 and "Paragraph 0" in seen[0]
+
+
+def test_factcheck_prompt_ignores_framing_and_paraphrase_but_flags_specifics():
+    from autopilot.qa import FACTCHECK_PROMPT
+    assert "rhetorical questions" in FACTCHECK_PROMPT and "paraphrase" in FACTCHECK_PROMPT
+    assert "number, date, name" in FACTCHECK_PROMPT

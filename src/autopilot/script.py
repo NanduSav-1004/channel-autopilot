@@ -50,6 +50,29 @@ SOURCE ({source_title}):
 """
 
 SECTIONS = 7
+EXCERPT_CHARS = 6000  # of the ~20,000-character article; the fact-check still reads all of it
+
+
+def _tokens(text: str) -> set[str]:
+    return {w for w in "".join(c.lower() if c.isalnum() else " " for c in text).split() if len(w) > 3}
+
+
+def relevant_excerpt(text: str, focus: str, max_chars: int = EXCERPT_CHARS) -> str:
+    """The article's opening plus the paragraphs that best match `focus`, in original order. Sending a section
+    writer the whole article costs about 5,000 tokens per call, which the free tiers cannot sustain."""
+    if len(text) <= max_chars:
+        return text
+    paras = [p for p in text.split("\n") if p.strip()]
+    want, chosen, used = _tokens(focus), set(), 0
+    for i in range(min(2, len(paras))):  # always keep the lead
+        chosen.add(i)
+        used += len(paras[i])
+    ranked = sorted(range(len(paras)), key=lambda i: -len(want & _tokens(paras[i])) / (len(_tokens(paras[i])) ** 0.5 or 1))
+    for i in ranked:
+        if i not in chosen and used + len(paras[i]) <= max_chars:
+            chosen.add(i)
+            used += len(paras[i])
+    return "\n".join(paras[i] for i in sorted(chosen))
 
 
 def _words(text: str) -> int:
@@ -67,7 +90,8 @@ def _write_section(
     prompt = SECTION_PROMPT.format(
         title=script["title"], style=style, headings=" | ".join(s["heading"] for s in secs), num=i + 1, n=n,
         heading=sec["heading"], points="; ".join(sec.get("key_points", [])), words=per,
-        max_words=round(per * 1.3), source_title=source["title"], source_text=source["text"],
+        max_words=round(per * 1.3), source_title=source["title"],
+        source_text=relevant_excerpt(source["text"], sec["heading"] + " " + " ".join(sec.get("key_points", []))),
         previous=(f"The previous section ended with: \"{prev}\" Continue naturally from it.\n" if prev
                   else "This is the opening of the video.\n"),
         ending=("End with a satisfying payoff that answers the opening question." if i == n - 1
