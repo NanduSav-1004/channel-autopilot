@@ -37,7 +37,7 @@ def test_plan_shorts_drops_bad_lengths_duplicates_and_out_of_range():
 
     res = shorts.plan_shorts(SCRIPT, SOURCE, 3, gen=gen)
     assert [s["section_index"] for s in res] == [0, 3]
-    assert "Write 4 standalone" in calls[0] and "HARD limit" in calls[0]  # asks for one extra, with a hard word limit
+    assert "Write 6 standalone" in calls[0] and "HARD limit" in calls[0]  # asks for twice as many, with a hard word limit
 
 
 def test_plan_shorts_drops_only_the_short_the_factchecker_flagged():

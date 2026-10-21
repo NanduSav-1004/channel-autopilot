@@ -109,8 +109,8 @@ def plan_shorts(
         f"[{i}] {s['heading']}: {s['narration']}"
         + (f"\n    Verified facts: {' | '.join(s['claims'])}" if s.get("claims") else "")
         for i, s in enumerate(sections))
-    out = gen(PLAN_PROMPT.format(title=script["title"], n=n + 1, target_min=TARGET_MIN, target_max=TARGET_MAX,
-                                 sections=listing))  # ask for one extra: some will not survive
+    out = gen(PLAN_PROMPT.format(title=script["title"], n=n * 2, target_min=TARGET_MIN, target_max=TARGET_MAX,
+                                 sections=listing))  # ask for twice as many: the length and fact-check filters drop some
     used: set[int] = set()
     cands, too_long = _accept(out, len(sections), used)
     print(f"[shorts] model proposed {len(out.get('shorts', [])) if isinstance(out, dict) else 0}: "
