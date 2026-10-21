@@ -12,6 +12,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+      - name: System packages (the render tests run the real ffmpeg)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-lato fonts-dejavu-core
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: pytest -q

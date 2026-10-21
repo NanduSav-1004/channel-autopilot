@@ -1,5 +1,6 @@
 import itertools
 import json
+import shutil
 import subprocess
 import wave
 from datetime import datetime, timezone
@@ -189,6 +190,7 @@ def test_prep_vertical_outputs_the_oversampled_vertical_canvas(tmp_path):
     assert Image.open(tmp_path / "o.jpg").size == (1620, 2880)
 
 
+@pytest.mark.skipif(not (shutil.which("ffmpeg") and shutil.which("ffprobe")), reason="needs ffmpeg and ffprobe installed")
 def test_render_short_end_to_end_makes_a_1080x1920_video(tmp_path):
     nar = tmp_path / "n.wav"
     with wave.open(str(nar), "wb") as w:
