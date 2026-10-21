@@ -3,7 +3,9 @@
 How the channel runs, how to tell it is healthy, and what to do when it is not.
 
 ## What runs, and when
-- **GitHub Actions workflow "Daily video"** runs every day at **08:00 UTC** (1:30 PM IST).
+- **GitHub Actions workflow "Daily video"** is scheduled three times a day, at **08:17, 09:43 and 11:11 UTC**
+  (1:47 PM, 3:13 PM and 4:41 PM IST). GitHub's scheduler is best-effort and sometimes delays or drops runs, so the
+  later times are backups. A run **skips itself** if today's video is already uploaded, so you still get one a day.
 - It queues one new topic (chosen by real search demand), writes the script, fact-checks it, voices it,
   finds licensed images and footage, renders the video, and uploads it.
 - The long video is **scheduled to go public at 15:00 UTC** (11:00 ET / 16:00 UK). Up to 3 Shorts are cut from it
@@ -12,6 +14,9 @@ How the channel runs, how to tell it is healthy, and what to do when it is not.
 - Job state is kept between runs on the single-commit `state` branch (`data/autopilot.db`).
 
 ## Is it healthy? (30 seconds)
+GitHub only emails you when a run **fails**. A run that **never starts** is silent, so if there is no new video by
+about 12:00 UTC, check the Actions tab and start it by hand (Run workflow, tick live, privacy public).
+
 1. https://github.com/NanduSav-1004/channel-autopilot/actions : the latest "Daily video" run should be green.
    A day that makes no video **fails on purpose** (red), and GitHub emails you.
 2. YouTube Studio, Content: a video marked "Scheduled" or newly public, plus its Shorts.
@@ -23,7 +28,8 @@ How the channel runs, how to tell it is healthy, and what to do when it is not.
 |---|---|
 | **Pause** the schedule | Set variable `AUTOPILOT_ENABLED` to `false` (or delete it). Manual runs still work. |
 | Upload privately (review first) | Add variable `UPLOAD_PRIVACY` = `private`. Default is `public`. |
-| Run once by hand | Actions, Daily video, Run workflow. Tick **live** to really upload; otherwise it is a dry run. |
+| Run once by hand | Actions, Daily video, Run workflow. Tick **live** to really upload and set privacy; otherwise it is a dry run. |
+| Make a second video today | Locally: `autopilot daily --live --force`. The scheduled runs never do this. |
 | Change counts or times | Edit `config/channel.yaml` (`per_day`, `publish_hour_utc`, `publish_offsets_hours`). |
 
 ## Reading the log lines

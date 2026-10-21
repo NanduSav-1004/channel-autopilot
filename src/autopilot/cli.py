@@ -12,6 +12,11 @@ def done_count(conn) -> int:
     return conn.execute("SELECT COUNT(*) FROM jobs WHERE status = 'done'").fetchone()[0]
 
 
+def already_done_today(conn, cfg) -> bool:
+    """Redundant schedule times and manual runs must not stack up several videos in one day."""
+    return db.uploaded_today(conn, "long") >= cfg.formats["long"]["per_day"]
+
+
 def ensure_progress(before: int, after: int) -> None:
     """A daily run that finishes no video must fail loudly: a green no-op would hide a dead channel."""
     if after <= before:
@@ -24,6 +29,7 @@ def main() -> None:
     parser.add_argument("command", choices=["topics", "run", "daily", "status", "retry", "thumbnails"])
     parser.add_argument("--privacy", choices=["private", "unlisted", "public"], default="private")
     parser.add_argument("--live", action="store_true", help="really upload (overrides dry_run in config)")
+    parser.add_argument("--force", action="store_true", help="make a video even if today's is already uploaded")
     args = parser.parse_args()
 
     load_env()
@@ -32,6 +38,9 @@ def main() -> None:
         cfg.dry_run = False
     conn = db.connect()
     done_before = done_count(conn)
+    if args.command == "daily" and not cfg.dry_run and not args.force and already_done_today(conn, cfg):
+        print("today's video is already uploaded; nothing to do (use --force to make another)")
+        return
     if args.command in ("topics", "daily"):
         want = cfg.formats["long"]["per_day"] - db.pending_count(conn, "long")
         if want > 0:

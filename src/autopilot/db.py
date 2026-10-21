@@ -57,3 +57,12 @@ def pending_count(conn: sqlite3.Connection, kind: str) -> int:
     return conn.execute(
         "SELECT COUNT(*) FROM jobs WHERE kind = ? AND status = 'pending'", (kind,)
     ).fetchone()[0]
+
+
+def uploaded_today(conn: sqlite3.Connection, kind: str = "long") -> int:
+    """Videos of this kind already uploaded today (UTC). The daily run uses it so that several
+    redundant schedule times can never make a second video the same day."""
+    return conn.execute(
+        "SELECT COUNT(*) FROM jobs WHERE kind = ? AND video_id IS NOT NULL AND date(created_at) = date('now')",
+        (kind,),
+    ).fetchone()[0]

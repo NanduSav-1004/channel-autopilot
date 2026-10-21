@@ -2,7 +2,11 @@ name: Daily video
 
 on:
   schedule:
-    - cron: "0 8 * * *"   # 08:00 UTC, after the free-tier model quotas reset (07:00 UTC)
+    # GitHub's scheduler is best-effort: runs are delayed or dropped, most often on the hour. So: three off-peak
+    # attempts, after the free-tier quotas reset (07:00 UTC). The run skips itself if today's video is already up.
+    - cron: "17 8 * * *"
+    - cron: "43 9 * * *"
+    - cron: "11 11 * * *"
   workflow_dispatch:
     inputs:
       live:
