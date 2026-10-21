@@ -21,9 +21,12 @@ case "${1:-}" in
     [ -f "$DB" ] || { echo "no database to save"; exit 0; }
     tmp="$(mktemp -d)"
     mkdir "$tmp/data" && cp "$DB" "$tmp/$DB"
+    if [ -f run.log ]; then  # last 400 lines, with anything that looks like a key masked
+      tail -n 400 run.log | sed -E 's/(AIza[0-9A-Za-z_-]{20,}|gsk_[0-9A-Za-z]{16,}|GOCSPX-[0-9A-Za-z_-]{8,}|ya29\.[0-9A-Za-z_-]{20,}|1\/\/[0-9A-Za-z_-]{20,})/***/g' > "$tmp/data/last_run.log"
+    fi
     cd "$tmp"
     git init -q -b state
-    git add "$DB"
+    git add data
     git -c user.name=autopilot-bot -c user.email=autopilot-bot@users.noreply.github.com \
         commit -q -m "state $(date -u +%FT%TZ)"
     git push --quiet --force "$REMOTE" state

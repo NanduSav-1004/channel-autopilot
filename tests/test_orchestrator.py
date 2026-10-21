@@ -241,3 +241,33 @@ def test_upload_of_an_already_uploaded_video_does_not_need_files(tmp_path, monke
     from autopilot import upload as up
     monkeypatch.setattr(up, "set_thumbnail", lambda v, t: None)
     st.handlers()["upload"](conn.execute("SELECT * FROM jobs").fetchone())  # no RestartJob, no re-upload
+
+
+def _visuals_setup(tmp_path, monkeypatch, items):
+    import json
+
+    cfg = Config(niche="s", audience="en", formats={"long": {"per_day": 1, "min_media_sections": 0.7}})
+    conn = _conn(tmp_path)
+    db.add_job(conn, "lasers", "long", "Laser")
+    st = stages.Stages(conn, cfg, root=tmp_path / "out", work=tmp_path / "work")
+    job = conn.execute("SELECT * FROM jobs").fetchone()
+    d = st.dir(job)
+    (d / "script.json").write_text(json.dumps({"title": "T", "sections": [{"heading": str(i)} for i in range(len(items))]}))
+    (d / "timings.json").write_text(json.dumps([{"start": i * 10.0, "end": i * 10.0 + 10.0} for i in range(len(items))]))
+    monkeypatch.setattr(stages.shots, "gather_images", lambda *a, **k: (items, ["credit"] * sum(map(len, items))))
+    return st, job, d
+
+
+def test_visuals_stage_refuses_a_video_that_is_mostly_title_cards(tmp_path, monkeypatch, capsys):
+    st, job, d = _visuals_setup(tmp_path, monkeypatch, [[{"kind": "image", "path": "a"}], [], [], [], [], [], []])
+    with pytest.raises(stages.StageError, match="1/7 sections"):
+        st.visuals(job)
+    assert not (d / "items.json").exists()  # nothing saved, so a retry gathers again
+    assert "1 images and 0 videos; 1/7 sections have media" in capsys.readouterr().out
+
+
+def test_visuals_stage_accepts_enough_coverage(tmp_path, monkeypatch):
+    items = [[{"kind": "image", "path": "a"}]] * 6 + [[]]  # 6 of 7 sections have media
+    st, job, d = _visuals_setup(tmp_path, monkeypatch, items)
+    st.visuals(job)
+    assert (d / "items.json").exists()

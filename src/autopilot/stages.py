@@ -134,6 +134,15 @@ class Stages:
             return
         plan = shots.plan_shots(_read(d / "timings.json"))
         items, credits = shots.gather_images(_read(d / "script.json"), plan, self.work / "assets", job["topic"])
+        with_media = sum(1 for sec in items if sec)
+        n_img = sum(i["kind"] == "image" for sec in items for i in sec)
+        n_vid = sum(i["kind"] == "video" for sec in items for i in sec)
+        print(f"[job {job['id']}] visuals: {n_img} images and {n_vid} videos; "
+              f"{with_media}/{len(items)} sections have media", flush=True)
+        floor = self.cfg.formats["long"].get("min_media_sections", 0)
+        if items and with_media / len(items) < floor:  # never publish a slideshow of title cards
+            raise StageError(f"only {with_media}/{len(items)} sections found images or footage "
+                             "(media sources unavailable or topic hard to illustrate)")
         _write(d / "items.json", [[{"kind": i["kind"], "path": str(i["path"])} for i in sec] for sec in items])
         _write(d / "credits.json", credits)
 
