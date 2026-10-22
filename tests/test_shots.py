@@ -95,3 +95,11 @@ def test_shorts_may_reuse_media_three_times_so_they_can_cut_fast():
 
     plan = plan_cuts(_sections(50.0), [8], 24, SHORT_CUT_SECONDS, SHORT_MAX_REUSE)
     assert len(plan[0]) == round(50 / SHORT_CUT_SECONDS)            # 8 items x 3 allows ~19 cuts: no cap hit
+
+
+def test_best_first_ranks_by_score_and_prefers_earlier_candidates_on_ties():
+    from autopilot.shots import MIN_SCORE, best_first
+
+    assert best_first([5, 9, 7, 9]) == [1, 3, 2, 0]
+    assert best_first([MIN_SCORE] * 5) == [0, 1, 2, 3, 4]      # rating unavailable: keep the most specific results, in order
+    assert best_first([]) == []

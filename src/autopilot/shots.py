@@ -145,6 +145,12 @@ def rate_sections(
     return out
 
 
+def best_first(scores: list[int]) -> list[int]:
+    """Candidate indexes, best score first. On a tie (for example the rating was unavailable and every score is neutral)
+    the EARLIER candidate wins: it came from the most specific search query."""
+    return sorted(range(len(scores)), key=lambda i: (-scores[i], i))
+
+
 def _interleave(items: list[dict]) -> list[dict]:
     """Alternate stills and video so consecutive shots don't feel samey."""
     imgs = [i for i in items if i["kind"] == "image"]
@@ -201,8 +207,7 @@ def gather_images(
     credits: list[str] = []
     per_section: list[list[dict]] = []
     for (ok, files), sc, spans in zip(pools, scores, plan):
-        ranked = sorted(zip(sc, range(len(ok))), reverse=True)
-        keep = [ok[i] for s, i in ranked if s >= MIN_SCORE][:len(spans)]
+        keep = [ok[i] for i in best_first(sc) if sc[i] >= MIN_SCORE][:len(spans)]
         chosen = []
         for item in _interleave(keep):
             try:

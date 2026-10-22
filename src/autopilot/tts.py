@@ -70,8 +70,7 @@ class KokoroEngine:
 
 GEMINI_TTS_MODELS = ["gemini-3.1-flash-tts-preview", "gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts",
                      "gemini-2.5-flash-preview-tts"]  # each model has its own free daily pool
-GEMINI_STYLE = ("Read the following like a charismatic, high-energy YouTube explainer narrator: fast-paced, excited and "
-                "curious, with punchy emphasis on key words and short dramatic pauses. Text: ")
+GEMINI_STYLE = "Say this in an energetic, fast-paced, curious YouTube-explainer voice, with punchy emphasis:\n\n"
 UA = {"User-Agent": "channel-autopilot/0.1 (https://github.com/NanduSav-1004/channel-autopilot)"}
 
 
@@ -163,8 +162,34 @@ class GeminiEngine:
             w.setsampwidth(2)
             w.setframerate(rate)
             w.writeframes(pcm)
+        words = _whisper_words(buf.getvalue())
+        if not words:  # without a transcript we can neither locate the sentences nor prove the direction was not spoken
+            raise OSError("Whisper unavailable: cannot verify the Gemini narration, so it is not used")
+        pcm, words = strip_spoken_direction(pcm, rate, sentences[0], words)
         total = len(pcm) / 2 / rate
-        return pcm, rate, align_sentences(sentences, _whisper_words(buf.getvalue()), total)
+        return pcm, rate, align_sentences(sentences, words, total)
+
+
+def strip_spoken_direction(pcm: bytes, rate: int, first_sentence: str, words: list[dict]) -> tuple[bytes, list[dict]]:
+    """Gemini sometimes SPEAKS the style direction before the script. Find where the script's own first words begin in
+    the transcript and cut the audio before that point. Raises OSError if the script text cannot be found at all."""
+    want = [_norm(w) for w in first_sentence.split()[:4] if _norm(w)]
+    heard = [_norm(h["word"]) for h in words]
+    best_i, best_score = 0, 0.0
+    for i in range(min(len(heard), 60)):                       # a spoken direction is at most a few dozen words
+        window = heard[i:i + len(want)]
+        score = difflib.SequenceMatcher(None, want, window, autojunk=False).ratio()
+        if score > best_score + 1e-9:
+            best_i, best_score = i, score
+    if best_score < 0.6:
+        raise OSError("the script text was not found in the spoken Gemini audio")
+    offset = max(0.0, float(words[best_i]["start"]) - 0.06)
+    if offset < 0.25:                                           # nothing but a normal breath before the first word
+        return pcm, words
+    print(f"[tts] Gemini spoke {best_i} extra word(s) before the script; cutting the first {offset:.1f}s", flush=True)
+    cut = int(offset * rate) * 2
+    shifted = [{**h, "start": float(h["start"]) - offset, "end": float(h["end"]) - offset} for h in words[best_i:]]
+    return pcm[cut:], shifted
 
 
 def pick_voice(root_id: int, voices: list[dict]) -> dict:

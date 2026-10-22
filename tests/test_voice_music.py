@@ -361,3 +361,60 @@ def test_mix_audio_falls_back_to_a_simpler_mix_then_to_the_voice_alone_when_the_
     assert render.mix_audio(nar, tmp_path / "m.wav", tmp_path / "b.wav") == "voice only"
     assert "dropping the music" in capsys.readouterr().out
     assert render.mix_audio(nar, None, tmp_path / "c.wav") == "voice only"               # no music at all is fine too
+
+
+# ---------- Gemini must not read its own direction aloud ----------
+def _heard(spec):
+    """[(word, start)] -> Whisper-style word dicts (each lasting 0.3 s)."""
+    return [{"word": w, "start": s, "end": s + 0.3} for w, s in spec]
+
+
+DIRECTION = [("Say", 0.3), ("this", 0.6), ("in", 0.9), ("an", 1.1), ("energetic", 1.3), ("voice", 2.0)]
+
+
+def test_a_spoken_direction_is_cut_off_the_front_of_the_audio_and_the_words_are_shifted():
+    pcm = b"\x01\x00" * 24000 * 6                                  # 6 s at 24 kHz
+    words = _heard(DIRECTION + [("Can", 3.4), ("you", 3.7), ("cool", 4.0), ("it", 4.3)])
+    out_pcm, out_words = tts.strip_spoken_direction(pcm, 24000, "Can you cool it?", words)
+    cut = (len(pcm) - len(out_pcm)) / 2 / 24000
+    assert cut == pytest.approx(3.34, abs=0.01)                      # everything before "Can" is gone
+    assert out_words[0]["word"] == "Can" and out_words[0]["start"] == pytest.approx(0.06, abs=0.01)
+    assert [w["word"] for w in out_words] == ["Can", "you", "cool", "it"]
+
+
+def test_a_clean_start_is_left_untouched():
+    pcm = b"\x01\x00" * 24000 * 3
+    words = _heard([("Can", 0.1), ("you", 0.4), ("cool", 0.7), ("it", 1.0)])
+    out_pcm, out_words = tts.strip_spoken_direction(pcm, 24000, "Can you cool it?", words)
+    assert out_pcm == pcm and out_words == words
+
+
+def test_audio_that_never_says_the_script_is_rejected_so_the_fallback_voice_takes_over():
+    words = _heard([("Completely", 0.2), ("different", 0.6), ("words", 1.0), ("here", 1.4)])
+    with pytest.raises(OSError, match="not found"):
+        tts.strip_spoken_direction(b"\x00\x00" * 24000, 24000, "Can you cool it?", words)
+
+
+def test_gemini_narration_that_cannot_be_verified_is_not_used(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    eng = tts.GeminiEngine("Sadachbia")
+    monkeypatch.setattr(eng, "_speak", lambda text: b"\x01\x00" * 24000)
+    monkeypatch.setattr(tts, "_whisper_words", lambda wav: [])      # Whisper down: cannot check what was spoken
+    with pytest.raises(OSError, match="cannot verify"):
+        eng.synth_section(["One two three."])
+
+
+def test_gemini_section_with_a_spoken_direction_comes_back_clean_and_correctly_timed(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    eng = tts.GeminiEngine("Sadachbia")
+    monkeypatch.setattr(eng, "_speak", lambda text: b"\x01\x00" * 24000 * 8)       # 8 s of audio
+    heard = _heard(DIRECTION + [("Hot", 3.4), ("water", 3.8), ("freezes.", 4.2), ("Why", 5.4), ("though?", 5.8)])
+    monkeypatch.setattr(tts, "_whisper_words", lambda wav: heard)
+    pcm, rate, spans = eng.synth_section(["Hot water freezes.", "Why though?"])
+    assert len(pcm) / 2 / rate == pytest.approx(8 - 3.34, abs=0.02)
+    assert spans[0][0] == 0.0 and 1.0 < spans[0][1] < 2.4 and spans[1][1] == pytest.approx(2.76, abs=0.05)  # ends where the last word ends
+
+
+def test_the_gemini_direction_is_short_and_ends_with_a_clear_break_before_the_script():
+    assert len(tts.GEMINI_STYLE.split()) <= 16 and tts.GEMINI_STYLE.endswith("\n\n")
+    assert "Read the following" not in tts.GEMINI_STYLE and "Text:" not in tts.GEMINI_STYLE
