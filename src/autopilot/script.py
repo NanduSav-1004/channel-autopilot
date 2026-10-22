@@ -1,5 +1,6 @@
 """Script generation. Grounded in a source article; varied by series so output is not templated."""
 import random
+import re
 from collections.abc import Callable
 
 from autopilot import llm
@@ -17,7 +18,8 @@ OUTLINE_PROMPT = """You are the scriptwriter for a faceless YouTube channel abou
 Plan a video about: "{topic}". Style: {style}
 Use ONLY facts supported by the SOURCE below. Never plan medical, financial or legal advice.
 
-Plan exactly {n} sections. Section 1 is the hook: it opens with a real question the video answers.
+Plan exactly {n} sections. Section 1 is the hook: it opens with a startling fact or a real question the video
+answers. The title is concrete and curiosity-driven (numbers and superlatives only if the SOURCE supports them).
 The last section is the payoff. Every section has 3-5 concrete key_points taken from the SOURCE
 (facts, numbers, names, mechanisms), and a short visual_query (2-4 words) for image search.
 
@@ -29,6 +31,18 @@ SOURCE ({source_title}):
 {source_text}
 """
 
+STYLE_RULES = """VOICE AND PACE (this is spoken aloud on YouTube; holding attention is everything):
+- Talk to ONE viewer: at least one sentence in every four says "you" or "your". Sound like a sharp, funny friend who just learned something wild.
+- Short, punchy sentences. Most under 12 words, none over 20. Fragments are fine. One idea per sentence.
+- Concrete beats abstract: numbers, sizes, comparisons, a vivid image every few sentences.
+- Ask a real question about every 60 words and answer it a few sentences later.
+- Never use filler or lecture words: "furthermore", "moreover", "in conclusion", "it is important to note", "delve",
+  "in this video", "let's dive in", "welcome", "today we".
+- Analogies and rhetorical questions are welcome, but they must NOT introduce new facts."""
+
+HOOK_RULE = ("- The FIRST sentence is the hook: AT MOST 12 words; a startling fact, a counter-intuitive claim or a direct "
+             "question that grabs attention within 3 seconds. No throat-clearing.")
+
 SECTION_PROMPT = """You are writing one section of a narrated YouTube explainer titled "{title}".
 Style: {style}
 All sections, in order: {headings}
@@ -37,7 +51,9 @@ Write section {num} of {n}: "{heading}".
 Cover these points, using ONLY facts in the SOURCE: {points}
 {previous}
 Rules:
-- Write AT LEAST {words} spoken words (aim for {words}-{max_words}). Conversational, vivid, concrete. No filler.
+- Write AT LEAST {words} spoken words (aim for {words}-{max_words}).
+{voice}
+{hook}
 - {ending}
 - Every sentence must be directly supported by the SOURCE. Do not add general conclusions, predictions or claims
   about significance that the SOURCE does not state; end by restating what the SOURCE established.
@@ -75,6 +91,46 @@ def relevant_excerpt(text: str, focus: str, max_chars: int = EXCERPT_CHARS) -> s
     return "\n".join(paras[i] for i in sorted(chosen))
 
 
+def _sentences(text: str) -> list[str]:
+    return [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if s]
+
+
+def style_stats(text: str) -> dict:
+    """How punchy a piece of narration is, in numbers (sentence length, hook length, direct address)."""
+    sents = _sentences(text)
+    lens = [len(s.split()) for s in sents] or [0]
+    words = max(1, len(text.split()))
+    return {"sentences": len(sents), "avg": sum(lens) / len(lens), "longest": max(lens),
+            "long_share": sum(1 for n in lens if n > 22) / len(lens), "hook": lens[0],
+            "you_per_1000": 1000 * len(re.findall(r"\b(?:you|your|you're|you'll|you've)\b", text, re.IGNORECASE)) / words}
+
+
+MAX_AVG, MAX_LONG_SHARE, MAX_HOOK = 15.0, 0.15, 16
+
+
+def needs_punch(text: str, first: bool) -> bool:
+    s = style_stats(text)
+    return s["avg"] > MAX_AVG or s["long_share"] > MAX_LONG_SHARE or (first and s["hook"] > MAX_HOOK)
+
+
+PUNCH_PROMPT = """Rewrite this narration so it is punchy and fast, as it would be spoken on YouTube.
+It is too long-winded: average sentence {avg:.0f} words (target under 13), longest {longest} (limit 20){hook_note}.
+
+{style}
+{hook}
+
+HARD RULES: keep EVERY fact, number and name from the draft; add no new facts; keep at least {min_words} words.
+Break long sentences into short ones. Return JSON: {{"narration": str, "claims": [str]}}
+(claims: each factual claim you now make, one per item).
+
+DRAFT:
+{draft}
+
+SOURCE ({source_title}) for checking facts:
+{source_text}
+"""
+
+
 def _words(text: str) -> int:
     return len(text.split())
 
@@ -94,6 +150,7 @@ def _write_section(
         source_text=relevant_excerpt(source["text"], sec["heading"] + " " + " ".join(sec.get("key_points", []))),
         previous=(f"The previous section ended with: \"{prev}\" Continue naturally from it.\n" if prev
                   else "This is the opening of the video.\n"),
+        voice=STYLE_RULES, hook=(HOOK_RULE if i == 0 else ""),
         ending=("End with a satisfying payoff that answers the opening question." if i == n - 1
                 else "End with a mini open-loop that makes the viewer want the next section."),
     )
@@ -103,9 +160,19 @@ def _write_section(
     out = gen(prompt)
     if _words(out.get("narration", "")) < per * 0.8:  # one targeted retry for an undershoot
         out = gen(prompt + f"\nYour last draft had only {_words(out.get('narration', ''))} words. Write at least {per}.")
+    narration, claims = out.get("narration", "").strip(), out.get("claims", [])
+    if narration and needs_punch(narration, first=(i == 0)):  # prompts alone drift back to long sentences: measure, fix once
+        before = style_stats(narration)
+        fixed = gen(PUNCH_PROMPT.format(
+            avg=before["avg"], longest=before["longest"], style=STYLE_RULES, hook=(HOOK_RULE if i == 0 else ""),
+            hook_note=(f"; the opening sentence is {before['hook']} words (limit 12)" if i == 0 else ""),
+            min_words=round(_words(narration) * 0.85), draft=narration, source_title=source["title"],
+            source_text=relevant_excerpt(source["text"], narration)))
+        better = fixed.get("narration", "").strip()
+        if better and style_stats(better)["avg"] < before["avg"] and _words(better) >= _words(narration) * 0.8:
+            narration, claims = better, fixed.get("claims") or claims
     return {"heading": sec["heading"], "key_points": sec.get("key_points", []),
-            "visual_query": sec.get("visual_query", ""), "narration": out.get("narration", "").strip(),
-            "claims": out.get("claims", [])}
+            "visual_query": sec.get("visual_query", ""), "narration": narration, "claims": claims}
 
 
 def _collect_claims(script: dict) -> list[str]:

@@ -13,8 +13,9 @@ Write {n} standalone YouTube Shorts scripts, each built from ONE different secti
 
 Rules for every Short:
 - {target_min}-{target_max} spoken words. This is a HARD limit: count the words. Plain, vivid, conversational.
-- The first sentence is a hook: a surprising fact or a real question the Short answers. Never start with
-  "In this video" or "Today".
+- The first sentence is a hook of AT MOST 10 words: a surprising fact or a real question the Short answers.
+  Never start with "In this video" or "Today".
+- Talk to ONE viewer ("you"). Short punchy sentences, most under 12 words. No filler words.
 - Use ONLY the verified facts listed for that section. Do NOT add evaluations, significance, predictions or
   superlatives ("the only way", "fundamentally changes", "revolutionary"). State what is known and stop.
 - No advice.

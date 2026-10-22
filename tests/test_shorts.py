@@ -218,13 +218,13 @@ def test_overlong_drafts_get_one_request_to_shorten_then_pass():
         calls.append(prompt)
         if "standalone" in prompt:
             return _plan_out((0, 100), (1, 160), (2, 170))  # two are over the limit
-        if "AT MOST" in prompt:
+        if "too long to be read aloud" in prompt:
             return _plan_out((1, 100), (2, 105))
         return {"unsupported": [], "advice_given": False}
 
     res = shorts.plan_shorts(SCRIPT, SOURCE, 3, gen=gen)
     assert sorted(s["section_index"] for s in res) == [0, 1, 2]
-    assert sum("AT MOST" in c for c in calls) == 1  # asked once, not in a loop
+    assert sum("too long to be read aloud" in c for c in calls) == 1  # asked once, not in a loop
 
 
 def test_no_shorten_request_when_enough_usable_shorts_already():
@@ -237,7 +237,7 @@ def test_no_shorten_request_when_enough_usable_shorts_already():
         return {"unsupported": [], "advice_given": False}
 
     shorts.plan_shorts(SCRIPT, SOURCE, 3, gen=gen)
-    assert not any("AT MOST" in c for c in calls)
+    assert not any("too long to be read aloud" in c for c in calls)
 
 
 def test_empty_plan_is_not_saved_so_a_later_run_can_retry(tmp_path, monkeypatch):
@@ -268,14 +268,14 @@ def test_plan_shorts_trims_in_code_when_the_model_will_not_comply():
 
     def gen(prompt):
         calls.append(prompt)
-        if "standalone" in prompt or "AT MOST" in prompt:
+        if "standalone" in prompt or "too long to be read aloud" in prompt:
             return {"shorts": [long_draft(0), long_draft(1), long_draft(2)]}  # never complies
         return {"unsupported": [], "advice_given": False}
 
     res = shorts.plan_shorts(SCRIPT, SOURCE, 3, gen=gen)
     assert len(res) == 3 and all(shorts.MIN_WORDS <= len(s["narration"].split()) <= shorts.MAX_WORDS for s in res)
     assert all(s["narration"].startswith("Hook sentence") and s["narration"].endswith("The payoff is clear.") for s in res)
-    assert sum("AT MOST" in c for c in calls) == 1  # one polite request, then code takes over
+    assert sum("too long to be read aloud" in c for c in calls) == 1  # one polite request, then code takes over
 
 
 def test_planner_prompt_includes_each_sections_verified_claims_and_forbids_embellishment():

@@ -10,7 +10,7 @@ from autopilot import audio, db, metadata, music, qa, schedule, shorts, shots, t
 from autopilot.config import Config
 from autopilot.errors import RestartJob, TransientError
 from autopilot.render import render_photo_video, render_short
-from autopilot.script import generate_script, repair_metadata, repair_sections
+from autopilot.script import generate_script, repair_metadata, repair_sections, style_stats
 
 
 class StageError(RuntimeError):
@@ -111,8 +111,13 @@ class Stages:
             raise StageError(f"no Wikipedia source for {job['topic']!r}")
         feedback = _read(d / "qa_issues.json") if (d / "qa_issues.json").exists() else None
         _write(d / "source.json", src)
-        _write(d / "script.json", generate_script(
-            job["topic"], src, self.cfg.niche, words=self.cfg.formats["long"]["target_words"], feedback=feedback))
+        script = generate_script(
+            job["topic"], src, self.cfg.niche, words=self.cfg.formats["long"]["target_words"], feedback=feedback)
+        _write(d / "script.json", script)
+        st = style_stats(" ".join(s["narration"] for s in script.get("sections", [])))
+        print(f"[job {job['id']}] style: avg {st['avg']:.1f} words/sentence, longest {st['longest']}, "
+              f"{100 * st['long_share']:.0f}% over 22 words, hook {st['hook']} words, "
+              f"'you' x{st['you_per_1000']:.0f} per 1000 words", flush=True)
 
     REPAIR_ROUNDS = 2
 

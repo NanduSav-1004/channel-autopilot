@@ -11,6 +11,11 @@ def _script(words=700, **over):
     return s
 
 
+def _punchy(n, word="Word"):
+    """About n words in short sentences, so the punch-up pass has nothing to fix."""
+    return (f"{word} {word.lower()} {word.lower()} end. " * (n // 4 + 1)).strip()
+
+
 def _fake_llm(words_per_call=None, short_first=False):
     """Outline for 3 planned sections; each section call returns `words_per_call` words."""
     calls = {"prompts": [], "sections": 0}
@@ -24,7 +29,7 @@ def _fake_llm(words_per_call=None, short_first=False):
         n = words_per_call
         if short_first and prompt.count("Your last draft") == 0 and calls["sections"] % 2 == 1:
             n = 5  # undershoot on the first try of every section
-        return {"narration": ("word " * n).strip() + " end.", "claims": [f"claim{calls['sections']}"]}
+        return {"narration": _punchy(n), "claims": [f"claim{calls['sections']}"]}
 
     return gen, calls
 
@@ -102,17 +107,17 @@ def test_locate_sections_matches_paraphrased_claims_and_ignores_unrelated():
 def test_repair_rewrites_only_target_sections_and_forwards_avoid_claims():
     from autopilot.script import repair_sections
     script = {"title": "T", "series": "what_if", "sections": [
-        {"heading": "A", "narration": "keep " * 200, "claims": ["c0"], "key_points": ["k"]},
-        {"heading": "B", "narration": "old " * 200, "claims": ["bad"], "key_points": ["k"]}]}
+        {"heading": "A", "narration": _punchy(200, "Keep"), "claims": ["c0"], "key_points": ["k"]},
+        {"heading": "B", "narration": _punchy(200, "Old"), "claims": ["bad"], "key_points": ["k"]}]}
     prompts = []
 
     def gen(prompt):
         prompts.append(prompt)
-        return {"narration": "new " * 200, "claims": ["good"]}
+        return {"narration": _punchy(200, "New"), "claims": ["good"]}
 
     out = repair_sections(script, SOURCE, [1], ["the bad claim"], gen=gen)
     assert len(prompts) == 1 and "the bad claim" in prompts[0] and "UNSUPPORTED" in prompts[0]
-    assert out["sections"][0]["narration"].startswith("keep") and out["sections"][1]["narration"].startswith("new")
+    assert out["sections"][0]["narration"].startswith("Keep") and out["sections"][1]["narration"].startswith("New")
     assert out["claims"] == ["c0", "good"]
 
 
@@ -173,3 +178,71 @@ def test_factcheck_prompt_ignores_framing_and_paraphrase_but_flags_specifics():
     from autopilot.qa import FACTCHECK_PROMPT
     assert "rhetorical questions" in FACTCHECK_PROMPT and "paraphrase" in FACTCHECK_PROMPT
     assert "number, date, name" in FACTCHECK_PROMPT
+
+
+
+# ---------- punchy style ----------
+LONG_WINDED = ("When you consider the fundamental physical principles that govern the behaviour of light inside a resonant "
+               "optical cavity, it becomes apparent that the amplification of coherent radiation depends upon a delicate "
+               "balance between the stimulated emission of photons and the various loss mechanisms present. ") * 3
+SNAPPY = "Light bounces. It grows. You get a beam. That is a laser. "
+
+
+def test_style_stats_measure_sentence_length_hook_and_direct_address():
+    from autopilot.script import style_stats
+
+    s = style_stats("Ever seen a laser cut steel? You can. It is wild. Your eyes can't track it.")
+    assert s["sentences"] == 4 and s["hook"] == 6 and s["longest"] == 6 and s["long_share"] == 0
+    assert s["you_per_1000"] > 100 and style_stats(LONG_WINDED)["avg"] > 30
+
+
+def test_needs_punch_flags_long_winded_text_and_long_hooks_but_not_snappy_text():
+    from autopilot.script import needs_punch
+
+    assert needs_punch(LONG_WINDED, first=False) and not needs_punch(SNAPPY * 10, first=False)
+    long_hook = "This is a very long opening sentence that rambles on for well over sixteen words before it finally stops. Short. Ok. Yes."
+    assert needs_punch(long_hook, first=True) and not needs_punch(long_hook, first=False)  # the hook limit applies to section 1 only
+
+
+def test_section_prompt_carries_the_voice_rules_and_the_hook_rule_only_for_the_first_section():
+    from autopilot.script import _write_section
+    script = {"title": "T", "sections": [{"heading": "A", "key_points": ["k"], "visual_query": "q", "narration": ""},
+                                          {"heading": "B", "key_points": ["k"], "visual_query": "q", "narration": ""}]}
+    prompts = []
+    for i in (0, 1):
+        _write_section(script, i, SOURCE, "", 120, lambda p: prompts.append(p) or {"narration": _punchy(130), "claims": []})
+    assert "every four" in prompts[0] and "ONE viewer" in prompts[0] and "Short, punchy sentences" in prompts[0]
+    assert "AT MOST 12 words" in prompts[0] and "AT MOST 12 words" not in prompts[1]
+
+
+def test_long_winded_section_gets_one_punch_up_pass_and_the_better_version_is_kept():
+    from autopilot.script import _write_section
+
+    script = {"title": "T", "sections": [{"heading": "A", "key_points": ["k"], "visual_query": "q", "narration": ""}]}
+    prompts = []
+
+    def gen(prompt):
+        prompts.append(prompt)
+        if "Rewrite this narration" in prompt:
+            return {"narration": SNAPPY * 20, "claims": ["rewritten claim"]}
+        return {"narration": LONG_WINDED, "claims": ["original claim"]}
+
+    out = _write_section(script, 0, SOURCE, "", 100, gen)
+    assert sum("Rewrite this narration" in p for p in prompts) == 1
+    assert out["narration"].startswith("Light bounces") and out["claims"] == ["rewritten claim"]  # claims follow the new text
+    assert "SOURCE (Laser) for checking facts" in prompts[-1]
+
+
+def test_punch_up_is_skipped_when_text_is_already_punchy_and_ignored_when_it_makes_things_worse():
+    from autopilot.script import _write_section
+
+    script = {"title": "T", "sections": [{"heading": "A", "key_points": ["k"], "visual_query": "q", "narration": ""}]}
+    calls = []
+    out = _write_section(script, 0, SOURCE, "", 100, lambda p: calls.append(p) or {"narration": SNAPPY * 20, "claims": ["c"]})
+    assert len(calls) == 1 and out["claims"] == ["c"]                                  # nothing to fix: no extra call
+
+    def worse(prompt):
+        return {"narration": LONG_WINDED * 2 if "Rewrite this narration" in prompt else LONG_WINDED, "claims": ["c"]}
+
+    kept = _write_section(script, 0, SOURCE, "", 100, worse)
+    assert kept["narration"] == LONG_WINDED.strip()                                    # the rewrite was not better: keep the draft
