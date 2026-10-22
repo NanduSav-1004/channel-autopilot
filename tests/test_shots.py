@@ -77,3 +77,21 @@ def test_cut_choice_varies_the_camera_move_between_first_and_second_use():
     assert all(f[2] != s[2] for f, s in zip(first, second, strict=True))           # but never the same move
     assert all(a[2] != b[2] for a, b in itertools.pairwise(first))                 # and neighbours differ too
     assert [c[1] for c in first] == [0] * 4 and [c[1] for c in second] == [1] * 4  # cycle count drives the stock-clip offset
+
+
+def test_short_media_pool_starts_with_its_own_section_then_borrows_from_the_nearest_neighbours():
+    from autopilot.shots import short_media_pool
+
+    sections = [[{"id": f"s{i}m{k}"} for k in range(3)] for i in range(6)]
+    pool = short_media_pool(sections, 2, want=8)
+    ids = [m["id"] for m in pool]
+    assert ids[:3] == ["s2m0", "s2m1", "s2m2"]                      # its own first
+    assert {"s1m0", "s3m0"} <= set(ids[3:]) and len(pool) >= 8     # then the adjacent sections
+    assert short_media_pool([[], [], []], 1) == []                  # nothing anywhere: empty, the card fallback handles it
+
+
+def test_shorts_may_reuse_media_three_times_so_they_can_cut_fast():
+    from autopilot.shots import SHORT_CUT_SECONDS, SHORT_MAX_REUSE, plan_cuts
+
+    plan = plan_cuts(_sections(50.0), [8], 24, SHORT_CUT_SECONDS, SHORT_MAX_REUSE)
+    assert len(plan[0]) == round(50 / SHORT_CUT_SECONDS)            # 8 items x 3 allows ~19 cuts: no cap hit

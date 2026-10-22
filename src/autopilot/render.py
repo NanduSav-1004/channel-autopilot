@@ -36,15 +36,37 @@ HILITE = "&H0033B7FF"  # the brand amber, in ASS's BGR order
 
 
 # Caption looks. `group` = words shown at once; the word being spoken is highlighted.
-SHORT_CAPTIONS = {"res": (1080, 1920), "font": 100, "margin_v": 600, "group": 3, "upper": True, "outline": 10}
-LONG_CAPTIONS = {"res": (1280, 720), "font": 52, "margin_v": 50, "group": 6, "upper": False, "outline": 5}
+SHORT_CAPTIONS = {"res": (1080, 1920), "font": 96, "margin_v": 600, "group": 4, "upper": True, "outline": 10}
+LONG_CAPTIONS = {"res": (1280, 720), "font": 52, "margin_v": 50, "group": 7, "upper": False, "outline": 5}
+FONT_CAPTION = "/usr/share/fonts/truetype/lato/Lato-Bold.ttf"
 
 
-def caption_groups(words: list[dict], group: int) -> list[list[dict]]:
-    """Split a sentence's words into on-screen phrases: at most `group` words, breaking at sentence ends and after a
-    comma once there are two words, and never leaving a lone word at the end."""
+def make_fits(look: dict):
+    """A function telling whether a phrase fits the screen width at the caption font size, measured with the real
+    font (so uppercase and wide letters are accounted for). Falls back to a character budget if the font is missing."""
+    w = look["res"][0]
+    limit = w - 2 * round(w * 0.06) - 2 * look["outline"]
+    try:
+        font = ImageFont.truetype(FONT_CAPTION, look["font"])
+    except OSError:
+        budget = int(limit / (look["font"] * (0.66 if look["upper"] else 0.56)))
+        return lambda words: len(" ".join(words)) <= budget
+
+    def fits(words: list[str]) -> bool:
+        text = " ".join(words)
+        return font.getlength(text.upper() if look["upper"] else text) <= limit
+
+    return fits
+
+
+def caption_groups(words: list[dict], group: int, fits=None) -> list[list[dict]]:
+    """Split a sentence's words into on-screen phrases: at most `group` words, never wider than the screen (`fits`),
+    breaking at sentence ends and after a comma once there are two words, and not leaving a lone word at the end."""
     chunks, cur = [], []
     for w in words:
+        if cur and fits and not fits([x["w"] for x in cur] + [w["w"]]):
+            chunks.append(cur)
+            cur = []
         cur.append(w)
         last = w["w"][-1]
         if len(cur) >= group or last in ".!?" or (last in ",;:" and len(cur) >= 2):
@@ -52,8 +74,10 @@ def caption_groups(words: list[dict], group: int) -> list[list[dict]]:
             cur = []
     if cur:
         chunks.append(cur)
-    if len(chunks) > 1 and len(chunks[-1]) == 1 and len(chunks[-2]) <= group:  # never leave a lone last word
-        chunks[-2] += chunks.pop()
+    if (len(chunks) > 1 and len(chunks[-1]) == 1 and len(chunks[-2]) <= group
+            and (not fits or fits([x["w"] for x in chunks[-2] + chunks[-1]]))):  # never leave a lone last word
+        lone = chunks.pop()          # pop first: `chunks[-2] += chunks.pop()` assigns into the wrong slot
+        chunks[-1] += lone
     return chunks
 
 
@@ -64,13 +88,15 @@ def write_ass_words(timings: list[dict], path: Path, look: dict) -> None:
 
     w, h = look["res"]
     header = (
-        f"[Script Info]\nScriptType: v4.00+\nPlayResX: {w}\nPlayResY: {h}\nWrapStyle: 2\n\n"
+        f"[Script Info]\nScriptType: v4.00+\nPlayResX: {w}\nPlayResY: {h}\nWrapStyle: 0\n\n"
         "[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,"
         "BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV\n"
         f"Style: Cap,Lato,{look['font']},&H00FFFFFF,&H00FFFFFF,&H00000000,&H90000000,1,1,{look['outline']},3,2,"
         f"{round(w * 0.06)},{round(w * 0.06)},{look['margin_v']}\n\n"
         "[Events]\nFormat: Layer,Start,End,Style,Text\n"
     )
+
+    fits = make_fits(look)
 
     def clean(word: str) -> str:
         word = word.replace("{", "(").replace("}", ")").replace("\\", "")
@@ -80,7 +106,7 @@ def write_ass_words(timings: list[dict], path: Path, look: dict) -> None:
     for sec in timings:
         for sent in sec["sentences"]:
             words = sent.get("words") or estimate_word_times(sent["text"], sent["start"], sent["end"])
-            for chunk in caption_groups(words, look["group"]):
+            for chunk in caption_groups(words, look["group"], fits):
                 for j, cur in enumerate(chunk):
                     end = chunk[j + 1]["s"] if j + 1 < len(chunk) else min(cur["e"] + 0.25, sent["end"] + 0.25)
                     text = " ".join(
@@ -333,11 +359,11 @@ def render_short(script: dict, timings: list[dict], items: list[dict], narration
     """script: {"title"}; timings: one section with timed sentences; items: [{"kind","path"}]."""
     from concurrent.futures import ThreadPoolExecutor
 
-    from autopilot.shots import SHORT_CUT_SECONDS, cut_choice, plan_cuts
+    from autopilot.shots import SHORT_CUT_SECONDS, SHORT_MAX_REUSE, cut_choice, plan_cuts
 
     work.mkdir(parents=True, exist_ok=True)
     out_mp4.parent.mkdir(parents=True, exist_ok=True)
-    spans = plan_cuts([{"start": 0.0, "end": timings[-1]["end"]}], [len(items)], FPS, SHORT_CUT_SECONDS)[0]
+    spans = plan_cuts([{"start": 0.0, "end": timings[-1]["end"]}], [len(items)], FPS, SHORT_CUT_SECONDS, SHORT_MAX_REUSE)[0]
     jobs = []
     for i, (a, b) in enumerate(spans):
         out = work / f"vclip_{i:03d}.mp4"

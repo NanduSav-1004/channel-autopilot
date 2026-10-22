@@ -20,7 +20,9 @@ dur = timings[-1]["end"]
 mus = music.generate_beat(dur + 3, work / "m.wav", seed=9, style=style) if style in music.STYLES else audio.generate_ambient(dur + 3, work / "m.wav", seed=9)
 parent = short_dir.parent
 sections = json.loads((parent / "items.json").read_text())
-pool = next((s for s in sections[script["section_index"]:] + sections if s), [])
+from autopilot.shots import short_media_pool
+
+pool = short_media_pool(sections, script["section_index"])
 items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]
 render_short(script, timings, items, work / "n.wav", out, work / "r", music=mus)
 print(f"{out.name}: {dur:.1f}s narration, engine={engine.name} voice={voice} x{speed}, music={style}")

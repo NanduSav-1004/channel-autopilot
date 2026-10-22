@@ -111,3 +111,39 @@ def test_render_photo_video_cuts_fast_and_reuses_media_end_to_end(tmp_path):
     info = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=width,height:format=duration", "-of", "default=nw=1", str(out)],
                           capture_output=True, text=True, check=True).stdout
     assert "width=1280" in info and 13.5 < float(info.split("duration=")[1]) < 14.6
+
+
+def test_caption_groups_keep_every_word_exactly_once_in_order():
+    from autopilot.render import caption_groups
+
+    for n in range(1, 25):
+        words = [_w(f"w{i}", i * 0.2, i * 0.2 + 0.18) for i in range(n)]
+        for group in (2, 3, 4, 7):
+            flat = [w["w"] for g in caption_groups(words, group) for w in g]
+            assert flat == [w["w"] for w in words], (n, group)
+
+
+def test_caption_phrases_fit_the_screen_width_at_the_real_font_size(tmp_path):
+    import pytest as _pytest
+    from PIL import ImageFont
+
+    from autopilot.render import (
+        FONT_CAPTION,
+        LONG_CAPTIONS,
+        SHORT_CAPTIONS,
+        caption_groups,
+        make_fits,
+    )
+
+    try:
+        ImageFont.truetype(FONT_CAPTION, 50)
+    except OSError:
+        _pytest.skip("Lato Bold is not installed")
+    text = "In 1937 Olaf Stapledon described a gauze of light-traps around a star in Star Maker, decades before Dyson did. " * 3
+    for look in (SHORT_CAPTIONS, LONG_CAPTIONS):
+        words = [_w(x, i * 0.2, i * 0.2 + 0.18) for i, x in enumerate(text.split())]
+        font = ImageFont.truetype(FONT_CAPTION, look["font"])
+        limit = look["res"][0] - 2 * round(look["res"][0] * 0.06)
+        for g in caption_groups(words, look["group"], make_fits(look)):
+            phrase = " ".join(w["w"] for w in g)
+            assert font.getlength(phrase.upper() if look["upper"] else phrase) <= limit or len(g) == 1, phrase

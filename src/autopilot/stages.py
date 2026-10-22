@@ -286,9 +286,7 @@ class Stages:
         if not (parent_dir / "items.json").exists():
             raise StageError("the long video's media list is gone")
         sections = _read(parent_dir / "items.json")
-        idx = s["section_index"]
-        order = [idx] + [j for _, j in sorted((abs(j - idx), j) for j in range(len(sections)) if j != idx)]
-        pool = next((sections[j] for j in order if sections[j]), [])  # this section's media, else the nearest
+        pool = shots.short_media_pool(sections, s["section_index"])  # this section's media, then its neighbours'
         items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]
         music = self.make_music(d / "music.wav", timings[-1]["end"] + 3, job["id"] + 1000)
         wd = self.work / f"{self.dir(self._parent(job)).name}-{d.name}"

@@ -15,6 +15,7 @@ SHOT_SECONDS = 6.0          # how much media to GATHER: about one distinct image
 CUT_SECONDS = 3.5           # how often a long video CUTS to a new shot
 SHORT_CUT_SECONDS = 2.6     # and a Short
 MAX_REUSE = 2               # an image or clip may appear this many times (with a different camera move each time)
+SHORT_MAX_REUSE = 3         # a Short is short enough to allow one more
 MAX_SHOTS_PER_SECTION = 40
 COMMONS_CANDIDATES = 10
 STOCK_CANDIDATES = 8
@@ -47,14 +48,15 @@ SECTIONS_PER_RATING_CALL = 4  # one vision request covers several sections to sa
 
 def plan_cuts(
     timings: list[dict], media_counts: list[int], fps: int = 24, cut_seconds: float = CUT_SECONDS,
+    max_reuse: int = MAX_REUSE,
 ) -> list[list[tuple[int, int]]]:
     """Frame spans per section for the RENDER: cut every `cut_seconds`, but never use a piece of media more than
-    MAX_REUSE times. A section with little media therefore cuts more slowly, and one with none (title card) slowly."""
+    `max_reuse` times. A section with little media therefore cuts more slowly, and one with none (title card) slowly."""
     plan = []
     for sec, have in zip(timings, media_counts, strict=True):
         dur = sec["end"] - sec["start"]
         want = round(dur / cut_seconds) if have else round(dur / SHOT_SECONDS)
-        n = max(1, min(MAX_SHOTS_PER_SECTION, want, MAX_REUSE * have if have else want))
+        n = max(1, min(MAX_SHOTS_PER_SECTION, want, max_reuse * have if have else want))
         edges = [round((sec["start"] + dur * k / n) * fps) for k in range(n + 1)]
         plan.append(list(itertools.pairwise(edges)))
     return plan
@@ -211,3 +213,15 @@ def gather_images(
             chosen.append({"kind": item["kind"], "path": path})
         per_section.append(chosen)
     return per_section, credits
+
+
+def short_media_pool(sections: list[list[dict]], idx: int, want: int = 8) -> list[dict]:
+    """Media for a Short cut from section `idx`: that section's own, then its nearest neighbours' (same video, so on
+    topic) until there is enough to cut quickly without repeating."""
+    order = [idx] + [j for _, j in sorted((abs(j - idx), j) for j in range(len(sections)) if j != idx)]
+    pool: list[dict] = []
+    for j in order:
+        pool += sections[j]
+        if len(pool) >= want:
+            break
+    return pool
