@@ -156,11 +156,13 @@ def render_photo_video(
     _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music)
 
 
-VOICE_LUFS, MUSIC_LUFS = -16, -31  # music sits ~15 LU under the voice, then ducks further while it speaks
+# Voice to -16 LUFS; the music bed to -21 LUFS, then ducked hard by sidechain compression while the narrator speaks.
+# Measured: that keeps the bed ~20-24 dB under the voice during speech, the balance of the original (liked) mix.
+VOICE_LUFS, MUSIC_LUFS = -16, -21
 
 
 def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: Path | None) -> None:
-    """Burn captions and mix audio with fixed loudness: narration to -16 LUFS, music well under it, and the music
+    """Burn captions and mix audio with fixed loudness: narration to -16 LUFS, music under it, and the music
     ducked by sidechain compression whenever the narrator speaks."""
     cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(clips), "-i", str(narration)]
     voice = f"loudnorm=I={VOICE_LUFS}:TP=-1.5:LRA=7"
@@ -168,8 +170,8 @@ def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: P
         cmd += ["-stream_loop", "-1", "-i", str(music)]
         audio = (
             f"[1:a]{voice},asplit=2[nar][sc];"
-            f"[2:a]loudnorm=I={MUSIC_LUFS}:TP=-3:LRA=11,lowpass=f=5500[mus];"
-            "[mus][sc]sidechaincompress=threshold=0.02:ratio=8:attack=20:release=500[duck];"
+            f"[2:a]loudnorm=I={MUSIC_LUFS}:TP=-3:LRA=11,lowpass=f=3000[mus];"
+            "[mus][sc]sidechaincompress=threshold=0.02:ratio=10:attack=30:release=600[duck];"
             "[nar][duck]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95[a]"
         )
         cmd += ["-filter_complex", f"[0:v]ass={ass}[v];{audio}", "-map", "[v]", "-map", "[a]"]

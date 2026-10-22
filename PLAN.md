@@ -33,9 +33,9 @@ Orchestrated by `autopilot daily`; state in SQLite on a `state` branch; failures
 | Orchestration | GitHub Actions cron, Python 3.12 |
 | Text LLM | Groq (gpt-oss-120b, qwen, gpt-oss-20b), Gemini free tier as fallback |
 | Vision rating | Gemini (images) |
-| Voice | Piper TTS (CPU, offline) |
+| Voice | Kokoro (offline) and Gemini Sadachbia, rotated at random per video; Piper as last-resort fallback |
 | Media | Wikimedia Commons (CC0/PD/CC BY/CC BY-SA), Pixabay stock video |
-| Music | generated in code (no licence or Content ID risk) |
+| Music | generated in code (soft ambient pad; no licence or Content ID risk) |
 | Demand | YouTube autocomplete (US) |
 | Render | FFmpeg, Pillow |
 | Publish | YouTube Data API v3 |

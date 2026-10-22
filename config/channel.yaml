@@ -19,4 +19,11 @@ forbidden_topics:
   - medical advice
   - financial advice
   - legal advice
+audio:
+  music_style: ambient          # the soft pad you preferred; beat styles (upbeat, lofi, pulse) exist but are not used
+  voices:                       # one is picked at random per video, never the same as the previous video's
+    - {engine: kokoro, name: bm_george, speed: 1.1}
+    - {engine: kokoro, name: am_michael, speed: 1.12}
+    - {engine: gemini, name: Sadachbia}   # free tier ~20 requests/day/model; falls back automatically
+  fallback: {engine: kokoro, name: am_michael, speed: 1.12}
 dry_run: true   # no public upload until the upload spike passes and this is set to false

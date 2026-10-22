@@ -1,3 +1,4 @@
+import itertools
 import shutil
 import subprocess
 import wave
@@ -39,7 +40,7 @@ def test_make_engine_falls_back_to_piper_when_kokoro_is_unavailable(monkeypatch,
     monkeypatch.setattr(tts, "KokoroEngine", Boom)
     monkeypatch.setattr(tts, "PiperEngine", FakePiper)
     assert tts.make_engine({"voice_engine": "kokoro"}).name == "piper"
-    assert "falling back to Piper" in capsys.readouterr().out
+    assert "trying the next option" in capsys.readouterr().out
     assert tts.make_engine({}).name == "piper"  # default stays Piper until config says otherwise
 
 
@@ -106,3 +107,158 @@ def test_final_pass_with_music_produces_video_with_balanced_audio(tmp_path):
     r = subprocess.run(["ffmpeg", "-i", str(out), "-af", "ebur128=peak=true", "-f", "null", "-"], check=False, capture_output=True, text=True)
     lufs = float(r.stderr.split("I:")[-1].split("LUFS")[0])
     assert -22 < lufs < -11
+
+
+# ---------- voice rotation ----------
+VOICES = [{"engine": "kokoro", "name": "bm_george"}, {"engine": "kokoro", "name": "am_michael"}, {"engine": "gemini", "name": "Sadachbia"}]
+
+
+def test_pick_voice_is_deterministic_never_repeats_the_previous_video_and_uses_every_voice():
+    picks = [tts.pick_voice(i, VOICES)["name"] for i in range(1, 61)]
+    assert picks == [tts.pick_voice(i, VOICES)["name"] for i in range(1, 61)]      # same video, same voice
+    assert all(a != b for a, b in itertools.pairwise(picks))             # never twice in a row
+    assert set(picks) == {"bm_george", "am_michael", "Sadachbia"}                  # all three get used
+    assert tts.pick_voice(5, VOICES[:1]) == VOICES[0]                              # a single voice is fine
+
+
+def test_make_engine_picks_from_the_voices_list_and_falls_back_when_the_pick_cannot_start(monkeypatch, capsys):
+    built = []
+
+    class K:
+        name = "kokoro"
+
+        def __init__(self, voice, speed):
+            built.append(("kokoro", voice))
+
+    class G:
+        name = "gemini"
+
+        def __init__(self, voice):
+            raise OSError("GEMINI_API_KEY is not set")
+
+    monkeypatch.setattr(tts, "KokoroEngine", K)
+    monkeypatch.setattr(tts, "GeminiEngine", G)
+    settings = {"voices": VOICES, "fallback": {"engine": "kokoro", "name": "am_michael", "speed": 1.12}}
+    for root in range(1, 25):
+        engine = tts.make_engine(settings, root)
+        assert engine.name == "kokoro"                                              # gemini picks degrade to kokoro
+    assert {v for _, v in built} == {"bm_george", "am_michael"}
+    assert "[tts] voice for this video:" in capsys.readouterr().out
+
+
+# ---------- sentence timing for whole-section voices ----------
+def test_align_sentences_places_boundaries_by_spoken_letters():
+    sentences = ["Aaaa.", "Bbbbbbbb."]                                            # 4 and 8 letters -> boundary at 1/3
+    words = [{"word": "aaaa", "start": 0.0, "end": 1.0}, {"word": "bbbb", "start": 1.2, "end": 2.2}, {"word": "bbbb", "start": 2.2, "end": 3.0}]
+    spans = tts.align_sentences(sentences, words, 3.2)
+    assert spans[0] == (0.0, 1.0) and spans[1][0] == 1.0 and spans[1][1] == 3.0
+
+
+def test_align_sentences_without_words_falls_back_to_a_proportional_split():
+    spans = tts.align_sentences(["Aaaa.", "Bbbbbbbb."], [], 3.0)
+    assert spans[0][1] == pytest.approx(1.0) and spans[1] == (pytest.approx(1.0), pytest.approx(3.0))
+
+
+def test_gemini_engine_returns_audio_with_aligned_sentence_spans(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    eng = tts.GeminiEngine("Sadachbia")
+    monkeypatch.setattr(eng, "_speak", lambda text: b"\x01\x00" * 24000 * 2)       # 2 s of audio
+    monkeypatch.setattr(tts, "_whisper_words", lambda wav: [{"word": "one", "start": 0, "end": 1.0}, {"word": "two", "start": 1, "end": 1.9}])
+    pcm, rate, spans = eng.synth_section(["One.", "Two."])
+    assert rate == 24000 and len(pcm) == 2 * 24000 * 2 and spans[0][1] == pytest.approx(1.0) and spans[1][1] == pytest.approx(1.9)
+
+
+def test_gemini_engine_needs_a_key(monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    with pytest.raises(OSError):
+        tts.GeminiEngine()
+
+
+def test_synthesize_script_supports_whole_section_engines_with_exact_offsets(tmp_path):
+    class Section:
+        name, whole_section = "sec", True
+
+        def synth_section(self, sentences):
+            return b"\x01\x00" * 8000 * 2, 8000, [(0.0, 0.9), (0.9, 2.0)]           # 2 s of audio, two sentences
+
+    script = {"sections": [{"heading": "A", "narration": "One. Two."}, {"heading": "B", "narration": "One. Two."}]}
+    timings = tts.synthesize_script(script, tmp_path / "n.wav", Section())
+    assert timings[0]["sentences"][1]["start"] == pytest.approx(0.9)
+    assert timings[1]["start"] == pytest.approx(2.0 + tts.SECTION_PAUSE)
+    assert timings[1]["sentences"][0]["start"] == pytest.approx(timings[1]["start"])
+    with wave.open(str(tmp_path / "n.wav")) as w:
+        assert w.getnframes() / 8000 == pytest.approx(timings[-1]["end"], abs=0.02)
+
+
+def test_a_failing_voice_redoes_the_whole_narration_with_the_fallback_never_mixing_voices(tmp_path, capsys):
+    class Flaky:
+        name, calls = "flaky", 0
+
+        def synth(self, text):
+            Flaky.calls += 1
+            if Flaky.calls == 2:
+                raise OSError("quota exhausted")
+            return b"\x05\x00" * 8000, 8000
+
+    class Fallback:
+        name = "fallback"
+
+        def synth(self, text):
+            return b"\x09\x00" * 8000, 8000
+
+    script = {"sections": [{"heading": "A", "narration": "One. Two. Three."}]}
+    timings = tts.synthesize_script(script, tmp_path / "n.wav", Flaky(), Fallback())
+    with wave.open(str(tmp_path / "n.wav")) as w:
+        raw = w.readframes(w.getnframes())
+    assert b"\x05\x00" not in raw and b"\x09\x00" in raw and len(timings[0]["sentences"]) == 3
+    assert "redoing the whole narration with fallback" in capsys.readouterr().out
+    with pytest.raises(OSError):
+        Flaky.calls = 1
+        tts.synthesize_script(script, tmp_path / "n2.wav", Flaky())                 # no fallback given: the error surfaces
+
+
+def test_a_long_video_and_its_shorts_share_one_voice(tmp_path, monkeypatch):
+    import sqlite3
+
+    from autopilot import db
+
+    seen = []
+    monkeypatch.setattr(stages.tts, "make_engine", lambda settings, root: seen.append(root) or type("E", (), {"name": f"v{root}"})())
+    conn = db.connect(tmp_path / "t.db")
+    long_id = db.add_job(conn, "lasers", "long")
+    short_id = db.add_job(conn, "kid", "short", parent_id=long_id, short_idx=0)
+    cfg = Config(niche="s", audience="en", formats={}, audio={"voices": VOICES})
+    st = stages.Stages(conn, cfg, root=tmp_path, work=tmp_path)
+    j_long, j_short = (conn.execute("SELECT * FROM jobs WHERE id = ?", (i,)).fetchone() for i in (long_id, short_id))
+    assert st.engine(j_long) is st.engine(j_short) and seen == [long_id]
+    assert isinstance(sqlite3.connect(":memory:"), sqlite3.Connection)
+
+
+def test_channel_config_lists_the_chosen_voices_and_keeps_the_liked_music():
+    from autopilot.config import load_config
+
+    cfg = load_config()
+    names = [v["name"] for v in cfg.audio["voices"]]
+    assert names == ["bm_george", "am_michael", "Sadachbia"] and cfg.audio["music_style"] == "ambient"
+    assert cfg.audio["fallback"]["engine"] == "kokoro"
+
+
+def test_voice_failing_on_the_very_first_call_still_falls_back_and_surfaces_the_real_error(tmp_path):
+    """Gemini quota exhausted is exactly this case: nothing was ever written, and the file must close cleanly."""
+    class Dead:
+        name = "dead"
+
+        def synth(self, text):
+            raise OSError("quota exhausted")
+
+    class Fine:
+        name = "fine"
+
+        def synth(self, text):
+            return b"\x07\x00" * 8000, 8000
+
+    script = {"sections": [{"heading": "A", "narration": "One. Two."}]}
+    timings = tts.synthesize_script(script, tmp_path / "n.wav", Dead(), Fine())
+    assert len(timings[0]["sentences"]) == 2
+    with pytest.raises(OSError, match="quota exhausted"):                            # not a wave.Error in disguise
+        tts.synthesize_script(script, tmp_path / "n2.wav", Dead())

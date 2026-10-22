@@ -33,7 +33,8 @@ class Stages:
     def __init__(self, conn: sqlite3.Connection, cfg: Config, root: Path = Path("output"),
                  work: Path = Path("work"), privacy: str = "private"):
         self.conn, self.cfg, self.root, self.work, self.privacy = conn, cfg, root, work, privacy
-        self._engine = None
+        self._engines: dict = {}
+        self._fallback = None
 
     # Files each stage reads. If one is missing (fresh CI runner after an interrupted run) the job rewinds.
     NEEDS: ClassVar[dict[str, list[str]]] = {
@@ -50,11 +51,23 @@ class Stages:
         "short_upload": ["final.mp4", "script.json"],
     }
 
-    def engine(self):
-        """The voice engine from config, built once per run (loading a model is slow)."""
-        if self._engine is None:
-            self._engine = tts.make_engine(self.cfg.audio)
-        return self._engine
+    def engine(self, job):
+        """The voice for this video. A long video and its Shorts share one voice (chosen by the long video's id);
+        engines are built once per voice, since loading a model is slow."""
+        root = job["parent_id"] or job["id"]
+        if root not in self._engines:
+            self._engines[root] = tts.make_engine(self.cfg.audio, root)
+        return self._engines[root]
+
+    def fallback_engine(self):
+        """What to use if the chosen voice fails partway (e.g. Gemini quota): the configured fallback, else Piper."""
+        if self._fallback is None:
+            spec = self.cfg.audio.get("fallback")
+            try:
+                self._fallback = tts.build_engine(spec) if spec else tts.PiperEngine()
+            except (ImportError, OSError, ValueError):
+                self._fallback = tts.PiperEngine()
+        return self._fallback
 
     def make_music(self, out: Path, seconds: float, seed: int) -> Path:
         style = self.cfg.audio.get("music_style", "ambient")
@@ -139,7 +152,8 @@ class Stages:
         d = self.dir(job)
         if (d / "timings.json").exists() and (d / "narration.wav").exists():
             return
-        _write(d / "timings.json", tts.synthesize_script(_read(d / "script.json"), d / "narration.wav", self.engine()))
+        _write(d / "timings.json", tts.synthesize_script(_read(d / "script.json"), d / "narration.wav",
+                                                                 self.engine(job), self.fallback_engine()))
 
     def visuals(self, job) -> None:
         d = self.dir(job)
@@ -252,7 +266,7 @@ class Stages:
             return
         s = _read(d / "script.json")
         timings = tts.synthesize_script({"sections": [{"heading": s["title"], "narration": s["narration"]}]},
-                                        d / "narration.wav", self.engine())
+                                        d / "narration.wav", self.engine(job), self.fallback_engine())
         if timings[-1]["end"] > shorts.MAX_SECONDS:
             (d / "narration.wav").unlink()
             raise StageError(f"Short is {timings[-1]['end']:.0f}s, over the {shorts.MAX_SECONDS}s limit")

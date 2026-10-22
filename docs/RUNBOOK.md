@@ -23,6 +23,17 @@ about 12:00 UTC, check the Actions tab and start it by hand (Run workflow, tick 
 3. Open the run, then the step "Make today's video". A good log ends with `processed N job(s)`.
    Useful lines: `[topics] queued ...`, `[job N] qa done`, `scheduled to go public at ...`, `queued N Short(s)`.
 
+## Voice and music
+- Each video gets a **random voice** from the three in `config/channel.yaml` (`audio.voices`): Kokoro `bm_george`,
+  Kokoro `am_michael`, Gemini `Sadachbia`. It never repeats the previous video's voice, and a long video and its
+  Shorts share one voice. The chosen voice is logged as `[tts] voice for this video: ...`.
+- Kokoro runs offline with no limit. **Gemini's free tier allows about 20 requests a day per model**, and its audio
+  has no timing, so sentences are located with Groq Whisper. If Gemini fails at any point, the **whole** narration is
+  redone with the fallback voice (`audio.fallback`), so a video never mixes two voices.
+- Music: `audio.music_style: ambient` (the soft pad). Beat styles (`upbeat`, `lofi`, `pulse`) exist but are not used.
+  Mix levels are fixed: narration -16 LUFS, music -21 LUFS and ducked hard while the narrator speaks.
+- Voice or music not wanted? Edit `audio:` in `config/channel.yaml`. Keep one voice by listing just one entry.
+
 ## Controls (GitHub: Settings, Secrets and variables, Actions, Variables)
 | Want to... | Do this |
 |---|---|
