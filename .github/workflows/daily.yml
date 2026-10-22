@@ -55,16 +55,20 @@ jobs:
 
       - run: pip install -e .
 
-      - name: Cache TTS voice
+      - name: Cache voice models
         id: voice
         uses: actions/cache@v4
         with:
           path: models
-          key: piper-en_US-lessac-medium
+          key: voices-v2-piper-lessac-kokoro-1.0
 
-      - name: Download TTS voice
+      - name: Download voice models
         if: steps.voice.outputs.cache-hit != 'true'
-        run: python -m piper.download_voices en_US-lessac-medium --download-dir models
+        run: |
+          python -m piper.download_voices en_US-lessac-medium --download-dir models
+          B=https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0
+          curl -sL --fail -o models/kokoro-v1.0.int8.onnx $B/kokoro-v1.0.int8.onnx
+          curl -sL --fail -o models/voices-v1.0.bin $B/voices-v1.0.bin
 
       - name: Restore job database
         run: scripts/state_sync.sh pull

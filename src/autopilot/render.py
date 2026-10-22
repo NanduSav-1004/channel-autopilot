@@ -156,20 +156,25 @@ def render_photo_video(
     _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music)
 
 
+VOICE_LUFS, MUSIC_LUFS = -16, -31  # music sits ~15 LU under the voice, then ducks further while it speaks
+
+
 def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: Path | None) -> None:
-    """Burn captions and mix audio. Music is ducked under the narration by sidechain compression."""
+    """Burn captions and mix audio with fixed loudness: narration to -16 LUFS, music well under it, and the music
+    ducked by sidechain compression whenever the narrator speaks."""
     cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(clips), "-i", str(narration)]
+    voice = f"loudnorm=I={VOICE_LUFS}:TP=-1.5:LRA=7"
     if music:
         cmd += ["-stream_loop", "-1", "-i", str(music)]
         audio = (
-            "[1:a]asplit=2[nar][sc];[2:a]volume=0.5,lowpass=f=3000[mus];"
-            "[mus][sc]sidechaincompress=threshold=0.02:ratio=10:attack=30:release=600[duck];"
-            "[nar][duck]amix=inputs=2:duration=first:normalize=0[a]"
+            f"[1:a]{voice},asplit=2[nar][sc];"
+            f"[2:a]loudnorm=I={MUSIC_LUFS}:TP=-3:LRA=11,lowpass=f=5500[mus];"
+            "[mus][sc]sidechaincompress=threshold=0.02:ratio=8:attack=20:release=500[duck];"
+            "[nar][duck]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95[a]"
         )
-        graph = f"[0:v]ass={ass}[v];{audio}"
-        cmd += ["-filter_complex", graph, "-map", "[v]", "-map", "[a]"]
+        cmd += ["-filter_complex", f"[0:v]ass={ass}[v];{audio}", "-map", "[v]", "-map", "[a]"]
     else:
-        cmd += ["-vf", f"ass={ass}"]
+        cmd += ["-vf", f"ass={ass}", "-af", voice]
     cmd += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p",
             "-c:a", "aac", "-b:a", "160k", "-shortest", str(out_mp4)]
     subprocess.run(cmd, check=True, capture_output=True)

@@ -11,6 +11,7 @@ class Config:
     formats: dict
     forbidden_topics: list = field(default_factory=list)
     dry_run: bool = True
+    audio: dict = field(default_factory=dict)  # voice_engine, voice_name, voice_speed, music_style
 
 
 def load_config(path: str | Path = "config/channel.yaml") -> Config:
@@ -21,4 +22,5 @@ def load_config(path: str | Path = "config/channel.yaml") -> Config:
         formats=data["formats"],
         forbidden_topics=data.get("forbidden_topics", []),
         dry_run=data.get("dry_run", True),
+        audio=data.get("audio", {}),
     )

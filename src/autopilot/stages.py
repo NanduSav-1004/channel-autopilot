@@ -6,7 +6,7 @@ import sqlite3
 from pathlib import Path
 from typing import ClassVar
 
-from autopilot import audio, db, metadata, qa, schedule, shorts, shots, thumbnail, tts, wiki
+from autopilot import audio, db, metadata, music, qa, schedule, shorts, shots, thumbnail, tts, wiki
 from autopilot.config import Config
 from autopilot.errors import RestartJob, TransientError
 from autopilot.render import render_photo_video, render_short
@@ -33,6 +33,7 @@ class Stages:
     def __init__(self, conn: sqlite3.Connection, cfg: Config, root: Path = Path("output"),
                  work: Path = Path("work"), privacy: str = "private"):
         self.conn, self.cfg, self.root, self.work, self.privacy = conn, cfg, root, work, privacy
+        self._engine = None
 
     # Files each stage reads. If one is missing (fresh CI runner after an interrupted run) the job rewinds.
     NEEDS: ClassVar[dict[str, list[str]]] = {
@@ -48,6 +49,18 @@ class Stages:
         "short_render": ["script.json", "timings.json", "narration.wav"],
         "short_upload": ["final.mp4", "script.json"],
     }
+
+    def engine(self):
+        """The voice engine from config, built once per run (loading a model is slow)."""
+        if self._engine is None:
+            self._engine = tts.make_engine(self.cfg.audio)
+        return self._engine
+
+    def make_music(self, out: Path, seconds: float, seed: int) -> Path:
+        style = self.cfg.audio.get("music_style", "ambient")
+        if style in music.STYLES:
+            return music.generate_beat(seconds, out, seed=seed, style=style)
+        return audio.generate_ambient(seconds, out, seed=seed)
 
     def handlers(self) -> dict:
         raw = {"script": self.script, "qa": self.qa, "voice": self.voice,
@@ -126,7 +139,7 @@ class Stages:
         d = self.dir(job)
         if (d / "timings.json").exists() and (d / "narration.wav").exists():
             return
-        _write(d / "timings.json", tts.synthesize_script(_read(d / "script.json"), d / "narration.wav"))
+        _write(d / "timings.json", tts.synthesize_script(_read(d / "script.json"), d / "narration.wav", self.engine()))
 
     def visuals(self, job) -> None:
         d = self.dir(job)
@@ -152,7 +165,7 @@ class Stages:
             return
         script, timings = _read(d / "script.json"), _read(d / "timings.json")
         items = [[{"kind": i["kind"], "path": Path(i["path"])} for i in sec] for sec in _read(d / "items.json")]
-        music = audio.generate_ambient(timings[-1]["end"] + 5, d / "music.wav", seed=job["id"])
+        music = self.make_music(d / "music.wav", timings[-1]["end"] + 5, job["id"])
         wd = self.work / d.name
         render_photo_video(script, timings, items, shots.plan_shots(timings), d / "narration.wav",
                            d / "final.mp4", wd, music=music)
@@ -239,7 +252,7 @@ class Stages:
             return
         s = _read(d / "script.json")
         timings = tts.synthesize_script({"sections": [{"heading": s["title"], "narration": s["narration"]}]},
-                                        d / "narration.wav")
+                                        d / "narration.wav", self.engine())
         if timings[-1]["end"] > shorts.MAX_SECONDS:
             (d / "narration.wav").unlink()
             raise StageError(f"Short is {timings[-1]['end']:.0f}s, over the {shorts.MAX_SECONDS}s limit")
@@ -258,7 +271,7 @@ class Stages:
         order = [idx] + [j for _, j in sorted((abs(j - idx), j) for j in range(len(sections)) if j != idx)]
         pool = next((sections[j] for j in order if sections[j]), [])  # this section's media, else the nearest
         items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]
-        music = audio.generate_ambient(timings[-1]["end"] + 3, d / "music.wav", seed=job["id"] + 1000)
+        music = self.make_music(d / "music.wav", timings[-1]["end"] + 3, job["id"] + 1000)
         wd = self.work / f"{self.dir(self._parent(job)).name}-{d.name}"
         render_short(s, timings, items, d / "narration.wav", d / "final.mp4", wd, music=music)
         shutil.rmtree(wd, ignore_errors=True)
