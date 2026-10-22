@@ -23,6 +23,19 @@ about 12:00 UTC, check the Actions tab and start it by hand (Run workflow, tick 
 3. Open the run, then the step "Make today's video". A good log ends with `processed N job(s)`.
    Useful lines: `[topics] queued ...`, `[job N] qa done`, `scheduled to go public at ...`, `queued N Short(s)`.
 
+## Checks before pushing (local, not on GitHub)
+- `scripts/check.sh` runs lint, the tests and a secret scan of the whole git history (about 5 seconds). It is also the
+  **pre-push hook**, so `git push` is blocked if anything fails. Install it once per clone: `scripts/install_hooks.sh`.
+- GitHub's CI workflow is manual now (Actions tab, Run workflow). It adds the fuller gitleaks scan; use it occasionally.
+
+## What makes the videos punchy
+- Scripts are written to measured targets: sentences averaging under about 13 words, a hook of at most 12 words, "you" in
+  about one sentence in four. A section that misses is rewritten once. `[job N] style: ...` in the log shows the numbers.
+- Captions are word by word: a short phrase on screen with the spoken word in amber, timed from Whisper (Groq) and fitted
+  to the screen width. If Whisper is unavailable the timing is estimated (less exact, still works).
+- Cuts: a new shot about every 3.5 s in long videos and 2.6 s in Shorts. A piece of media is used at most twice (Shorts:
+  three times) with a different camera move; a section with little media cuts more slowly instead of repeating.
+
 ## Voice and music
 - Each video gets a **random voice** from the three in `config/channel.yaml` (`audio.voices`): Kokoro `bm_george`,
   Kokoro `am_michael`, Gemini `Sadachbia`. It never repeats the previous video's voice, and a long video and its
