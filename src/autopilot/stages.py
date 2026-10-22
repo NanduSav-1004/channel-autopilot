@@ -183,7 +183,8 @@ class Stages:
         if (d / "final.mp4").exists():
             return
         script, timings = _read(d / "script.json"), _read(d / "timings.json")
-        items = [[{"kind": i["kind"], "path": Path(i["path"])} for i in sec] for sec in _read(d / "items.json")]
+        items = shots.fill_sparse_sections(
+            [[{"kind": i["kind"], "path": Path(i["path"])} for i in sec] for sec in _read(d / "items.json")])
         music = self.make_music(d / "music.wav", timings[-1]["end"] + 5, job["id"])
         wd = self.work / d.name
         render_photo_video(script, timings, items, shots.plan_cuts(timings, [len(s) for s in items]), d / "narration.wav",

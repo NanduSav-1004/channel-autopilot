@@ -147,3 +147,33 @@ def test_caption_phrases_fit_the_screen_width_at_the_real_font_size(tmp_path):
         for g in caption_groups(words, look["group"], make_fits(look)):
             phrase = " ".join(w["w"] for w in g)
             assert font.getlength(phrase.upper() if look["upper"] else phrase) <= limit or len(g) == 1, phrase
+
+
+@pytest.mark.skipif(not (shutil.which("ffmpeg") and shutil.which("ffprobe")), reason="needs ffmpeg")
+def test_render_handles_borrowed_media_shown_from_a_different_angle(tmp_path):
+    import wave
+
+    import numpy as np
+    from PIL import Image
+
+    from autopilot.render import render_photo_video
+    from autopilot.shots import fill_sparse_sections, plan_cuts
+
+    sections = []
+    for s, colour in enumerate(((200, 40, 40), (40, 40, 200))):
+        p = tmp_path / f"i{s}.jpg"
+        Image.new("RGB", (1280, 720), colour).save(p)
+        sections.append([{"kind": "image", "path": p}])
+    pools = fill_sparse_sections(sections, min_items=2)                  # each section borrows the other's picture
+    assert pools[0][1].get("borrowed") and pools[1][1].get("borrowed")
+    nar = tmp_path / "n.wav"
+    with wave.open(str(nar), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(22050)
+        w.writeframes(np.zeros(22050 * 14, dtype="<i2").tobytes())
+    timings = [{"heading": h, "start": s, "end": s + 7.0, "sentences": [{"text": "hello there.", "start": s + 0.2, "end": s + 6.5,
+                                                                        "words": [{"w": "hello", "s": s + 0.2, "e": s + 0.8}, {"w": "there.", "s": s + 0.9, "e": s + 1.5}]}]}
+               for h, s in (("A", 0.0), ("B", 7.0))]
+    plan = plan_cuts(timings, [len(p) for p in pools])
+    out = tmp_path / "v.mp4"
+    render_photo_video({"title": "T"}, timings, pools, plan, nar, out, tmp_path / "w")
+    assert out.exists() and out.stat().st_size > 10_000

@@ -178,8 +178,14 @@ def _prep_image(src: Path, dst: Path) -> None:
     img.crop((left, top, left + 1920, top + 1080)).save(dst, quality=92)
 
 
-def _motion(variant: int, n: int) -> tuple[str, str, str]:
-    """The Ken Burns move for a shot; variants rotate so consecutive shots (and a re-used image) differ."""
+def _motion(variant: int, n: int, cycle: int = 0) -> tuple[str, str, str]:
+    """The camera move for a shot. First use of an image: a slow zoom or pan over the whole picture (variants rotate so
+    neighbours differ). A repeat (cycle 1, 2) looks at a DIFFERENT PART: a pan across the top, then across the bottom,
+    at a fixed high zoom, so a re-used image reads as a new shot."""
+    if cycle == 1:
+        return "1.4", f"(iw-iw/zoom)*on/{n}", "(ih-ih/zoom)*0.12"          # pan left to right along the top
+    if cycle >= 2:
+        return "1.4", f"(iw-iw/zoom)*(1-on/{n})", "(ih-ih/zoom)*0.88"      # pan right to left along the bottom
     centre_x, centre_y = "iw/2-(iw/zoom/2)", "ih/2-(ih/zoom/2)"
     variant = variant % 3
     if variant == 0:
@@ -189,8 +195,8 @@ def _motion(variant: int, n: int) -> tuple[str, str, str]:
     return "1.12", f"(iw-iw/zoom)*on/{n}", centre_y          # pan left to right
 
 
-def _render_clip(img: Path, frames: int, variant: int, out: Path) -> None:
-    z, x, y = _motion(variant, frames)
+def _render_clip(img: Path, frames: int, variant: int, out: Path, cycle: int = 0) -> None:
+    z, x, y = _motion(variant, frames, cycle)
     subprocess.run(
         ["ffmpeg", "-y", "-i", str(img), "-vf",
          f"zoompan=z='{z}':x='{x}':y='{y}':d={frames}:s={W}x{H}:fps={FPS},format=yuv420p",
@@ -227,6 +233,8 @@ def render_photo_video(
             out = work / f"clip_{len(jobs):04d}.mp4"
             item_idx, cycle, variant = cut_choice(ji, len(pool)) if pool else (0, 0, ji)
             item = pool[item_idx] if pool else None
+            if item and item.get("borrowed"):  # shown in another section already: use a different part of it here
+                cycle = min(cycle + 1, 2)
             if item and item["kind"] == "video":
                 jobs.append(("video", item["path"], b - a, 2.0 * cycle, out))
                 continue
@@ -236,11 +244,14 @@ def render_photo_video(
             prepped = work / f"prep_{item_idx if pool else 'c'}_{si}.jpg"
             if not prepped.exists():
                 _prep_image(src, prepped)
-            jobs.append(("image", prepped, b - a, variant, out))
+            jobs.append(("image", prepped, b - a, (variant, cycle), out))
 
     def run(job):
         kind, src, frames, extra, out = job
-        _render_stock_clip(src, frames, out, extra) if kind == "video" else _render_clip(src, frames, extra, out)
+        if kind == "video":
+            _render_stock_clip(src, frames, out, extra)
+        else:
+            _render_clip(src, frames, extra[0], out, extra[1])
 
     with ThreadPoolExecutor(max_workers=2) as ex:
         list(ex.map(run, jobs))

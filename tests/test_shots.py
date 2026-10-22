@@ -49,10 +49,10 @@ def test_plan_cuts_cuts_every_few_seconds_when_there_is_enough_media():
     assert all((b - a) / 24 == pytest.approx(CUT_SECONDS, abs=0.5) for a, b in plan[0])
 
 
-def test_plan_cuts_never_uses_a_piece_of_media_more_than_twice_so_sparse_sections_cut_slower():
+def test_plan_cuts_never_uses_a_piece_of_media_more_than_max_reuse_times_so_sparse_sections_cut_slower():
     from autopilot.shots import MAX_REUSE, plan_cuts
 
-    plan = plan_cuts(_sections(90.0), [3])               # 90 s but only 3 images
+    plan = plan_cuts(_sections(150.0), [3])              # 150 s but only 3 images
     assert len(plan[0]) == MAX_REUSE * 3
     assert (plan[0][0][1] - plan[0][0][0]) / 24 > 10      # so each shot is long, not a rapid repeat
 
@@ -103,3 +103,25 @@ def test_best_first_ranks_by_score_and_prefers_earlier_candidates_on_ties():
     assert best_first([5, 9, 7, 9]) == [1, 3, 2, 0]
     assert best_first([MIN_SCORE] * 5) == [0, 1, 2, 3, 4]      # rating unavailable: keep the most specific results, in order
     assert best_first([]) == []
+
+
+def test_a_reused_image_shows_a_different_part_each_time():
+    from autopilot.render import _motion
+
+    first, second, third = _motion(0, 100, 0), _motion(0, 100, 1), _motion(0, 100, 2)
+    assert len({first, second, third}) == 3                       # three different camera moves for the same picture
+    assert second[0] == third[0] == "1.4" and "0.12" in second[2] and "0.88" in third[2]   # top band, then bottom band
+    assert "on/100" in second[1] and "1-on/100" in third[1]       # panning in opposite directions
+
+
+def test_sparse_sections_borrow_from_their_nearest_neighbours_and_mark_the_loans():
+    from autopilot.shots import fill_sparse_sections
+
+    sections = [[{"id": "a0"}, {"id": "a1"}], [{"id": f"b{k}"} for k in range(6)], [{"id": "c0"}], [{"id": f"d{k}"} for k in range(5)]]
+    out = fill_sparse_sections(sections, min_items=5)
+    assert out[1] == sections[1] and out[3] == sections[3]                      # well-supplied sections are untouched
+    assert [m["id"] for m in out[0][:2]] == ["a0", "a1"] and len(out[0]) >= 5   # keeps its own first, then borrows
+    assert all(m.get("borrowed") for m in out[0][2:]) and not any(m.get("borrowed") for m in out[0][:2])
+    assert out[0][2]["id"].startswith("b")                                      # from the nearest section
+    assert len(out[2]) >= 5 and out[2][0] == {"id": "c0"}
+    assert fill_sparse_sections([[], []], min_items=5) == [[], []]              # nothing anywhere: stays empty (title cards)

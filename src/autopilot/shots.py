@@ -14,7 +14,7 @@ from autopilot import commons, llm, stock
 SHOT_SECONDS = 6.0          # how much media to GATHER: about one distinct image per this many seconds
 CUT_SECONDS = 3.5           # how often a long video CUTS to a new shot
 SHORT_CUT_SECONDS = 2.6     # and a Short
-MAX_REUSE = 2               # an image or clip may appear this many times (with a different camera move each time)
+MAX_REUSE = 3               # an image or clip may appear this many times, each time showing a different part of it
 SHORT_MAX_REUSE = 3         # a Short is short enough to allow one more
 MAX_SHOTS_PER_SECTION = 40
 COMMONS_CANDIDATES = 10
@@ -230,3 +230,22 @@ def short_media_pool(sections: list[list[dict]], idx: int, want: int = 8) -> lis
         if len(pool) >= want:
             break
     return pool
+
+
+MIN_SECTION_MEDIA = 5
+
+
+def fill_sparse_sections(sections: list[list[dict]], min_items: int = MIN_SECTION_MEDIA) -> list[list[dict]]:
+    """A section that found little media would hold on a couple of pictures for 20+ seconds. Let it borrow from its
+    nearest neighbours (same video, so on topic). Borrowed items are marked so the renderer shows them from a
+    different angle than where they appear in their own section."""
+    out = []
+    for i, own in enumerate(sections):
+        pool = list(own)
+        if len(pool) < min_items:
+            for j in [j for _, j in sorted((abs(j - i), j) for j in range(len(sections)) if j != i)]:
+                pool += [{**m, "borrowed": True} for m in sections[j]]
+                if len(pool) >= min_items:
+                    break
+        out.append(pool)
+    return out
