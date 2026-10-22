@@ -1,7 +1,8 @@
 name: CI
+# Lint, tests and the secret scan now run locally before every push (scripts/check.sh, .githooks/pre-push).
+# This workflow is the optional full check (it includes gitleaks): run it by hand from the Actions tab.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
   pull_request:
 
 jobs:

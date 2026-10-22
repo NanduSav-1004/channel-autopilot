@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Blocks a push whose lint, tests or secret scan fail. Installed by scripts/install_hooks.sh
+exec "$(git rev-parse --show-toplevel)/scripts/check.sh"
