@@ -303,3 +303,61 @@ def test_synthesize_script_uses_whisper_words_when_available(tmp_path, monkeypat
     timings = tts.synthesize_script({"sections": [{"heading": "A", "narration": "One two three."}]}, tmp_path / "n.wav", FakeEngine())
     w = timings[0]["sentences"][0]["words"]
     assert w[1]["s"] == pytest.approx(0.4) and w[2]["s"] == pytest.approx(0.8)
+
+
+# ---------- the voice must never be lost in the mix ----------
+def _wav(path, seconds, loud=0.3, mute=()):
+    """A mono 16 kHz tone; `mute` is a list of (start, end) seconds that are silent."""
+    t = np.arange(int(16000 * seconds)) / 16000
+    x = np.sin(2 * np.pi * 220 * t) * loud
+    for a, b in mute:
+        x[int(a * 16000):int(b * 16000)] = 0
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000)
+        w.writeframes((x * 32767).astype("<i2").tobytes())
+    return path
+
+
+needs_ffmpeg = pytest.mark.skipif(not (shutil.which("ffmpeg") and shutil.which("ffprobe")), reason="needs ffmpeg")
+
+
+@needs_ffmpeg
+def test_voice_losses_finds_the_moments_where_the_mix_dropped_the_voice(tmp_path):
+    from autopilot import render
+
+    ref = _wav(tmp_path / "ref.wav", 10)
+    bad = _wav(tmp_path / "bad.wav", 10, mute=[(3.0, 5.0)])
+    lost = render.voice_losses(ref, bad)
+    assert lost and all(2.5 <= t <= 5.0 for t in lost) and len(lost) >= 3
+    assert render.voice_losses(ref, _wav(tmp_path / "ok.wav", 10)) == []
+    assert render.voice_losses(ref, _wav(tmp_path / "louder.wav", 10, loud=0.9)) == []   # extra music on top is fine
+    # silence in the REFERENCE (no speech there) is never counted as a loss
+    assert render.voice_losses(_wav(tmp_path / "r2.wav", 10, mute=[(3.0, 5.0)]), bad) == []
+
+
+@needs_ffmpeg
+def test_mix_audio_returns_a_verified_mix_the_length_of_the_narration(tmp_path):
+    from autopilot import render
+
+    nar = _wav(tmp_path / "n.wav", 6)
+    music.generate_beat(8, tmp_path / "m.wav", seed=1, style="upbeat")
+    how = render.mix_audio(nar, tmp_path / "m.wav", tmp_path / "out.wav")
+    assert how == "music ducked"
+    with wave.open(str(tmp_path / "out.wav")) as w:
+        assert w.getframerate() == 48000 and abs(w.getnframes() / 48000 - 6) < 0.1
+
+
+@needs_ffmpeg
+def test_mix_audio_falls_back_to_a_simpler_mix_then_to_the_voice_alone_when_the_voice_is_lost(tmp_path, monkeypatch, capsys):
+    from autopilot import render
+
+    nar = _wav(tmp_path / "n.wav", 5)
+    music.generate_beat(7, tmp_path / "m.wav", seed=1, style="lofi")
+    verdicts = iter([[1.0, 1.5], []])                      # the first mix loses the voice, the simpler one is clean
+    monkeypatch.setattr(render, "voice_losses", lambda ref, mixed: next(verdicts))
+    assert render.mix_audio(nar, tmp_path / "m.wav", tmp_path / "a.wav") == "music steady"
+    assert "trying a simpler mix" in capsys.readouterr().out
+    monkeypatch.setattr(render, "voice_losses", lambda ref, mixed: [2.0])                # every mix loses it
+    assert render.mix_audio(nar, tmp_path / "m.wav", tmp_path / "b.wav") == "voice only"
+    assert "dropping the music" in capsys.readouterr().out
+    assert render.mix_audio(nar, None, tmp_path / "c.wav") == "voice only"               # no music at all is fine too

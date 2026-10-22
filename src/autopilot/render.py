@@ -1,6 +1,7 @@
 """Render a long-form video: generated title cards + burned-in captions over narration (FFmpeg)."""
 import colorsys
 import itertools
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -251,27 +252,75 @@ def render_photo_video(
 # Voice to -16 LUFS; the music bed to -21 LUFS, then ducked hard by sidechain compression while the narrator speaks.
 # Measured: that keeps the bed ~20-24 dB under the voice during speech, the balance of the original (liked) mix.
 VOICE_LUFS, MUSIC_LUFS = -16, -21
+VOICE_NORM = f"loudnorm=I={VOICE_LUFS}:TP=-1.5:LRA=7"
+GRAPH_DUCKED = (
+    f"[0:a]{VOICE_NORM},asplit=2[nar][sc];"
+    f"[1:a]loudnorm=I={MUSIC_LUFS}:TP=-3:LRA=11,lowpass=f=3000[mus];"
+    "[mus][sc]sidechaincompress=threshold=0.02:ratio=10:attack=30:release=600[duck];"
+    "[nar][duck]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95[a]"
+)
+GRAPH_STEADY = (  # simpler fallback: the music at a fixed low level, no ducking
+    f"[0:a]{VOICE_NORM}[nar];[1:a]loudnorm=I=-28:TP=-3:LRA=11,lowpass=f=3000[mus];"
+    "[nar][mus]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95[a]"
+)
+SPEECH_FLOOR_DB, LOSS_TOLERANCE_DB = -32.0, 3.0
+
+
+def _envelope(path: Path, win: float = 0.5):
+    """Loudness (dBFS) of an audio file in `win`-second windows."""
+    import numpy as np
+
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-ac", "1", "-ar", "16000", "-f", "s16le", "-"],
+                         capture_output=True, check=True).stdout
+    x = np.frombuffer(raw, dtype="<i2").astype(float) / 32768
+    n = int(16000 * win)
+    return np.array([20 * np.log10(np.sqrt((x[i:i + n] ** 2).mean()) + 1e-9) for i in range(0, max(0, len(x) - n), n)])
+
+
+def voice_losses(ref_wav: Path, mixed_wav: Path, win: float = 0.5) -> list[float]:
+    """Times (seconds) where the narrator is speaking in `ref_wav` but the mix is more than LOSS_TOLERANCE_DB quieter:
+    the voice has been lost. (A correct mix is never quieter than the voice alone: it only adds music.)"""
+    ref, mix = _envelope(ref_wav, win), _envelope(mixed_wav, win)
+    return [round(i * win, 1) for i, (r, m) in enumerate(zip(ref, mix, strict=False))
+            if r > SPEECH_FLOOR_DB and m < r - LOSS_TOLERANCE_DB]
+
+
+def mix_audio(narration: Path, music: Path | None, out_wav: Path) -> str:
+    """Mix narration and music into `out_wav` (48 kHz) in an audio-only pass, and VERIFY the voice survived.
+    Mixing inside the video encode was found to drop the voice at random moments, so the audio is built on its own,
+    checked against the voice alone, and falls back to a simpler mix, then to the voice alone, if it is not clean."""
+    import wave
+
+    with wave.open(str(narration)) as w:
+        dur = w.getnframes() / w.getframerate()
+    out_wav.parent.mkdir(parents=True, exist_ok=True)
+    ref = out_wav.with_suffix(".voice.wav")
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(narration), "-af", VOICE_NORM, "-ar", "48000", "-ac", "1",
+                    str(ref)], check=True)
+    if music:
+        for label, graph in (("music ducked", GRAPH_DUCKED), ("music steady", GRAPH_STEADY)):
+            subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(narration), "-stream_loop", "-1", "-i", str(music),
+                            "-filter_complex", graph, "-map", "[a]", "-t", f"{dur:.3f}", "-ar", "48000", "-ac", "1",
+                            str(out_wav)], check=True)
+            lost = voice_losses(ref, out_wav)
+            if not lost:
+                return label
+            print(f"[mix] WARNING: '{label}' lost the voice at {lost[:6]} s; trying a simpler mix", flush=True)
+        print("[mix] WARNING: dropping the music: every mix lost the voice", flush=True)
+    shutil.copy(ref, out_wav)
+    return "voice only"
 
 
 def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: Path | None) -> None:
-    """Burn captions and mix audio with fixed loudness: narration to -16 LUFS, music under it, and the music
-    ducked by sidechain compression whenever the narrator speaks."""
-    cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(clips), "-i", str(narration)]
-    voice = f"loudnorm=I={VOICE_LUFS}:TP=-1.5:LRA=7"
-    if music:
-        cmd += ["-stream_loop", "-1", "-i", str(music)]
-        audio = (
-            f"[1:a]{voice},asplit=2[nar][sc];"
-            f"[2:a]loudnorm=I={MUSIC_LUFS}:TP=-3:LRA=11,lowpass=f=3000[mus];"
-            "[mus][sc]sidechaincompress=threshold=0.02:ratio=10:attack=30:release=600[duck];"
-            "[nar][duck]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95[a]"
-        )
-        cmd += ["-filter_complex", f"[0:v]ass={ass}[v];{audio}", "-map", "[v]", "-map", "[a]"]
-    else:
-        cmd += ["-vf", f"ass={ass}", "-af", voice]
-    cmd += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "160k", "-shortest", str(out_mp4)]
-    subprocess.run(cmd, check=True, capture_output=True)
+    """Burn captions into the video and attach the pre-mixed, verified audio."""
+    mixed = out_mp4.with_suffix(".mix.wav")
+    how = mix_audio(narration, music, mixed)
+    print(f"[mix] audio: {how}", flush=True)
+    subprocess.run(
+        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(clips), "-i", str(mixed), "-vf", f"ass={ass}",
+         "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p",
+         "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-shortest", str(out_mp4)],
+        check=True, capture_output=True)
 
 
 # ---------- vertical 9:16 renderer for Shorts ----------
