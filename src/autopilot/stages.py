@@ -186,7 +186,7 @@ class Stages:
         items = [[{"kind": i["kind"], "path": Path(i["path"])} for i in sec] for sec in _read(d / "items.json")]
         music = self.make_music(d / "music.wav", timings[-1]["end"] + 5, job["id"])
         wd = self.work / d.name
-        render_photo_video(script, timings, items, shots.plan_shots(timings), d / "narration.wav",
+        render_photo_video(script, timings, items, shots.plan_cuts(timings, [len(s) for s in items]), d / "narration.wav",
                            d / "final.mp4", wd, music=music)
         first_image = next((i["path"] for sec in items for i in sec if i["kind"] == "image"), None)
         thumbnail.make_thumbnail(script, first_image, d / "thumbnail.jpg")

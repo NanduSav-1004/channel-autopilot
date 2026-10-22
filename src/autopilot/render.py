@@ -1,5 +1,6 @@
 """Render a long-form video: generated title cards + burned-in captions over narration (FFmpeg)."""
 import colorsys
+import itertools
 import subprocess
 from pathlib import Path
 
@@ -28,6 +29,66 @@ def write_ass(timings: list[dict], path: Path) -> None:
         for s in sec["sentences"]:
             text = s["text"].replace("\n", " ").replace("{", "(").replace("}", ")")
             lines.append(f"Dialogue: 0,{_ass_time(s['start'])},{_ass_time(s['end'])},Cap,{text}")
+    path.write_text(header + "\n".join(lines) + "\n", encoding="utf-8")
+
+
+HILITE = "&H0033B7FF"  # the brand amber, in ASS's BGR order
+
+
+# Caption looks. `group` = words shown at once; the word being spoken is highlighted.
+SHORT_CAPTIONS = {"res": (1080, 1920), "font": 100, "margin_v": 600, "group": 3, "upper": True, "outline": 10}
+LONG_CAPTIONS = {"res": (1280, 720), "font": 52, "margin_v": 50, "group": 6, "upper": False, "outline": 5}
+
+
+def caption_groups(words: list[dict], group: int) -> list[list[dict]]:
+    """Split a sentence's words into on-screen phrases: at most `group` words, breaking at sentence ends and after a
+    comma once there are two words, and never leaving a lone word at the end."""
+    chunks, cur = [], []
+    for w in words:
+        cur.append(w)
+        last = w["w"][-1]
+        if len(cur) >= group or last in ".!?" or (last in ",;:" and len(cur) >= 2):
+            chunks.append(cur)
+            cur = []
+    if cur:
+        chunks.append(cur)
+    if len(chunks) > 1 and len(chunks[-1]) == 1 and len(chunks[-2]) <= group:  # never leave a lone last word
+        chunks[-2] += chunks.pop()
+    return chunks
+
+
+def write_ass_words(timings: list[dict], path: Path, look: dict) -> None:
+    """Word-by-word captions: a short phrase on screen, the word being spoken in amber. One ASS event per word, so
+    the highlight moves exactly with the voice."""
+    from autopilot.tts import estimate_word_times
+
+    w, h = look["res"]
+    header = (
+        f"[Script Info]\nScriptType: v4.00+\nPlayResX: {w}\nPlayResY: {h}\nWrapStyle: 2\n\n"
+        "[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,"
+        "BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV\n"
+        f"Style: Cap,Lato,{look['font']},&H00FFFFFF,&H00FFFFFF,&H00000000,&H90000000,1,1,{look['outline']},3,2,"
+        f"{round(w * 0.06)},{round(w * 0.06)},{look['margin_v']}\n\n"
+        "[Events]\nFormat: Layer,Start,End,Style,Text\n"
+    )
+
+    def clean(word: str) -> str:
+        word = word.replace("{", "(").replace("}", ")").replace("\\", "")
+        return word.upper() if look["upper"] else word
+
+    events = []  # (start, end, text)
+    for sec in timings:
+        for sent in sec["sentences"]:
+            words = sent.get("words") or estimate_word_times(sent["text"], sent["start"], sent["end"])
+            for chunk in caption_groups(words, look["group"]):
+                for j, cur in enumerate(chunk):
+                    end = chunk[j + 1]["s"] if j + 1 < len(chunk) else min(cur["e"] + 0.25, sent["end"] + 0.25)
+                    text = " ".join(
+                        (f"{{\\c{HILITE}&}}{clean(x['w'])}{{\\r}}" if k == j else clean(x["w"])) for k, x in enumerate(chunk))
+                    events.append([cur["s"], end, text])
+    for ev, nxt in itertools.pairwise(events):  # a phrase lingers a moment, but never into the next one
+        ev[1] = min(ev[1], nxt[0])
+    lines = [f"Dialogue: 0,{_ass_time(s)},{_ass_time(max(e, s + 0.04))},Cap,{text}" for s, e, text in events]
     path.write_text(header + "\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -90,10 +151,10 @@ def _prep_image(src: Path, dst: Path) -> None:
     img.crop((left, top, left + 1920, top + 1080)).save(dst, quality=92)
 
 
-def _motion(idx: int, n: int) -> tuple[str, str, str]:
-    """Rotate Ken Burns variants so consecutive shots don't repeat the same move."""
+def _motion(variant: int, n: int) -> tuple[str, str, str]:
+    """The Ken Burns move for a shot; variants rotate so consecutive shots (and a re-used image) differ."""
     centre_x, centre_y = "iw/2-(iw/zoom/2)", "ih/2-(ih/zoom/2)"
-    variant = idx % 3
+    variant = variant % 3
     if variant == 0:
         return f"1+0.12*on/{n}", centre_x, centre_y          # slow zoom in
     if variant == 1:
@@ -101,8 +162,8 @@ def _motion(idx: int, n: int) -> tuple[str, str, str]:
     return "1.12", f"(iw-iw/zoom)*on/{n}", centre_y          # pan left to right
 
 
-def _render_clip(img: Path, frames: int, idx: int, out: Path) -> None:
-    z, x, y = _motion(idx, frames)
+def _render_clip(img: Path, frames: int, variant: int, out: Path) -> None:
+    z, x, y = _motion(variant, frames)
     subprocess.run(
         ["ffmpeg", "-y", "-i", str(img), "-vf",
          f"zoompan=z='{z}':x='{x}':y='{y}':d={frames}:s={W}x{H}:fps={FPS},format=yuv420p",
@@ -111,10 +172,11 @@ def _render_clip(img: Path, frames: int, idx: int, out: Path) -> None:
     )
 
 
-def _render_stock_clip(src: Path, frames: int, out: Path) -> None:
-    """Loop/trim a stock clip to the shot length, cover-crop to 16:9, strip its audio."""
+def _render_stock_clip(src: Path, frames: int, out: Path, offset: float = 0.0) -> None:
+    """Loop/trim a stock clip to the shot length, cover-crop to 16:9, strip its audio. `offset` starts a re-used
+    clip from a different point so the second appearance does not look like a repeat."""
     subprocess.run(
-        ["ffmpeg", "-y", "-stream_loop", "-1", "-i", str(src), "-an", "-vf",
+        ["ffmpeg", "-y", "-ss", f"{offset:.2f}", "-stream_loop", "-1", "-i", str(src), "-an", "-vf",
          f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS},format=yuv420p",
          "-frames:v", str(frames), "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", str(out)],
         check=True, capture_output=True,
@@ -129,30 +191,34 @@ def render_photo_video(
 
     work.mkdir(parents=True, exist_ok=True)
     out_mp4.parent.mkdir(parents=True, exist_ok=True)
+    from autopilot.shots import cut_choice
+
     jobs = []
-    for si, (sec, spans) in enumerate(zip(timings, plan)):
+    for si, (sec, spans) in enumerate(zip(timings, plan, strict=True)):
         pool = images[si]
         for ji, (a, b) in enumerate(spans):
-            n, out = len(jobs), work / f"clip_{len(jobs):04d}.mp4"
-            item = pool[ji % len(pool)] if pool else None
+            out = work / f"clip_{len(jobs):04d}.mp4"
+            item_idx, cycle, variant = cut_choice(ji, len(pool)) if pool else (0, 0, ji)
+            item = pool[item_idx] if pool else None
             if item and item["kind"] == "video":
-                jobs.append(("video", item["path"], b - a, n, out))
+                jobs.append(("video", item["path"], b - a, 2.0 * cycle, out))
                 continue
             src = item["path"] if item else work / f"card_{si:02d}.png"
             if not item:
                 make_card(script["title"], sec["heading"], si, len(timings), src)
-            prepped = work / f"prep_{n:04d}.jpg"
-            _prep_image(src, prepped)
-            jobs.append(("image", prepped, b - a, n, out))
+            prepped = work / f"prep_{item_idx if pool else 'c'}_{si}.jpg"
+            if not prepped.exists():
+                _prep_image(src, prepped)
+            jobs.append(("image", prepped, b - a, variant, out))
 
     def run(job):
-        kind, src, frames, n, out = job
-        _render_stock_clip(src, frames, out) if kind == "video" else _render_clip(src, frames, n, out)
+        kind, src, frames, extra, out = job
+        _render_stock_clip(src, frames, out, extra) if kind == "video" else _render_clip(src, frames, extra, out)
 
     with ThreadPoolExecutor(max_workers=2) as ex:
         list(ex.map(run, jobs))
     (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
-    write_ass(timings, work / "captions.ass")
+    write_ass_words(timings, work / "captions.ass", LONG_CAPTIONS)
     _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music)
 
 
@@ -241,8 +307,8 @@ def make_vertical_card(title: str, path: Path) -> None:
     img.save(path)
 
 
-def _render_vclip(img: Path, frames: int, idx: int, out: Path) -> None:
-    z = f"1+0.06*on/{frames}" if idx % 2 == 0 else f"1.06-0.06*on/{frames}"
+def _render_vclip(img: Path, frames: int, variant: int, out: Path) -> None:
+    z = f"1+0.07*on/{frames}" if variant % 2 == 0 else f"1.07-0.07*on/{frames}"
     subprocess.run(
         ["ffmpeg", "-y", "-i", str(img), "-vf",
          f"zoompan=z='{z}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={frames}:s={VW}x{VH}:fps={FPS},format=yuv420p",
@@ -251,12 +317,12 @@ def _render_vclip(img: Path, frames: int, idx: int, out: Path) -> None:
     )
 
 
-def _render_vstock(src: Path, frames: int, out: Path) -> None:
+def _render_vstock(src: Path, frames: int, out: Path, offset: float = 0.0) -> None:
     graph = (f"[0:v]split[a][b];[a]scale={VW}:{VH}:force_original_aspect_ratio=increase,crop={VW}:{VH},"
              "boxblur=30:3,eq=brightness=-0.2[bg];"
              f"[b]scale={VW}:-2[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2-160,fps={FPS},format=yuv420p[v]")
     subprocess.run(
-        ["ffmpeg", "-y", "-stream_loop", "-1", "-i", str(src), "-an", "-filter_complex", graph, "-map", "[v]",
+        ["ffmpeg", "-y", "-ss", f"{offset:.2f}", "-stream_loop", "-1", "-i", str(src), "-an", "-filter_complex", graph, "-map", "[v]",
          "-frames:v", str(frames), "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", str(out)],
         check=True, capture_output=True,
     )
@@ -267,32 +333,33 @@ def render_short(script: dict, timings: list[dict], items: list[dict], narration
     """script: {"title"}; timings: one section with timed sentences; items: [{"kind","path"}]."""
     from concurrent.futures import ThreadPoolExecutor
 
-    from autopilot.shorts import caption_chunks
-    from autopilot.shots import plan_shots
+    from autopilot.shots import SHORT_CUT_SECONDS, cut_choice, plan_cuts
 
     work.mkdir(parents=True, exist_ok=True)
     out_mp4.parent.mkdir(parents=True, exist_ok=True)
-    spans = plan_shots([{"start": 0.0, "end": timings[-1]["end"]}], FPS, shot_seconds=4.5)[0]
+    spans = plan_cuts([{"start": 0.0, "end": timings[-1]["end"]}], [len(items)], FPS, SHORT_CUT_SECONDS)[0]
     jobs = []
     for i, (a, b) in enumerate(spans):
         out = work / f"vclip_{i:03d}.mp4"
-        item = items[i % len(items)] if items else None
+        item_idx, cycle, variant = cut_choice(i, len(items)) if items else (0, 0, i)
+        item = items[item_idx] if items else None
         if item and item["kind"] == "video":
-            jobs.append(("video", item["path"], b - a, i, out))
+            jobs.append(("video", item["path"], b - a, 2.0 * cycle, out))
             continue
         src = item["path"] if item else work / "vcard.png"
         if not item:
             make_vertical_card(script["title"], src)
-        prepped = work / f"vprep_{i:03d}.jpg"
-        _prep_vertical(src, prepped)
-        jobs.append(("image", prepped, b - a, i, out))
+        prepped = work / f"vprep_{item_idx}.jpg"
+        if not prepped.exists():
+            _prep_vertical(src, prepped)
+        jobs.append(("image", prepped, b - a, variant, out))
 
     def run(job):
-        kind, src, frames, i, out = job
-        _render_vstock(src, frames, out) if kind == "video" else _render_vclip(src, frames, i, out)
+        kind, src, frames, extra, out = job
+        _render_vstock(src, frames, out, extra) if kind == "video" else _render_vclip(src, frames, extra, out)
 
     with ThreadPoolExecutor(max_workers=2) as ex:
         list(ex.map(run, jobs))
     (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
-    write_ass_vertical(caption_chunks(timings[0]["sentences"]), work / "captions.ass")
+    write_ass_words(timings, work / "captions.ass", SHORT_CAPTIONS)
     _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music)

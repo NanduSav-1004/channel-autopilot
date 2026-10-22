@@ -1,6 +1,7 @@
 """Text to speech with swappable engines (Piper or Kokoro, both offline, CPU). Synthesizes per sentence so caption
 timings are exact."""
 import base64
+import difflib
 import io
 import json
 import os
@@ -17,6 +18,21 @@ SENTENCE_PAUSE = 0.22
 SECTION_PAUSE = 0.6
 PIPER_MODEL = "models/en_US-lessac-medium.onnx"
 KOKORO_MODEL, KOKORO_VOICES = "models/kokoro-v1.0.int8.onnx", "models/voices-v1.0.bin"
+
+
+def estimate_word_times(text: str, start: float, end: float) -> list[dict]:
+    """Spread a sentence's words over its time span, in proportion to how long each takes to say (letters, plus a little
+    extra after a comma or colon where the voice pauses). Good enough to highlight words as they are spoken."""
+    tokens = text.split()
+    if not tokens:
+        return []
+    weights = [sum(c.isalnum() for c in w) + 2 + (3 if w[-1] in ",;:" else 0) for w in tokens]
+    total, span, t, words = sum(weights), max(end - start, 0.0), start, []
+    for w, wt in zip(tokens, weights, strict=True):
+        dur = span * wt / total
+        words.append({"w": w, "s": round(t, 3), "e": round(t + dur, 3)})
+        t += dur
+    return words
 
 
 def split_sentences(text: str) -> list[str]:
@@ -194,6 +210,94 @@ def make_engine(settings: dict | None = None, root_id: int = 1):
     return PiperEngine()
 
 
+def _norm(word: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", word.lower())
+
+
+def _wav_slice(path: Path, start: float, end: float) -> bytes:
+    """A WAV (as bytes) holding only [start, end] seconds of `path`."""
+    with wave.open(str(path)) as w:
+        rate = w.getframerate()
+        w.setpos(min(w.getnframes(), max(0, int(start * rate))))
+        frames = w.readframes(max(0, int((end - start) * rate)))
+        buf = io.BytesIO()
+        with wave.open(buf, "wb") as out:
+            out.setnchannels(w.getnchannels())
+            out.setsampwidth(w.getsampwidth())
+            out.setframerate(rate)
+            out.writeframes(frames)
+    return buf.getvalue()
+
+
+def refine_word_times(script_words: list[dict], heard: list[dict], lo: float, hi: float) -> list[dict]:
+    """Replace estimated word times with the times Whisper heard, matching words by text. Words Whisper missed or
+    heard differently are spread between their matched neighbours. Always monotonic and inside [lo, hi]."""
+    if not script_words or not heard:
+        return script_words
+    a = [_norm(w["w"]) for w in script_words]
+    b = [_norm(h["word"]) for h in heard]
+    anchors: dict[int, tuple[float, float]] = {}
+    for blk in difflib.SequenceMatcher(None, a, b, autojunk=False).get_matching_blocks():
+        for k in range(blk.size):
+            anchors[blk.a + k] = (float(heard[blk.b + k]["start"]), float(heard[blk.b + k]["end"]))
+    if not anchors:
+        return script_words
+    n, starts, ends = len(script_words), [0.0] * len(script_words), [0.0] * len(script_words)
+    known = sorted(anchors)
+    for idx, (s, e) in anchors.items():
+        starts[idx], ends[idx] = s, e
+    for left, right in zip([-1, *known], [*known, n], strict=True):  # runs of unmatched words between anchors
+        run = list(range(left + 1, right))
+        if not run:
+            continue
+        t0 = ends[left] if left >= 0 else lo
+        t1 = starts[right] if right < n else hi
+        weights = [sum(c.isalnum() for c in script_words[k]["w"]) + 2 for k in run]
+        t, total = t0, sum(weights)
+        for k, wt in zip(run, weights, strict=True):
+            starts[k], ends[k] = t, t + max(t1 - t0, 0.0) * wt / total
+            t = ends[k]
+    out, prev = [], lo
+    for w, s, e in zip(script_words, starts, ends, strict=True):
+        s = min(max(s, prev), hi)
+        e = min(max(e, s + 0.03), hi)
+        out.append({"w": w["w"], "s": round(s, 3), "e": round(e, 3)})
+        prev = s
+    return out
+
+
+def add_word_times(out_wav: Path, timings: list[dict], whisper=None) -> None:
+    """Give every sentence a `words` list with start/end times. Estimates first; then, one Whisper call per section,
+    the real times. Whisper being unavailable just leaves the estimates."""
+    whisper = whisper or _whisper_words
+    for sec in timings:
+        for sent in sec["sentences"]:
+            sent["words"] = estimate_word_times(sent["text"], sent["start"], sent["end"])
+        if not sec["sentences"]:
+            continue
+        lo, hi = max(0.0, sec["start"] - 0.15), sec["end"] + 0.15
+        try:
+            heard = whisper(_wav_slice(out_wav, lo, hi))
+        except (OSError, wave.Error, ValueError):
+            continue
+        heard = [{"word": h["word"], "start": float(h["start"]) + lo, "end": float(h["end"]) + lo} for h in heard]
+        flat = [w for sent in sec["sentences"] for w in sent["words"]]
+        fixed = iter(refine_word_times(flat, heard, sec["sentences"][0]["start"], sec["sentences"][-1]["end"]))
+        for sent in sec["sentences"]:
+            sent["words"] = clamp_words([next(fixed) for _ in sent["words"]], sent["start"], sent["end"])
+
+
+def clamp_words(words: list[dict], lo: float, hi: float) -> list[dict]:
+    """Keep a sentence's words inside the sentence's exact span (known from synthesis), in order."""
+    out, prev = [], lo
+    for w in words:
+        s = min(max(w["s"], prev, lo), max(lo, hi - 0.03))
+        e = min(max(w["e"], s + 0.03), max(hi, s + 0.03))
+        out.append({"w": w["w"], "s": round(s, 3), "e": round(e, 3)})
+        prev = s
+    return out
+
+
 def synthesize_script(script: dict, out_wav: str | Path, engine=None, fallback=None) -> list[dict]:
     """Write one narration WAV; return per-section timings:
     [{"heading", "start", "end", "sentences": [{"text", "start", "end"}]}].
@@ -201,12 +305,14 @@ def synthesize_script(script: dict, out_wav: str | Path, engine=None, fallback=N
     never mixes two voices."""
     engine = engine or PiperEngine()
     try:
-        return _synthesize(script, out_wav, engine)
+        timings = _synthesize(script, out_wav, engine)
     except (OSError, wave.Error) as exc:
         if fallback is None:
             raise
         print(f"[tts] {engine.name} failed ({exc}); redoing the whole narration with {fallback.name}", flush=True)
-        return _synthesize(script, out_wav, fallback)
+        timings = _synthesize(script, out_wav, fallback)
+    add_word_times(Path(out_wav), timings)
+    return timings
 
 
 def _synthesize(script: dict, out_wav: str | Path, engine) -> list[dict]:

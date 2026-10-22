@@ -262,3 +262,44 @@ def test_voice_failing_on_the_very_first_call_still_falls_back_and_surfaces_the_
     assert len(timings[0]["sentences"]) == 2
     with pytest.raises(OSError, match="quota exhausted"):                            # not a wave.Error in disguise
         tts.synthesize_script(script, tmp_path / "n2.wav", Dead())
+
+
+# ---------- word times ----------
+def test_estimate_word_times_spread_a_sentence_in_order_over_its_span():
+    words = tts.estimate_word_times("Hello there, general Kenobi.", 2.0, 4.0)
+    assert [w["w"] for w in words] == ["Hello", "there,", "general", "Kenobi."]
+    assert words[0]["s"] == pytest.approx(2.0) and words[-1]["e"] == pytest.approx(4.0)
+    assert all(a["e"] == pytest.approx(b["s"]) for a, b in itertools.pairwise(words))
+    assert tts.estimate_word_times("", 0, 1) == []
+
+
+def test_refine_word_times_uses_what_whisper_heard_and_fills_in_what_it_missed():
+    script = [{"w": "Dyson", "s": 0, "e": 0}, {"w": "sphere", "s": 0, "e": 0}, {"w": "began,", "s": 0, "e": 0}, {"w": "in", "s": 0, "e": 0}, {"w": "1937.", "s": 0, "e": 0}]
+    heard = [{"word": "Dyson", "start": 0.10, "end": 0.40}, {"word": "sphere", "start": 0.45, "end": 0.90},
+             {"word": "in", "start": 1.60, "end": 1.70}, {"word": "1937", "start": 1.75, "end": 2.20}]   # "began" was missed
+    out = tts.refine_word_times(script, heard, 0.0, 2.5)
+    assert out[0]["s"] == pytest.approx(0.10) and out[1]["s"] == pytest.approx(0.45) and out[3]["s"] == pytest.approx(1.60)
+    assert 0.90 <= out[2]["s"] < 1.60 and out[2]["e"] <= 1.60 + 1e-6               # the missed word sits in the gap
+    assert all(a["s"] <= b["s"] for a, b in itertools.pairwise(out))
+    assert tts.refine_word_times(script, [], 0, 1) == script                         # nothing heard: leave the estimate
+
+
+def test_clamp_words_keeps_them_inside_their_sentence_in_order():
+    out = tts.clamp_words([{"w": "a", "s": 0.5, "e": 1.5}, {"w": "b", "s": 0.9, "e": 5.0}, {"w": "c", "s": 9.0, "e": 9.5}], 1.0, 3.0)
+    assert out[0]["s"] == 1.0 and all(1.0 <= w["s"] <= 3.0 and w["e"] <= 3.0 + 1e-6 for w in out)
+    assert all(a["s"] <= b["s"] for a, b in itertools.pairwise(out))
+
+
+def test_synthesize_script_adds_word_times_to_every_sentence_even_without_whisper(tmp_path):
+    script = {"sections": [{"heading": "A", "narration": "One two three. Four five."}]}
+    timings = tts.synthesize_script(script, tmp_path / "n.wav", FakeEngine())      # the network is blocked in tests
+    sents = timings[0]["sentences"]
+    assert [len(s["words"]) for s in sents] == [3, 2]
+    assert sents[0]["words"][0]["s"] == pytest.approx(sents[0]["start"])
+
+
+def test_synthesize_script_uses_whisper_words_when_available(tmp_path, monkeypatch):
+    monkeypatch.setattr(tts, "_whisper_words", lambda wav: [{"word": "One", "start": 0.05, "end": 0.3}, {"word": "two", "start": 0.4, "end": 0.7}, {"word": "three", "start": 0.8, "end": 1.0}])
+    timings = tts.synthesize_script({"sections": [{"heading": "A", "narration": "One two three."}]}, tmp_path / "n.wav", FakeEngine())
+    w = timings[0]["sentences"][0]["words"]
+    assert w[1]["s"] == pytest.approx(0.4) and w[2]["s"] == pytest.approx(0.8)

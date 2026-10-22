@@ -1,5 +1,7 @@
 import itertools
 
+import pytest
+
 from autopilot.commons import license_ok, parse_results
 from autopilot.shots import plan_shots
 
@@ -28,3 +30,50 @@ def test_parse_results_filters_license_size_and_aspect():
                                  _page("CC0", w=1000, h=1500), _page("CC0", mime="image/svg+xml")]}}
     out = parse_results(data)
     assert len(out) == 1 and out[0]["artist"] == "Ann"
+
+
+# ---------- faster cuts ----------
+def _sections(*durations):
+    t, out = 0.0, []
+    for d in durations:
+        out.append({"start": t, "end": t + d})
+        t += d
+    return out
+
+
+def test_plan_cuts_cuts_every_few_seconds_when_there_is_enough_media():
+    from autopilot.shots import CUT_SECONDS, plan_cuts
+
+    plan = plan_cuts(_sections(60.0), [20])             # 60 s, plenty of media
+    assert len(plan[0]) == round(60 / CUT_SECONDS)
+    assert all((b - a) / 24 == pytest.approx(CUT_SECONDS, abs=0.5) for a, b in plan[0])
+
+
+def test_plan_cuts_never_uses_a_piece_of_media_more_than_twice_so_sparse_sections_cut_slower():
+    from autopilot.shots import MAX_REUSE, plan_cuts
+
+    plan = plan_cuts(_sections(90.0), [3])               # 90 s but only 3 images
+    assert len(plan[0]) == MAX_REUSE * 3
+    assert (plan[0][0][1] - plan[0][0][0]) / 24 > 10      # so each shot is long, not a rapid repeat
+
+
+def test_plan_cuts_uses_slow_title_cards_when_a_section_has_no_media_and_covers_every_frame():
+    from autopilot.shots import plan_cuts
+
+    timings = _sections(30.0, 41.37, 12.0)
+    plan = plan_cuts(timings, [8, 0, 4])
+    spans = [s for sec in plan for s in sec]
+    assert spans[0][0] == 0 and spans[-1][1] == round(timings[-1]["end"] * 24)
+    assert all(a[1] == b[0] for a, b in itertools.pairwise(spans))   # no gaps, no overlaps, even across sections
+    assert len(plan[1]) == round(41.37 / 6)                           # the section with no media: slow cards
+
+
+def test_cut_choice_varies_the_camera_move_between_first_and_second_use():
+    from autopilot.shots import cut_choice
+
+    first = [cut_choice(k, 4) for k in range(4)]
+    second = [cut_choice(k, 4) for k in range(4, 8)]
+    assert [c[0] for c in first] == [0, 1, 2, 3] == [c[0] for c in second]        # same media, in the same order
+    assert all(f[2] != s[2] for f, s in zip(first, second, strict=True))           # but never the same move
+    assert all(a[2] != b[2] for a, b in itertools.pairwise(first))                 # and neighbours differ too
+    assert [c[1] for c in first] == [0] * 4 and [c[1] for c in second] == [1] * 4  # cycle count drives the stock-clip offset

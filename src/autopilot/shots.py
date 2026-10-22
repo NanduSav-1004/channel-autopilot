@@ -11,8 +11,11 @@ from PIL import Image
 
 from autopilot import commons, llm, stock
 
-SHOT_SECONDS = 6.0
-MAX_SHOTS_PER_SECTION = 16
+SHOT_SECONDS = 6.0          # how much media to GATHER: about one distinct image per this many seconds
+CUT_SECONDS = 3.5           # how often a long video CUTS to a new shot
+SHORT_CUT_SECONDS = 2.6     # and a Short
+MAX_REUSE = 2               # an image or clip may appear this many times (with a different camera move each time)
+MAX_SHOTS_PER_SECTION = 40
 COMMONS_CANDIDATES = 10
 STOCK_CANDIDATES = 8
 MIN_SCORE = 6
@@ -40,6 +43,28 @@ Score every candidate 0-10 for how well it illustrates ITS OWN section. Give 0-3
 slides/posters full of text, unrelated people or scenes. Give 8-10 only to clearly on-topic, clean,
 good-looking images. Return JSON: {{"scores": [int, ...]}} with exactly {n} integers, in order."""
 SECTIONS_PER_RATING_CALL = 4  # one vision request covers several sections to save free-tier quota
+
+
+def plan_cuts(
+    timings: list[dict], media_counts: list[int], fps: int = 24, cut_seconds: float = CUT_SECONDS,
+) -> list[list[tuple[int, int]]]:
+    """Frame spans per section for the RENDER: cut every `cut_seconds`, but never use a piece of media more than
+    MAX_REUSE times. A section with little media therefore cuts more slowly, and one with none (title card) slowly."""
+    plan = []
+    for sec, have in zip(timings, media_counts, strict=True):
+        dur = sec["end"] - sec["start"]
+        want = round(dur / cut_seconds) if have else round(dur / SHOT_SECONDS)
+        n = max(1, min(MAX_SHOTS_PER_SECTION, want, MAX_REUSE * have if have else want))
+        edges = [round((sec["start"] + dur * k / n) * fps) for k in range(n + 1)]
+        plan.append(list(itertools.pairwise(edges)))
+    return plan
+
+
+def cut_choice(k: int, pool_size: int) -> tuple[int, int, int]:
+    """For the k-th shot of a section drawing on `pool_size` media: (which media, how many times it has been used
+    before, which camera move). The move differs between the first and the second use of the same media."""
+    item, cycle = k % pool_size, k // pool_size
+    return item, cycle, (item + cycle) % 3
 
 
 def plan_shots(
