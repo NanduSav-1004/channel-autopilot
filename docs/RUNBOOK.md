@@ -3,8 +3,9 @@
 How the channel runs, how to tell it is healthy, and what to do when it is not.
 
 ## What runs, and when
-- **GitHub Actions workflow "Daily video"** is scheduled three times a day, at **08:17, 09:43 and 11:11 UTC**
-  (1:47 PM, 3:13 PM and 4:41 PM IST). GitHub's scheduler is best-effort and sometimes delays or drops runs, so the
+- **GitHub Actions workflow "Daily video"** is scheduled five times a day, at **02:17, 04:43, 08:17, 09:43 and 11:11 UTC**
+  (7:47 AM, 10:13 AM, 1:47 PM, 3:13 PM and 4:41 PM IST). GitHub has been starting scheduled runs 5+ hours late, so
+  the early slots exist to land before the 15:00 UTC go-live slot. GitHub's scheduler is best-effort and sometimes delays or drops runs, so the
   later times are backups. A run **skips itself** if today's video is already uploaded, so you still get one a day.
 - It queues one new topic (chosen by real search demand), writes the script, fact-checks it, voices it,
   finds licensed images and footage, renders the video, and uploads it.

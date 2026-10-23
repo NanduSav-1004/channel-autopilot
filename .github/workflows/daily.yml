@@ -4,6 +4,10 @@ on:
   schedule:
     # GitHub's scheduler is best-effort: runs are delayed or dropped, most often on the hour. So: three off-peak
     # attempts, after the free-tier quotas reset (07:00 UTC). The run skips itself if today's video is already up.
+    # Observed on 2026-10-22/23: GitHub started these 5+ hours late (or not at all), which can push the upload past the
+    # 15:00 UTC go-live slot. So two EARLY slots come first: a 5-hour delay from 02:17 still lands before 08:00 UTC.
+    - cron: "17 2 * * *"
+    - cron: "43 4 * * *"
     - cron: "17 8 * * *"
     - cron: "43 9 * * *"
     - cron: "11 11 * * *"
