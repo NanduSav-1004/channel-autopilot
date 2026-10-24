@@ -1,3 +1,6 @@
+import itertools
+import wave
+
 import numpy as np
 
 from autopilot import malayalam as ml
@@ -102,7 +105,7 @@ def test_edition_due_picks_todays_uploaded_video_without_a_malayalam_edition(tmp
     assert ml.edition_due(conn) is None
 
 
-def test_daily_edition_skips_cleanly_without_a_malayalam_login(tmp_path, monkeypatch):
+def test_daily_edition_does_nothing_without_a_due_video_or_when_disabled(tmp_path, monkeypatch):
     from autopilot import db
     from autopilot.config import Config
 
@@ -111,7 +114,7 @@ def test_daily_edition_skips_cleanly_without_a_malayalam_login(tmp_path, monkeyp
     monkeypatch.setattr("autopilot.youtube_auth.TOKEN_PATH_ML", tmp_path / "none.json")
     cfg = Config(niche="s", audience="a", formats={}, malayalam={"enabled": True})
     msg = ml.run_daily_edition(db.connect(tmp_path / "x.db"), cfg, "public", True, tmp_path)
-    assert "no Malayalam channel login" in msg
+    assert "nothing due" in msg
     assert "disabled" in ml.run_daily_edition(db.connect(tmp_path / "y.db"), Config("s", "a", {}), "public", True, tmp_path)
 
 
@@ -124,3 +127,38 @@ def test_the_reviewers_false_alarm_is_dropped_by_the_second_look():
         raise AssertionError(prompt)
 
     assert ml.check_translation("English.", "മലയാളം.", gen) == []
+
+
+def test_segment_by_pauses_cuts_at_the_real_pauses_even_when_the_pace_varies():
+    # sentences of 40, 20 and 40 letters spoken at slightly different paces, with a comma pause inside the middle one
+    gaps = [(3.0, 3.15), (6.4, 6.9), (8.5, 8.6), (10.9, 11.4), (14.0, 14.1)]      # (3.0..) (8.5..) (14.0..) are only commas
+    spans = ml.segment_by_pauses([40, 20, 40], gaps, 0.0, 17.4)
+    assert abs(spans[0][1] - 6.4) < 0.2 and abs(spans[1][0] - 6.9) < 0.2
+    assert abs(spans[1][1] - 10.9) < 0.2 and abs(spans[2][0] - 11.4) < 0.2 and spans[2][1] == 17.4
+
+
+def test_segment_by_pauses_falls_back_to_proportional_cuts_without_pauses():
+    spans = ml.segment_by_pauses([10, 10, 20], [], 0.0, 40.0)
+    assert [round(a) for a, _ in spans] == [0, 10, 20] and spans[-1][1] == 40.0
+
+
+def test_word_times_fill_the_span_in_order():
+    words = ml.words_in((2.0, 4.0), ["അ" * 3, "അ" * 1, "അ" * 4])
+    assert words[0]["s"] == 2.0 and words[-1]["e"] == 4.0 and all(a["e"] <= b["s"] + 1e-6 for a, b in itertools.pairwise(words))
+
+
+def test_timing_from_audio_with_pauses(tmp_path):
+    rate = 24000
+    tone = lambda sec: (np.sin(2 * np.pi * 220 * np.arange(int(sec * rate)) / rate) * 8000).astype("<i2")
+    gap = lambda sec: np.zeros(int(sec * rate), dtype="<i2")
+    audio = np.concatenate([gap(0.3), tone(3.0), gap(0.5), tone(1.5), gap(0.5), tone(3.0), gap(0.6)])
+    wav = tmp_path / "n.wav"
+    with wave.open(str(wav), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(rate); w.writeframes(audio.tobytes())
+    sents = [{"text": "അ" * 30 + ".", "start": 0, "end": 3.8}, {"text": "അ" * 15 + ".", "start": 3.8, "end": 5.8},
+             {"text": "അ" * 30 + ".", "start": 5.8, "end": 9.4}]
+    timings = [{"heading": "h", "start": 0.0, "end": audio.size / rate, "sentences": sents}]
+    assert ml.ml_add_word_times(wav, timings) == 1
+    ml.make_monotone(timings)
+    s = timings[0]["sentences"]
+    assert abs(s[1]["start"] - 3.8) < 0.3 and abs(s[2]["start"] - 5.8) < 0.3 and s[0]["words"] and ml.pace_outliers(timings) == 0

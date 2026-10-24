@@ -101,7 +101,7 @@ def align_sentences(sentences: list[str], words: list[dict], total: float) -> li
     return list(zip(starts, ends, strict=True))
 
 
-def _whisper_words(wav: bytes) -> list[dict]:
+def _whisper_words(wav: bytes, language: str = "en", model: str = "whisper-large-v3-turbo") -> list[dict]:
     """Word timestamps from Groq's free Whisper, or [] if unavailable (alignment then falls back to proportional)."""
     key = os.environ.get("GROQ_API_KEY")
     if not key:
@@ -111,7 +111,7 @@ def _whisper_words(wav: bytes) -> list[dict]:
     def field(n: str, v: str) -> bytes:
         return f'--{b}\r\nContent-Disposition: form-data; name="{n}"\r\n\r\n{v}\r\n'.encode()
 
-    body = (field("model", "whisper-large-v3-turbo") + field("language", "en") + field("response_format", "verbose_json")
+    body = (field("model", model) + field("language", language) + field("response_format", "verbose_json")
             + field("timestamp_granularities[]", "word")
             + f'--{b}\r\nContent-Disposition: form-data; name="file"; filename="a.wav"\r\nContent-Type: audio/wav\r\n\r\n'.encode()
             + wav + f"\r\n--{b}--\r\n".encode())

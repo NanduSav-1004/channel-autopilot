@@ -2,9 +2,11 @@
 
 Everything here uses its OWN Gemini key (GEMINI_API_KEY_ML, a separate free-tier project) so the English channel's
 daily quota is never touched. Translation uses Gemini only: the Groq models produced garbled Malayalam."""
+import itertools
 import json
 import os
 import re
+import wave
 from collections.abc import Callable
 from contextlib import contextmanager
 from pathlib import Path
@@ -226,8 +228,177 @@ def pick_ml_voice(video_number: int, voices: list[dict] | None = None) -> dict:
     return tts.pick_voice(video_number, voices or ML_VOICES)
 
 
+def segment_by_pauses(weights: list[float], gaps: list[tuple[float, float]], t0: float, t1: float,
+                      comma_slack: list[float] | None = None) -> list[tuple[float, float]]:
+    """Cut [t0, t1] into len(weights) consecutive spans, one per piece of text, cutting only at real pauses where possible.
+    The spans' lengths should be proportional to the weights (letters), and longer pauses are better cut points; a dynamic
+    programme picks the best pauses, so one wrong pick cannot push every later piece out of place. When the audio has too
+    few pauses, a cut at the proportional position stands in for the missing one."""
+    n = len(weights)
+    if n == 1:
+        return [(t0, t1)]
+    inner = [g for g in gaps if t0 < (g[0] + g[1]) / 2 < t1]
+    speech = max(0.1, (t1 - t0) - sum(b - a for a, b in inner))
+    pace = speech / max(1.0, sum(weights))
+    cum = np.cumsum(weights)[:-1] / sum(weights)
+    cands = [(a, b, -0.8 * min(b - a, 0.6)) for a, b in inner] + [(t0 + f * (t1 - t0),) * 2 + (0.7,) for f in cum]
+    cands.sort(key=lambda c: (c[0], c[1]))
+    slack = comma_slack or [0.0] * n
+    exp = [w * pace + sl for w, sl in zip(weights, slack, strict=True)]
+
+    def cost(i: int, start: float, stop: float) -> float:
+        return 4.0 * ((stop - start - exp[i]) / max(exp[i], 0.5)) ** 2
+
+    m = len(cands)
+    best = [[float("inf")] * m for _ in range(n - 1)]
+    back = [[-1] * m for _ in range(n - 1)]
+    for j, c in enumerate(cands):
+        best[0][j] = cost(0, t0, c[0]) + c[2]
+    for i in range(1, n - 1):
+        for j, c in enumerate(cands):
+            for k in range(j):
+                if best[i - 1][k] == float("inf") or cands[k][1] > c[0] + 1e-9:
+                    continue
+                v = best[i - 1][k] + cost(i, cands[k][1], c[0]) + c[2]
+                if v < best[i][j]:
+                    best[i][j], back[i][j] = v, k
+    last, jbest = float("inf"), -1
+    for j, c in enumerate(cands):
+        if best[n - 2][j] < float("inf") and c[1] < t1:
+            v = best[n - 2][j] + cost(n - 1, c[1], t1)
+            if v < last:
+                last, jbest = v, j
+    if jbest < 0:   # no consistent choice: proportional spans
+        edges = [t0] + [t0 + f * (t1 - t0) for f in cum] + [t1]
+        return list(itertools.pairwise(edges))
+    chosen = [jbest]
+    for i in range(n - 2, 0, -1):
+        chosen.append(back[i][chosen[-1]])
+    chosen.reverse()
+    spans, start = [], t0
+    for j in chosen:
+        spans.append((start, cands[j][0]))
+        start = cands[j][1]
+    spans.append((start, t1))
+    return spans
+
+
+def words_in(span: tuple[float, float], words: list[str]) -> list[dict]:
+    """Words spread over a span in proportion to their letters."""
+    w = np.array([_letters(x) for x in words], dtype=float)
+    edges = span[0] + np.concatenate([[0.0], np.cumsum(w)]) / w.sum() * (span[1] - span[0])
+    return [{"w": x, "s": round(float(a), 3), "e": round(float(b), 3)} for x, a, b in zip(words, edges[:-1], edges[1:], strict=True)]
+
+
+def phrases(sentence: str) -> list[str]:
+    """A sentence broken after each comma (the voice pauses there)."""
+    parts = re.split(r"(?<=[,;:])\s+", sentence.strip())
+    return [p for p in parts if p]
+
+
+def ml_add_word_times(out_wav: Path, timings: list[dict], gaps: list[tuple[float, float]] | None = None) -> int:
+    """Time every sentence, comma-phrase and word from the audio's own pauses (see segment_by_pauses). Returns how
+    many sections were timed."""
+    gaps = pauses(out_wav) if gaps is None else gaps
+    with wave.open(str(out_wav)) as w:
+        rate = w.getframerate()
+        pcm = w.readframes(w.getnframes())
+    rms = _frame_rms(pcm, rate)
+    loud = np.flatnonzero(rms > 0.06 * (float(np.percentile(rms, 98)) or 1.0))
+    for sec in timings:
+        if not sec["sentences"]:
+            continue
+        a, b = int(sec["start"] / 0.02), int(sec["end"] / 0.02)
+        idx = loud[(loud >= a) & (loud <= b)]
+        if not len(idx):
+            continue
+        t0, t1 = float(idx[0]) * 0.02, float(idx[-1] + 1) * 0.02
+        texts = [s["text"] for s in sec["sentences"]]
+        spans = segment_by_pauses([_letters(x) for x in texts], gaps, t0, t1,
+                                  [0.25 * (len(phrases(x)) - 1) for x in texts])
+        for sent, (s0, s1) in zip(sec["sentences"], spans, strict=True):
+            parts = phrases(sent["text"])
+            inside = [g for g in gaps if s0 < (g[0] + g[1]) / 2 < s1]
+            psp = segment_by_pauses([_letters(x) for x in parts], inside, s0, s1)
+            words = []
+            for part, span in zip(parts, psp, strict=True):
+                words += words_in(span, part.split())
+            sent["start"], sent["end"], sent["words"] = round(s0, 3), round(s1, 3), words
+    return sum(1 for sec in timings if sec["sentences"] and "words" in sec["sentences"][0])
+
+
+def pauses(wav: Path, min_len: float = 0.12) -> list[tuple[float, float]]:
+    """(start, end) of every real pause in the narration."""
+    with wave.open(str(wav)) as w:
+        rate = w.getframerate()
+        pcm = w.readframes(w.getnframes())
+    rms = _frame_rms(pcm, rate)
+    quiet = rms < 0.06 * (float(np.percentile(rms, 98)) or 1.0)
+    out, i, n = [], 0, len(quiet)
+    while i < n:
+        if quiet[i]:
+            j = i
+            while j + 1 < n and quiet[j + 1]:
+                j += 1
+            if (j - i + 1) * 0.02 >= min_len:
+                out.append((i * 0.02, (j + 1) * 0.02))
+            i = j + 1
+        else:
+            i += 1
+    return out
+
+
+def pace_outliers(timings: list[dict], tolerance: float = 0.45) -> int:
+    """Sanity check on the timing: a sentence should take about as long as its letters suggest (compared with the whole
+    video's pace). Counts sentences more than `tolerance` away; a high count would mean sentences were cut at wrong pauses."""
+    rows = [(_letters(s["text"]), s["end"] - s["start"]) for sec in timings for s in sec["sentences"]]
+    pace = sum(d for _, d in rows) / max(1, sum(n for n, _ in rows))
+    return sum(1 for n, d in rows if abs(d - n * pace) > tolerance * n * pace + 0.5)
+
+
+def make_monotone(timings: list[dict]) -> None:
+    """Words and sentences must run forward in time, each word at least a few ms long, inside its sentence."""
+    prev_end = 0.0
+    for sec in timings:
+        for sent in sec["sentences"]:
+            ws = sent["words"]
+            sent["start"] = max(sent["start"], prev_end - 0.0, sec["start"])
+            t = sent["start"]
+            for w in ws:
+                w["s"] = round(max(w["s"], t), 3)
+                w["e"] = round(max(w["e"], w["s"] + 0.03), 3)
+                t = w["s"] + 0.02
+            sent["end"] = round(max(sent["end"], ws[-1]["e"] if ws else sent["start"] + 0.05), 3)
+            sent["start"] = round(sent["start"], 3)
+            prev_end = sent["start"]
+
+
+def pause_agreement(wav: Path, timings: list[dict], tol: float = 0.25) -> float:
+    """Independent sync check: Gemini pauses between sentences, so each sentence start (after the first of a section)
+    should sit at or next to a real pause in the audio. Returns the share that do."""
+    with wave.open(str(wav)) as w:
+        rate = w.getframerate()
+        pcm = w.readframes(w.getnframes())
+    rms = _frame_rms(pcm, rate)
+    quiet = rms < 0.06 * (float(np.percentile(rms, 98)) or 1.0)
+    hits = total = 0
+    for sec in timings:
+        for sent in sec["sentences"][1:]:
+            k = int(sent["start"] / 0.02)
+            span = int(tol / 0.02)
+            total += 1
+            hits += bool(quiet[max(0, k - span): k + span + 1].any())
+    return hits / total if total else 1.0
+
+
 def make_voice(script_ml: dict, out_wav: Path, voice: dict) -> list[dict]:
-    return tts.synthesize_script(script_ml, out_wav, MalayalamGeminiEngine(voice["name"]), None)
+    timings = tts.synthesize_script(script_ml, out_wav, MalayalamGeminiEngine(voice["name"]), None)
+    fixed = ml_add_word_times(out_wav, timings)
+    make_monotone(timings)
+    odd = pace_outliers(timings)
+    print(f"[ml] timing: {fixed}/{len(timings)} sections cut at the audio's pauses; "
+          f"{odd} sentence(s) of {sum(len(s['sentences']) for s in timings)} have an unusual pace", flush=True)
+    return timings
 
 
 def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, translate=translate_script) -> Path:
@@ -256,7 +427,10 @@ def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, transla
                                         for sec in json.loads((src_dir / "items.json").read_text())])
     music = audio.generate_ambient(timings[-1]["end"] + 5, out_dir / "music.wav", seed=1)
     final = out_dir / "final.mp4"
-    render_photo_video(ml, timings, items, shots.plan_cuts(timings, [len(s) for s in items]), wav, final, work,
+    en_total = json.loads((src_dir / "timings.json").read_text())[-1]["end"] if (src_dir / "timings.json").exists() else 0
+    cut = shots.CUT_SECONDS * max(1.0, timings[-1]["end"] / en_total) if en_total else shots.CUT_SECONDS
+    plan = shots.plan_cuts(timings, [len(s) for s in items], cut_seconds=cut)   # longer audio, same number of shots
+    render_photo_video(ml, timings, items, plan, wav, final, work,
                        music=music, look=ML_CAPTIONS)
     images = [i["path"] for sec in items for i in sec if i["kind"] == "image"]
     thumbnail.make_thumbnail(ml, images, out_dir / "thumbnail.jpg", lang="ml")
@@ -268,7 +442,7 @@ def edition_due(conn):
     """The newest English long video that is uploaded and has no Malayalam edition yet (and none failed today)."""
     return conn.execute(
         "SELECT * FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL AND ml_video_id IS NULL "
-        "AND date(created_at) = date('now') AND COALESCE(ml_status, '') NOT LIKE 'failed%' ORDER BY id DESC LIMIT 1").fetchone()
+        "AND date(created_at) = date('now') AND COALESCE(ml_status, '') NOT LIKE 'failed%' AND COALESCE(ml_status, '') != 'built' ORDER BY id DESC LIMIT 1").fetchone()
 
 
 def upload_edition(conn, job, out_dir: Path, src_dir: Path, hour_utc: int | None, privacy: str, live: bool) -> str | None:
@@ -303,8 +477,7 @@ def run_daily_edition(conn, cfg, privacy: str, live: bool, root: Path) -> str:
     ml_cfg = cfg.malayalam or {}
     if not ml_cfg.get("enabled"):
         return "malayalam edition: disabled"
-    if live and not youtube_auth.configured("ml"):
-        return "malayalam edition: skipped (no Malayalam channel login yet)"
+    build_only = live and not youtube_auth.configured("ml")   # no channel yet: still build it so it can be reviewed
     if not os.environ.get("GEMINI_API_KEY_ML"):
         return "malayalam edition: skipped (GEMINI_API_KEY_ML is not set)"
     job = edition_due(conn)
@@ -316,7 +489,13 @@ def run_daily_edition(conn, cfg, privacy: str, live: bool, root: Path) -> str:
     voice = pick_ml_voice(job["id"], ml_cfg.get("voices"))
     try:
         build_edition(src, src / "ml", Path("work") / "ml" / src.name, voice)
-        vid = upload_edition(conn, job, src / "ml", src, ml_cfg.get("publish_hour_utc"), privacy, live)
+        vid = upload_edition(conn, job, src / "ml", src, ml_cfg.get("publish_hour_utc"), privacy, live and not build_only)
+        if build_only:
+            conn.execute("UPDATE jobs SET ml_status = 'built' WHERE id = ?", (job["id"],))
+            conn.commit()
+            notify.send(f"Brightwork Malayalam: built the Malayalam edition of {job['topic']!r} but did not upload it "
+                        "(no Malayalam channel login yet). Download it from this run's Artifacts.")
+            return "malayalam edition: built, not uploaded (no Malayalam channel login yet)"
     except Exception as exc:  # noqa: BLE001
         conn.execute("UPDATE jobs SET ml_status = ? WHERE id = ?", (f"failed: {type(exc).__name__}", job["id"]))
         conn.commit()
@@ -324,6 +503,7 @@ def run_daily_edition(conn, cfg, privacy: str, live: bool, root: Path) -> str:
                     "The English video is unaffected.")
         return f"malayalam edition FAILED: {type(exc).__name__}: {exc}"
     if vid:
+        (src / "ml" / "final.mp4").unlink(missing_ok=True)      # uploaded: the workflow keeps artifacts only for review builds
         at = conn.execute("SELECT ml_publish_at FROM jobs WHERE id = ?", (job["id"],)).fetchone()[0]
         from autopilot.cli import ist
         notify.send(f"Brightwork Malayalam: uploaded {json.loads((src / 'ml' / 'script_ml.json').read_text())['title']!r}\n"

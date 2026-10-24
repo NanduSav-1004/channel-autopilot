@@ -108,6 +108,18 @@ jobs:
           [ "$LIVE" = "true" ] && ARGS="$ARGS --live"
           autopilot $ARGS 2>&1 | tee -a run.log
 
+      - name: Keep the Malayalam edition for review (only when it was built but not uploaded)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: malayalam-edition-${{ github.run_id }}
+          path: |
+            output/*/ml/final.mp4
+            output/*/ml/thumbnail.jpg
+            output/*/ml/script_ml.json
+          if-no-files-found: ignore
+          retention-days: 3
+
       - name: Save job database
         if: always()
         run: scripts/state_sync.sh push
