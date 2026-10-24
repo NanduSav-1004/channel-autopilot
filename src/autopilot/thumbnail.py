@@ -1,10 +1,29 @@
-"""Thumbnail: best image from the video, darkened, with short bold text (1280x720)."""
+"""Thumbnail (1280x720): the most striking image from the video, graded for punch, with a heavy headline whose key
+word is amber, a tag from the video's style, and a small brand badge."""
+import math
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+import numpy as np
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 
 W, H = 1280, 720
-FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+FONT_HEAVY = "/usr/share/fonts/truetype/lato/Lato-Black.ttf"
+FONT_BOLD = "/usr/share/fonts/truetype/lato/Lato-Bold.ttf"
+FONT_FALLBACK = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+AMBER, NAVY, INK = (255, 190, 40), (14, 27, 61), (6, 10, 30)
+SERIES_TAG = {
+    "how_it_works": "HOW IT WORKS", "myth_vs_reality": "MYTH OR FACT?", "origin_story": "THE ORIGIN STORY",
+    "scale_and_numbers": "BY THE NUMBERS", "what_if": "WHAT IF?",
+}
+
+
+def _font(size: int, heavy: bool = True) -> ImageFont.FreeTypeFont:
+    for path in (FONT_HEAVY if heavy else FONT_BOLD, FONT_BOLD, FONT_FALLBACK):
+        try:
+            return ImageFont.truetype(path, size)
+        except OSError:
+            continue
+    return ImageFont.load_default()
 
 
 def thumbnail_text(script: dict) -> str:
@@ -12,39 +31,222 @@ def thumbnail_text(script: dict) -> str:
     return " ".join(text.split()[:5]).upper()
 
 
-def _wrap(draw, text: str, font, max_width: int) -> list[str]:
-    lines, cur = [], ""
-    for word in text.split():
-        trial = f"{cur} {word}".strip()
-        if cur and draw.textlength(trial, font=font) > max_width:
-            lines.append(cur)
-            cur = word
-        else:
-            cur = trial
-    return lines + [cur]
+def colorfulness(img: Image.Image) -> float:
+    """Hasler-Susstrunk colourfulness: about 0 for greyscale, 40+ for vivid."""
+    a = np.asarray(img.convert("RGB").resize((320, 180))).astype(float)
+    rg, yb = a[..., 0] - a[..., 1], 0.5 * (a[..., 0] + a[..., 1]) - a[..., 2]
+    return math.hypot(rg.std(), yb.std()) + 0.3 * math.hypot(rg.mean(), yb.mean())
 
 
-def make_thumbnail(script: dict, background: Path | None, out: Path) -> Path:
-    if background and background.exists():
-        img = Image.open(background).convert("RGB")
-        scale = max(W / img.width, H / img.height)
-        img = img.resize((round(img.width * scale), round(img.height * scale)), Image.LANCZOS)
-        left, top = (img.width - W) // 2, (img.height - H) // 2
-        img = img.crop((left, top, left + W, top + H))
-    else:
-        img = Image.new("RGB", (W, H), (15, 25, 60))
-    # left-to-right darkening keeps the text readable on any photo
-    shade = Image.new("L", (W, 1))
-    shade.putdata([int(200 * max(0.0, 1 - x / (W * 0.85))) for x in range(W)])
-    shade = shade.resize((W, H))
-    img = Image.composite(Image.new("RGB", (W, H), (0, 0, 0)), img, shade)
-    draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype(FONT_BOLD, 120)
-    lines = _wrap(draw, thumbnail_text(script), font, int(W * 0.62))
-    y = (H - len(lines) * 130) // 2
+def visual_interest(img: Image.Image) -> float:
+    """How eye-catching an image is likely to be: colour, contrast and detail, minus mostly-white or mostly-black."""
+    gray = np.asarray(img.convert("L").resize((320, 180))).astype(float)
+    score = colorfulness(img) + 0.5 * gray.std() + 3.0 * np.abs(np.diff(gray, axis=1)).mean()
+    if gray.mean() > 205:      # a white page or diagram
+        score -= 25
+    if gray.mean() < 30:       # nearly black
+        score -= 25
+    return score
+
+
+def pick_background(paths: list[Path]) -> Path | None:
+    """The most striking usable image: landscape, big enough, scored by visual_interest."""
+    best, best_score = None, -1e9
+    for p in paths:
+        try:
+            with Image.open(p) as im:
+                if im.width < 900 or im.width / im.height < 1.2:
+                    continue
+                score = visual_interest(im)
+        except OSError:
+            continue
+        if score > best_score:
+            best, best_score = p, score
+    return best
+
+
+PICK_PROMPT = """Choose the best background image for the YouTube thumbnail of a video titled "{title}".
+The {n} candidates are attached, numbered 1 to {n} in order.
+Prefer: clearly related to the topic, visually striking (strong colour or contrast, one clear subject), simple.
+Reject images with lots of text, logos, watermarks, maps, charts, tables or screenshots, and murky or cluttered ones.
+Return JSON: {{"best": <number 1-{n}>, "reason": str}}"""
+
+
+def _small_jpeg(path: Path, side: int = 512) -> bytes:
+    import io
+
+    img = Image.open(path).convert("RGB")
+    img.thumbnail((side, side))
+    buf = io.BytesIO()
+    img.save(buf, "JPEG", quality=70)
+    return buf.getvalue()
+
+
+def shortlist(paths: list[Path], k: int = 8) -> list[Path]:
+    """The k most visually interesting usable images (the vision model chooses among these)."""
+    scored = []
+    for p in paths:
+        try:
+            with Image.open(p) as im:
+                if im.width < 900 or im.width / im.height < 1.2:
+                    continue
+                scored.append((visual_interest(im), str(p), p))
+        except OSError:
+            continue
+    return [p for _, _, p in sorted(scored, reverse=True)[:k]]
+
+
+def pick_with_vision(script: dict, paths: list[Path], gen=None) -> Path | None:
+    """Ask the vision model which shortlisted image makes the best thumbnail (on topic, striking, no text/charts).
+    Any failure falls back to the colour-and-contrast pick."""
+    from autopilot import llm
+
+    gen = gen or llm.generate_json
+    short = shortlist(paths)
+    if len(short) < 2:
+        return pick_background(paths)
+    try:
+        best = int(gen(PICK_PROMPT.format(title=script["title"], n=len(short)), images=[_small_jpeg(p) for p in short])["best"])
+        if 1 <= best <= len(short):
+            return short[best - 1]
+    except (llm.LLMError, KeyError, TypeError, ValueError, OSError):
+        pass
+    return short[0]
+
+
+def grade(img: Image.Image) -> Image.Image:
+    """Punchy colour. Dull or black-and-white images become a navy-to-amber duotone so they look deliberate."""
+    img = img.convert("RGB")
+    if colorfulness(img) < 14:
+        gray = ImageOps.autocontrast(img.convert("L"), cutoff=1)
+        img = ImageOps.colorize(gray, black=(8, 14, 40), mid=(150, 70, 70), white=(255, 215, 130), midpoint=120)
+    img = ImageEnhance.Contrast(img).enhance(1.18)
+    img = ImageEnhance.Color(img).enhance(1.35)
+    return ImageEnhance.Sharpness(img).enhance(1.4)
+
+
+def _cover(img: Image.Image, focus_x: float = 0.7) -> Image.Image:
+    """Fill 1280x720, keeping the right side (where the subject should be) rather than the centre; text sits left."""
+    s = max(W / img.width, H / img.height) * 1.04
+    img = img.resize((round(img.width * s), round(img.height * s)), Image.LANCZOS)
+    left = round((img.width - W) * focus_x)
+    top = (img.height - H) // 2
+    return img.crop((left, top, left + W, top + H))
+
+
+def _overlay(img: Image.Image) -> Image.Image:
+    """A dark-to-clear gradient behind the headline (left) and a soft vignette, so text is readable on any photo."""
+    x = np.linspace(0, 1, W)[None, :]
+    y = np.linspace(-1, 1, H)[:, None]
+    left = np.clip(1 - x / 0.62, 0, 1) ** 1.3 * 0.78
+    vignette = np.clip((np.abs(y) - 0.55) / 0.45, 0, 1) * 0.45
+    alpha = np.clip(left + vignette, 0, 0.9)
+    shade = Image.new("RGBA", (W, H), INK + (0,))
+    shade.putalpha(Image.fromarray((alpha * 255).astype("uint8")))
+    return Image.alpha_composite(img.convert("RGBA"), shade)
+
+
+def _splits(words: list[str]) -> list[list[str]]:
+    """Candidate ways to break the headline into 1-3 lines, most balanced first."""
+    n = len(words)
+    options = [[" ".join(words)]]
+    if n >= 2:
+        for cut in range(1, n):
+            options.append([" ".join(words[:cut]), " ".join(words[cut:])])
+    if n >= 3:
+        for a in range(1, n - 1):
+            for b in range(a + 1, n):
+                options.append([" ".join(words[:a]), " ".join(words[a:b]), " ".join(words[b:])])
+    return options
+
+
+def _fit(text: str, draw: ImageDraw.ImageDraw, max_w: int, max_h: int) -> tuple[list[str], int]:
+    """The line breaks and font size that make the headline as BIG as the space allows."""
+    best_lines, best_size = [text], 40
+    for lines in _splits(text.split()):
+        size = 240
+        while size > 40:
+            font = _font(size)
+            if max(draw.textlength(line, font=font) for line in lines) <= max_w and len(lines) * size * 1.0 <= max_h:
+                break
+            size -= 4
+        if size > best_size:
+            best_lines, best_size = lines, size
+    return best_lines, best_size
+
+
+def key_word(text: str) -> str:
+    """The word to highlight: the last one if it is substantial, otherwise the longest."""
+    words = [w for w in text.split() if any(c.isalnum() for c in w)]
+    if not words:
+        return ""
+    return words[-1] if len(words[-1].strip("?!.,")) >= 4 else max(words, key=lambda w: len(w.strip("?!.,")))
+
+
+def _draw_headline(canvas: Image.Image, text: str) -> None:
+    draw = ImageDraw.Draw(canvas)
+    hi = key_word(text)
+    lines, size = _fit(text, draw, int(W * 0.64), int(H * 0.70))
+    font = _font(size)
+    stroke = max(7, size // 14)
+    line_h = int(size * 1.0)
+    y = (H - len(lines) * line_h) // 2 + 12
+    shadow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow)
+    marked = False
+    placed = []
     for line in lines:
-        draw.text((60, y), line, font=font, fill=(255, 255, 255), stroke_width=6, stroke_fill=(0, 0, 0))
-        y += 130
+        x, parts = 58, []
+        for word in line.split(" "):
+            is_hi = (word == hi) and not marked
+            marked = marked or is_hi
+            parts.append((word, x, is_hi))
+            x += draw.textlength(word + " ", font=font)
+        placed.append((y, parts))
+        y += line_h
+    for ly, parts in placed:                                   # drop shadow first, blurred
+        for word, wx, _ in parts:
+            sd.text((wx + 7, ly + 9), word, font=font, fill=(0, 0, 0, 200), stroke_width=stroke, stroke_fill=(0, 0, 0, 200))
+    canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(5)))
+    draw = ImageDraw.Draw(canvas)
+    for ly, parts in placed:
+        for word, wx, is_hi in parts:
+            draw.text((wx, ly), word, font=font, fill=AMBER if is_hi else (255, 255, 255),
+                      stroke_width=stroke, stroke_fill=(10, 12, 24))
+
+
+def _draw_tag(canvas: Image.Image, label: str) -> None:
+    draw = ImageDraw.Draw(canvas)
+    font = _font(44, heavy=True)
+    tw = draw.textlength(label, font=font)
+    box = (48, 40, 48 + tw + 52, 40 + 70)
+    draw.rounded_rectangle(box, radius=14, fill=AMBER)
+    draw.text((48 + 26, 40 + 8), label, font=font, fill=INK)
+
+
+def _draw_badge(canvas: Image.Image) -> None:
+    """Brand badge in the top-right; the bottom-right is where YouTube overlays the video length."""
+    d = ImageDraw.Draw(canvas)
+    cx, cy, r = W - 96, 92, 56
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=NAVY, outline=AMBER, width=7)
+    font = _font(72)
+    bb = d.textbbox((0, 0), "B", font=font)
+    d.text((cx - (bb[0] + bb[2]) / 2, cy - (bb[1] + bb[3]) / 2 - 3), "B", font=font, fill=(255, 255, 255))
+
+
+def make_thumbnail(script: dict, background: "Path | list[Path] | None", out: Path, pick=None) -> Path:
+    """`pick(script, paths)` chooses the image (the pipeline passes pick_with_vision); default is the colour score."""
+    paths = [background] if isinstance(background, Path) else list(background or [])
+    paths = [Path(p) for p in paths if p and Path(p).exists()]
+    chosen = pick(script, paths) if pick else pick_background(paths)
+    if chosen:
+        base = _cover(grade(Image.open(chosen)))
+    else:
+        base = Image.new("RGB", (W, H), NAVY)
+    canvas = _overlay(base)
+    _draw_headline(canvas, thumbnail_text(script))
+    _draw_tag(canvas, SERIES_TAG.get(script.get("series", ""), "EXPLAINED"))
+    _draw_badge(canvas)
     out.parent.mkdir(parents=True, exist_ok=True)
-    img.save(out, quality=90)  # YouTube limit is 2 MB; a 1280x720 JPEG is well under
+    canvas.convert("RGB").save(out, quality=90)  # YouTube limit is 2 MB; a 1280x720 JPEG is well under
     return out

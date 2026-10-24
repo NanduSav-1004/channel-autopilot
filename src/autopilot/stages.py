@@ -189,8 +189,8 @@ class Stages:
         wd = self.work / d.name
         render_photo_video(script, timings, items, shots.plan_cuts(timings, [len(s) for s in items]), d / "narration.wav",
                            d / "final.mp4", wd, music=music)
-        first_image = next((i["path"] for sec in items for i in sec if i["kind"] == "image"), None)
-        thumbnail.make_thumbnail(script, first_image, d / "thumbnail.jpg")
+        images = [i["path"] for sec in items for i in sec if i["kind"] == "image"]
+        thumbnail.make_thumbnail(script, images, d / "thumbnail.jpg", pick=thumbnail.pick_with_vision)
         shutil.rmtree(wd, ignore_errors=True)
 
     def upload(self, job) -> None:
