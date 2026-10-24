@@ -49,3 +49,11 @@ def test_watchdog_counts_todays_long_uploads(tmp_path):
     c.execute("INSERT INTO jobs VALUES ('long', 'xyz', datetime('now'))")
     c.commit()
     assert watchdog.uploaded_today(str(db)) == 1
+
+
+def test_ist_formats_indian_time_and_utc():
+    from autopilot.cli import ist
+
+    assert ist("2026-10-24T18:00:00Z") == "24 Oct 11:30 PM IST (18:00 UTC)"
+    assert ist("2026-10-25T02:00:00Z") == "25 Oct 7:30 AM IST (02:00 UTC)"
+    assert ist(None) == "immediately"

@@ -1,7 +1,8 @@
 import argparse
 import sys
+from datetime import timedelta, timezone
 
-from autopilot import db, notify, topics
+from autopilot import db, notify, schedule, topics
 from autopilot.config import load_config
 from autopilot.env import load_env
 from autopilot.pipeline import run_pending
@@ -17,14 +18,26 @@ def already_done_today(conn, cfg) -> bool:
     return db.uploaded_today(conn, "long") >= cfg.formats["long"]["per_day"]
 
 
+def ist(ts: str | None) -> str:
+    """'2026-10-24T18:00:00Z' -> '24 Oct 11:30 PM IST (18:00 UTC)'; the owner works in Indian time."""
+    if not ts:
+        return "immediately"
+    dt = schedule.parse(ts)
+    local = dt.astimezone(timezone(timedelta(hours=5, minutes=30)))
+    return f"{local:%d %b} {local.strftime('%I:%M %p').lstrip('0')} IST ({dt:%H:%M} UTC)"
+
+
 def notify_uploaded(conn) -> None:
-    row = conn.execute("SELECT video_id, topic, publish_at FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL "
+    row = conn.execute("SELECT id, video_id, topic, publish_at FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL "
                        "ORDER BY id DESC LIMIT 1").fetchone()
-    shorts = conn.execute("SELECT COUNT(*) FROM jobs WHERE kind = 'short' AND video_id IS NOT NULL "
-                          "AND date(created_at) = date('now')").fetchone()[0]
-    if row:
-        notify.send(f"Brightwork: uploaded {row['topic']!r}\nhttps://youtu.be/{row['video_id']}\n"
-                    f"goes public {row['publish_at'] or 'now'} UTC; {shorts} Short(s) queued")
+    if not row:
+        return
+    shorts = conn.execute("SELECT publish_at FROM jobs WHERE kind = 'short' AND parent_id = ? AND video_id IS NOT NULL "
+                          "ORDER BY publish_at", (row["id"],)).fetchall()
+    lines = [f"Brightwork: uploaded {row['topic']!r}", f"https://youtu.be/{row['video_id']}",
+             f"Goes public: {ist(row['publish_at'])}"]
+    lines += [f"Short {i}: {ist(s['publish_at'])}" for i, s in enumerate(shorts, 1)] or ["No Shorts queued"]
+    notify.send("\n".join(lines))
 
 
 def ensure_progress(before: int, after: int) -> None:

@@ -8,4 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from autopilot import notify
 
 run = f"https://github.com/{os.environ.get('GITHUB_REPOSITORY', '')}/actions/runs/{os.environ.get('GITHUB_RUN_ID', '')}"
-notify.send(f"Brightwork: the daily workflow FAILED. {run}")
+from datetime import datetime, timedelta, timezone
+
+n = datetime.now(timezone.utc)
+notify.send(f"Brightwork: the daily workflow FAILED at {(n + timedelta(hours=5, minutes=30)).strftime('%I:%M %p').lstrip('0')} IST / {n:%H:%M} UTC. {run}")
