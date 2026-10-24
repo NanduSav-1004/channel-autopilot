@@ -356,6 +356,50 @@ def words_in(span: tuple[float, float], words: list[str]) -> list[dict]:
     return [{"w": x, "s": round(float(a), 3), "e": round(float(b), 3)} for x, a, b in zip(words, edges[:-1], edges[1:], strict=True)]
 
 
+def place_words(words: list[str], gaps: list[tuple[float, float]], t0: float, t1: float) -> list[dict]:
+    """Time the words of one sentence spanning [t0, t1]. Pauses inside the sentence (a dramatic pause in a hook, a breath
+    after a comma) are matched to word boundaries by a small dynamic programme: between two used pauses the words should
+    take time proportional to their letters. A pause that fits no boundary well is treated as a hesitation and skipped."""
+    n = len(words)
+    inner = [g for g in gaps if g[1] - g[0] >= 0.15 and t0 + 0.12 < g[0] and g[1] < t1 - 0.12]
+    if n == 1 or not inner:
+        return words_in((t0, t1), words)
+    wl = np.array([_letters(w) for w in words], dtype=float)
+    cum = np.concatenate([[0.0], np.cumsum(wl)])
+    pace = max(0.02, ((t1 - t0) - sum(b - a for a, b in inner)) / cum[-1])
+    pts = [(t0, t0)] + inner                           # pts[0] is the sentence start; "used" pauses follow
+    k = len(inner)
+    best = {(0, 0): (0.0, None)}                       # (pause index, boundary after word index) -> (cost, previous state)
+
+    def seg_cost(j0: int, b0: int, j1: int | None, b1: int) -> float:
+        start = pts[j0][1]
+        stop = t1 if j1 is None else pts[j1][0]
+        skipped = sum(pts[m][1] - pts[m][0] for m in range(j0 + 1, (k + 1) if j1 is None else j1))
+        expect = pace * (cum[b1] - cum[b0]) + skipped
+        c = ((stop - start - expect) / max(expect, 0.4)) ** 2
+        skip_pen = sum(0.3 + 1.5 * (pts[m][1] - pts[m][0]) for m in range(j0 + 1, (k + 1) if j1 is None else j1))   # a long pause is rarely a hesitation
+        return c + skip_pen - (0.4 if b1 < n and words[b1 - 1][-1:] in ",;:" else 0.0)
+
+    for j in range(1, k + 1):
+        for b in range(1, n):
+            cands = [(v[0] + seg_cost(j0, b0, j, b), (j0, b0)) for (j0, b0), v in best.items() if j0 < j and b0 < b]
+            if cands:
+                best[(j, b)] = min(cands, key=lambda c: c[0])
+    final = [(v[0] + seg_cost(j0, b0, None, n), s) for s, v in best.items() for j0, b0 in [s]]
+    _, state = min(final, key=lambda c: c[0])
+    chain = []
+    while state is not None:
+        chain.append(state)
+        state = best[state][1]
+    chain.reverse()                                    # [(0, 0), (j1, b1), ...]
+    out: list[dict] = []
+    for idx, (j0, b0) in enumerate(chain):
+        j1, b1 = chain[idx + 1] if idx + 1 < len(chain) else (None, n)
+        span = (pts[j0][1], t1 if j1 is None else pts[j1][0])
+        out += words_in(span, words[b0:b1])
+    return out
+
+
 def phrases(sentence: str) -> list[str]:
     """A sentence broken after each comma (the voice pauses there)."""
     parts = re.split(r"(?<=[,;:])\s+", sentence.strip())
@@ -383,13 +427,8 @@ def ml_add_word_times(out_wav: Path, timings: list[dict], gaps: list[tuple[float
         spans = segment_by_pauses([_letters(x) for x in texts], gaps, t0, t1,
                                   [0.25 * (len(phrases(x)) - 1) for x in texts])
         for sent, (s0, s1) in zip(sec["sentences"], spans, strict=True):
-            parts = phrases(sent["text"])
             inside = [g for g in gaps if s0 < (g[0] + g[1]) / 2 < s1]
-            psp = segment_by_pauses([_letters(x) for x in parts], inside, s0, s1)
-            words = []
-            for part, span in zip(parts, psp, strict=True):
-                words += words_in(span, part.split())
-            sent["start"], sent["end"], sent["words"] = round(s0, 3), round(s1, 3), words
+            sent["start"], sent["end"], sent["words"] = round(s0, 3), round(s1, 3), place_words(sent["text"].split(), inside, s0, s1)
     return sum(1 for sec in timings if sec["sentences"] and "words" in sec["sentences"][0])
 
 

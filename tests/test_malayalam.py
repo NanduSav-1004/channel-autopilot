@@ -236,3 +236,17 @@ def test_build_short_retries_shorter_and_renders_a_vertical_video(tmp_path):
     info = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=width,height", "-of", "csv=p=0", str(out)],
                           capture_output=True, text=True, check=True).stdout
     assert "1080,1920" in info
+
+
+def test_a_dramatic_pause_inside_a_sentence_is_matched_to_the_right_word_boundary():
+    # five words (letters 23, 16, 17, 3, 9) spoken over 0.08-7.02 s with real pauses after word 2 and word 3
+    words = ["അ" * 23, "അ" * 16, "അ" * 17, "അ" * 3, "അ" * 9]
+    out = ml.place_words(words, [(3.5, 3.78), (4.72, 5.54)], 0.08, 7.02)
+    assert abs(out[1]["e"] - 3.5) < 0.05 and abs(out[2]["s"] - 3.78) < 0.05
+    assert abs(out[2]["e"] - 4.72) < 0.05 and abs(out[3]["s"] - 5.54) < 0.05
+    assert out[0]["s"] == 0.08 and out[-1]["e"] == 7.02
+
+
+def test_place_words_without_inner_pauses_is_proportional():
+    out = ml.place_words(["അ" * 10, "അ" * 10], [], 0.0, 4.0)
+    assert abs(out[0]["e"] - 2.0) < 1e-6
