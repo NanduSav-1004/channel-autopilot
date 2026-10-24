@@ -59,7 +59,7 @@ jobs:
           cache: pip
 
       - name: System packages (fonts for captions and thumbnails)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-lato fonts-dejavu-core ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-lato fonts-dejavu-core fonts-noto-core ffmpeg
 
       - run: pip install -e .
 
