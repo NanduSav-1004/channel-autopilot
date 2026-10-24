@@ -131,8 +131,9 @@ class GeminiEngine:
     key_env = "GEMINI_API_KEY"
     style: str | None = None          # None: the English direction (GEMINI_STYLE); subclasses for other languages override
 
-    def __init__(self, voice: str = "Sadachbia"):
+    def __init__(self, voice: str = "Sadachbia", models: list[str] | None = None):
         self.voice = voice
+        self.models = list(models or GEMINI_TTS_MODELS)
         self.key = os.environ.get(self.key_env)
         if not self.key:
             raise OSError(f"{self.key_env} is not set")
@@ -142,7 +143,7 @@ class GeminiEngine:
             "responseModalities": ["AUDIO"],
             "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": self.voice}}}}}).encode()
         last = None
-        for model in GEMINI_TTS_MODELS:
+        for model in self.models:
             req = urllib.request.Request(
                 f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent", data=body,
                 headers={"x-goog-api-key": self.key, "Content-Type": "application/json"})
@@ -154,6 +155,11 @@ class GeminiEngine:
             except (OSError, KeyError, IndexError, ValueError) as exc:
                 last = f"{model} {type(exc).__name__}"
         raise OSError(f"all Gemini TTS models failed ({last})")
+
+    def variants(self) -> list["GeminiEngine"]:
+        """One engine per TTS model. The same voice name sounds different on different models, so a whole narration must
+        be spoken by ONE model: if it runs out of quota partway, the narration is redone with the next model."""
+        return [type(self)(self.voice, [m]) for m in self.models]
 
     def synth_section(self, sentences: list[str]) -> tuple[bytes, int, list[tuple[float, float]]]:
         pcm = self._speak(" ".join(sentences))
@@ -333,7 +339,20 @@ def synthesize_script(script: dict, out_wav: str | Path, engine=None, fallback=N
     engine = engine or PiperEngine()
     used = engine
     try:
-        timings = _synthesize(script, out_wav, engine)
+        timings = None
+        for candidate in (engine.variants() if hasattr(engine, "variants") else [engine]):
+            try:
+                timings, used = _synthesize(script, out_wav, candidate), candidate
+                if hasattr(engine, "variants"):
+                    print(f"[tts] whole narration spoken by Gemini model {candidate.models[0]}", flush=True)
+                break
+            except (OSError, wave.Error) as exc:
+                if not hasattr(engine, "variants"):
+                    raise
+                print(f"[tts] {candidate.name} model {candidate.models[0]} could not speak the whole narration ({exc}); "
+                      "trying the next model", flush=True)
+        if timings is None:
+            raise OSError(f"no {engine.name} model could speak the whole narration")
     except (OSError, wave.Error) as exc:
         if fallback is None:
             raise

@@ -21,6 +21,7 @@ FONT_ML_BOLD = "/usr/share/fonts/truetype/noto/NotoSansMalayalam-Bold.ttf"
 ML_CAPTIONS = {"res": (1280, 720), "font": 46, "margin_v": 50, "group": 6, "upper": False, "outline": 5,
                "fontname": "Noto Sans Malayalam", "font_path": FONT_ML_BOLD}
 
+QUOTES = str.maketrans("", "", "'\"‘’“”")
 SENT_RE = re.compile(r"(?<=[.!?])\s+")
 
 
@@ -218,7 +219,7 @@ class MalayalamGeminiEngine(tts.GeminiEngine):
     splitter = staticmethod(split_sentences_ml)
 
     def synth_section(self, sentences: list[str]):
-        pcm = self._speak(" ".join(sentences))
+        pcm = self._speak(" ".join(sentences).translate(QUOTES))   # quote marks make Gemini act the quote as a second voice
         pcm, spans = align_by_silence(sentences, pcm, 24000)
         return pcm, 24000, spans
 
