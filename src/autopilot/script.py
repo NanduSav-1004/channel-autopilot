@@ -243,3 +243,36 @@ def repair_metadata(
     if out.get("description"):
         script["description"] = out["description"].strip()
     return script
+
+
+TITLE_MAX = 70
+SHORTEN_PROMPT = """Shorten this YouTube title to at most {max} characters. Keep the same meaning, the main keyword and the curiosity.
+Do not add any new facts or claims.
+
+Title: {title}
+
+Return JSON: {{"title": str}}"""
+
+
+def trim_title(title: str, limit: int = TITLE_MAX) -> str:
+    """No-LLM fallback: drop the subtitle after a colon or dash if that fits, else cut at a word boundary."""
+    for sep in (": ", " - ", " — ", " – ", "? "):
+        head = title.split(sep)[0].strip()
+        if sep == "? " and not head.endswith("?"):
+            head += "?"
+        if sep in title and 15 <= len(head) <= limit:
+            return head
+    return title[:limit].rsplit(" ", 1)[0].rstrip(" ,;:-—–") if len(title) > limit else title
+
+
+def shorten_title(script: dict, gen: Callable[[str], dict] = llm.generate_json) -> bool:
+    """Keep titles within TITLE_MAX (longer ones get cut off in search and on phones). Returns True if it changed."""
+    title = script["title"].strip()
+    if len(title) <= TITLE_MAX:
+        return False
+    try:
+        new = str(gen(SHORTEN_PROMPT.format(max=TITLE_MAX, title=title)).get("title", "")).strip().strip('"')
+    except (llm.LLMError, KeyError, TypeError, ValueError, AttributeError):
+        new = ""
+    script["title"] = new if 10 <= len(new) <= TITLE_MAX else trim_title(title)
+    return True

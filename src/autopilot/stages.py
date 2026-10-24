@@ -10,7 +10,13 @@ from autopilot import audio, db, metadata, music, qa, schedule, shorts, shots, t
 from autopilot.config import Config
 from autopilot.errors import RestartJob, TransientError
 from autopilot.render import render_photo_video, render_short
-from autopilot.script import generate_script, repair_metadata, repair_sections, style_stats
+from autopilot.script import (
+    generate_script,
+    repair_metadata,
+    repair_sections,
+    shorten_title,
+    style_stats,
+)
 
 
 class StageError(RuntimeError):
@@ -146,6 +152,10 @@ class Stages:
             _write(d / "script.json", script)
             issues = check(script)
         if not issues:
+            old = script["title"]
+            if shorten_title(script):
+                _write(d / "script.json", script)
+                print(f"[job {job['id']}] title shortened: {old!r} -> {script['title']!r}", flush=True)
             return
         _write(d / "qa_issues.json", issues)
         (d / "script.json").unlink()  # force a regeneration (with the issues as feedback) on retry
