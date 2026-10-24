@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from autopilot import db, topics
+from autopilot import db, notify, topics
 from autopilot.config import load_config
 from autopilot.env import load_env
 from autopilot.pipeline import run_pending
@@ -15,6 +15,16 @@ def done_count(conn) -> int:
 def already_done_today(conn, cfg) -> bool:
     """Redundant schedule times and manual runs must not stack up several videos in one day."""
     return db.uploaded_today(conn, "long") >= cfg.formats["long"]["per_day"]
+
+
+def notify_uploaded(conn) -> None:
+    row = conn.execute("SELECT video_id, topic, publish_at FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL "
+                       "ORDER BY id DESC LIMIT 1").fetchone()
+    shorts = conn.execute("SELECT COUNT(*) FROM jobs WHERE kind = 'short' AND video_id IS NOT NULL "
+                          "AND date(created_at) = date('now')").fetchone()[0]
+    if row:
+        notify.send(f"Brightwork: uploaded {row['topic']!r}\nhttps://youtu.be/{row['video_id']}\n"
+                    f"goes public {row['publish_at'] or 'now'} UTC; {shorts} Short(s) queued")
 
 
 def ensure_progress(before: int, after: int) -> None:

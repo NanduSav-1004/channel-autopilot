@@ -1,0 +1,24 @@
+name: Watchdog
+
+on:
+  schedule:
+    # Tells you (Telegram) if no video has been uploaded by midday UTC, e.g. when GitHub never started the daily run.
+    - cron: "30 12 * * *"
+    - cron: "30 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: github.event_name == 'workflow_dispatch' || vars.AUTOPILOT_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/watchdog.py

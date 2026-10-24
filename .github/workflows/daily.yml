@@ -46,6 +46,8 @@ jobs:
       YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
       YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
       YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -93,6 +95,10 @@ jobs:
       - name: Save job database
         if: always()
         run: scripts/state_sync.sh push
+
+      - name: Alert if the run failed
+        if: failure()
+        run: python3 scripts/watchdog_fail.py || true
 
       - name: Keepalive (GitHub disables scheduled workflows after 60 days without repo activity)
         if: always()

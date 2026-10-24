@@ -24,6 +24,12 @@ about 12:00 UTC, check the Actions tab and start it by hand (Run workflow, tick 
 3. Open the run, then the step "Make today's video". A good log ends with `processed N job(s)`.
    Useful lines: `[topics] queued ...`, `[job N] qa done`, `scheduled to go public at ...`, `queued N Short(s)`.
 
+## Phone alerts (Telegram)
+- Needs secrets `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` (local `.env`, then `python scripts/set_github_secrets.py`;
+  `scripts/telegram_chat_id.py` finds the chat id after you message the bot). Without them alerts are silently skipped.
+- You get a message when a video is uploaded (title, link, go-live time), when the daily workflow fails, and from the
+  **Watchdog** workflow (12:30 and 14:30 UTC) if no video has been uploaded yet that day.
+
 ## Checks before pushing (local, not on GitHub)
 - `scripts/check.sh` runs lint, the tests and a secret scan of the whole git history (about 5 seconds). It is also the
   **pre-push hook**, so `git push` is blocked if anything fails. Install it once per clone: `scripts/install_hooks.sh`.

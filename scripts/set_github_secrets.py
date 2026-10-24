@@ -28,6 +28,8 @@ secrets = {
     "GEMINI_API_KEY": env.get("GEMINI_API_KEY", ""),
     "GROQ_API_KEY": env.get("GROQ_API_KEY", ""),
     "PIXABAY_API_KEY": env.get("PIXABAY_API_KEY", ""),
+    "TELEGRAM_BOT_TOKEN": env.get("TELEGRAM_BOT_TOKEN", ""),
+    "TELEGRAM_CHAT_ID": env.get("TELEGRAM_CHAT_ID", ""),
     "YOUTUBE_CLIENT_ID": client["client_id"],
     "YOUTUBE_CLIENT_SECRET": client["client_secret"],
     "YOUTUBE_REFRESH_TOKEN": token["refresh_token"],
