@@ -1,7 +1,7 @@
 ലോകം എങ്ങനെ പ്രവർത്തിക്കുന്നു എന്ന് ലളിതമായ മലയാളത്തിൽ വിശദീകരിക്കുന്ന ശാസ്ത്ര ചാനലാണ് Brightwork Malayalam. ഭൗതികശാസ്ത്രം, രസതന്ത്രം, എൻജിനീയറിങ്, ചരിത്രം എന്നിവയിലെ ദൈനംദിന കാര്യങ്ങളും വലിയ ആശയങ്ങളും ഞങ്ങൾ വിശദീകരിക്കുന്നു. ഓരോ വീഡിയോയും ഒരു ചോദ്യത്തിൽ തുടങ്ങി വ്യക്തമായ ഒരു ഉത്തരത്തിൽ അവസാനിക്കുന്നു.
 
-ഈ വീഡിയോകൾ എങ്ങനെ നിർമ്മിക്കുന്നു എന്ന് തുറന്നു പറയാം: തിരക്കഥ AI സഹായത്തോടെ വിക്കിപീഡിയ പോലുള്ള പൊതു സ്രോതസ്സുകളിൽ നിന്ന് തയ്യാറാക്കി, ആ സ്രോതസ്സുകളുമായി ഒത്തുനോക്കുന്നു. ശബ്ദം കൃത്രിമമാണ്. ചിത്രങ്ങളും ദൃശ്യങ്ങളും ഓപ്പൺ ലൈസൻസുള്ള ശേഖരങ്ങളിൽ നിന്നാണ്; ഓരോ വീഡിയോയുടെയും വിവരണത്തിൽ സ്രോതസ്സും ക്രെഡിറ്റും നൽകിയിട്ടുണ്ട്.
+ഈ വീഡിയോകൾ എങ്ങനെ നിർമ്മിക്കുന്നു എന്ന് തുറന്നു പറയാം: തിരക്കഥ AI സഹായത്തോടെ വിക്കിപീഡിയ പോലുള്ള പൊതു സ്രോതസ്സുകളിൽ നിന്ന് തയ്യാറാക്കി അവയുമായി ഒത്തുനോക്കുന്നു. ശബ്ദം കൃത്രിമമാണ്. ചിത്രങ്ങളും ദൃശ്യങ്ങളും ഓപ്പൺ ലൈസൻസുള്ള ശേഖരങ്ങളിൽ നിന്നാണ്; ഓരോ വീഡിയോയുടെയും വിവരണത്തിൽ ക്രെഡിറ്റ് നൽകിയിട്ടുണ്ട്.
 
-പുതിയ വീഡിയോകൾ പതിവായി വരുന്നു. തെറ്റ് ശ്രദ്ധയിൽപ്പെട്ടാൽ കമന്റിൽ അറിയിക്കുക.
+പുതിയ വീഡിയോകൾ പതിവായി വരുന്നു. തെറ്റ് കണ്ടാൽ കമന്റിൽ അറിയിക്കുക.
 
-Brightwork Malayalam explains how the world really works in plain Malayalam: the physics, chemistry, engineering and history behind everyday things and big ideas. It is the Malayalam edition of Brightwork Science. Scripts are written with AI assistance from public sources and checked against them, then narrated with a synthetic voice; images and footage come from openly licensed libraries and are credited in every description.
+Malayalam edition of Brightwork Science: science explainers in plain Malayalam.
