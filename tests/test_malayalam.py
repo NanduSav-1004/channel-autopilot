@@ -1,4 +1,6 @@
 import itertools
+import json
+import subprocess
 import wave
 
 import numpy as np
@@ -162,3 +164,75 @@ def test_timing_from_audio_with_pauses(tmp_path):
     ml.make_monotone(timings)
     s = timings[0]["sentences"]
     assert abs(s[1]["start"] - 3.8) < 0.3 and abs(s[2]["start"] - 5.8) < 0.3 and s[0]["words"] and ml.pace_outliers(timings) == 0
+
+
+def test_a_short_may_leave_things_out_but_not_invent_numbers():
+    assert ml.added_numbers("Seven years later.", "1950-ൽ ഏഴ് വർഷം.") == ["1950"]
+    assert ml.added_numbers("In 1950 it began.", "1950-ൽ തുടങ്ങി.") == []
+
+
+def test_translate_short_asks_again_when_too_long_and_rejects_invented_numbers():
+    import pytest
+
+    short = {"title": "T", "narration": "In 1950 they found it."}
+    seen = []
+
+    def gen(prompt):
+        seen.append(prompt)
+        if prompt.startswith("You check"):
+            return {"issues": []}
+        if "reviewer found" in prompt:
+            return {"title": "ശീർഷകം", "narration": "1950-ൽ അവർ കണ്ടെത്തി."}
+        return {"title": "ശീർഷകം", "narration": "അ " * 120}                      # far too long the first time
+
+    out = ml.translate_short(short, 80, gen, log=lambda s: None)
+    assert out["narration"] == "1950-ൽ അവർ കണ്ടെത്തി." and any("too long" in p for p in seen)
+
+    with pytest.raises(ml.TranslationRejected):
+        ml.translate_short(short, 80, lambda p: {"issues": []} if p.startswith("You check") else
+                           {"title": "ശീ", "narration": "2020-ൽ കണ്ടെത്തി."}, log=lambda s: None)
+
+
+def test_short_description_links_the_malayalam_long_video_and_discloses_ai():
+    d = ml.short_description_ml({"narration": "ആദ്യ വാക്യം. രണ്ടാമത്തേത്."}, "LONGID", "https://src", ["credit 1"])
+    assert "https://youtu.be/LONGID" in d and "AI" in d and "https://src" in d and "credit 1" in d
+    assert "This video uses" not in d
+
+
+def test_build_short_retries_shorter_and_renders_a_vertical_video(tmp_path):
+    import shutil
+
+    import pytest
+    from PIL import Image
+
+    if not (shutil.which("ffmpeg") and shutil.which("ffprobe")):
+        pytest.skip("needs ffmpeg")
+    sdir = tmp_path / "short0"
+    sdir.mkdir()
+    (sdir / "script.json").write_text(json.dumps({"title": "T", "narration": "One two.", "section_index": 0}))
+    img = tmp_path / "i.jpg"
+    Image.new("RGB", (1280, 720), (200, 40, 40)).save(img)
+    spoken = []
+
+    def speak(ml_script, wav):
+        n = len(spoken)
+        spoken.append(n)
+        secs = 70.0 if n == 0 else 6.0                               # first version is too long for a Short
+        with wave.open(str(wav), "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(24000)
+            w.writeframes(np.zeros(int(24000 * secs), dtype="<i2").tobytes())
+        words = [{"w": "ഒന്ന്", "s": 0.5, "e": 1.0}, {"w": "രണ്ട്.", "s": 1.1, "e": 1.6}]
+        return [{"heading": "T", "start": 0.0, "end": secs, "sentences": [{"text": "ഒന്ന് രണ്ട്.", "start": 0.5, "end": 1.6, "words": words}]}]
+
+    asked = []
+
+    def translate(short, max_words):
+        asked.append(max_words)
+        return {"title": "ശീർഷകം", "narration": "ഒന്ന് രണ്ട്."}
+
+    out = ml.build_short(sdir, [[{"kind": "image", "path": str(img)}]], sdir / "ml", tmp_path / "w", {"name": "Charon"},
+                         translate=translate, speak=speak)
+    assert len(asked) == 2 and asked[1] < asked[0] and out.exists()
+    info = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=width,height", "-of", "csv=p=0", str(out)],
+                          capture_output=True, text=True, check=True).stdout
+    assert "1080,1920" in info

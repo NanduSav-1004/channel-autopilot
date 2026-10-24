@@ -36,7 +36,11 @@ about 12:00 UTC, check the Actions tab and start it by hand (Run workflow, tick 
 - If the edition fails you get a Telegram message; the English video is never affected. The edition is built in the same
   run as the English video (the media is only on that runner), so a failed edition is not retried later.
 - Try one locally: `autopilot ml --src output/<job folder> --voice Charon` (builds `<job folder>/ml/`, uploads nothing).
-- No Shorts for the Malayalam channel yet.
+- **Malayalam Shorts:** one per English Short, from the same scripts. Each is translated to fit about 52 s (Malayalam words
+  are long: at most 80 words, the model leaves out minor detail, never changes a fact or number), fact-checked ("may omit,
+  must not add or change", no invented numbers), voiced, captioned and uploaded to the Malayalam channel, scheduled after the
+  Malayalam long video by `malayalam.short_offsets_hours` (default 10, 15 and 21 h: 7:30 AM, 12:30 PM, 6:30 PM IST). A Short that
+  cannot be made to fit 58 s, or whose translation stays unfaithful, is skipped and you get a Telegram message.
 
 ## Phone alerts (Telegram)
 - Needs secrets `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` (local `.env`, then `python scripts/set_github_secrets.py`;

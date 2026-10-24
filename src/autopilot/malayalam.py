@@ -2,6 +2,7 @@
 
 Everything here uses its OWN Gemini key (GEMINI_API_KEY_ML, a separate free-tier project) so the English channel's
 daily quota is never touched. Translation uses Gemini only: the Groq models produced garbled Malayalam."""
+import contextlib
 import itertools
 import json
 import os
@@ -91,6 +92,30 @@ MALAYALAM:
 REPORTED PROBLEMS:
 {issues}"""
 
+SHORT_PROMPT = """Translate this YouTube Short script (a science explainer, spoken in under {seconds} seconds) into natural SPOKEN Malayalam
+for a Kerala audience, in Malayalam script.
+Rules: conversational and punchy, short sentences (each ends with . ? or !); keep common English technical terms the way Malayalam
+speakers say them; keep every number, date and name accurate and add nothing that is not in the English. Malayalam words are long,
+so the WHOLE narration must be at most {max_words} Malayalam words: keep the hook first and the payoff last, and if it does not
+fit, leave out the least important detail (never change a fact or a number).
+Title: at most 60 characters, curiosity-driven and honest, Malayalam script (English terms may stay in English).
+Return JSON {{"title": str, "narration": str}}.
+
+Title: {title}
+Narration: {narration}"""
+
+SHORT_CHECK_PROMPT = """You check a Malayalam Short script against its English original. The Malayalam may leave out minor details
+(it has to be shorter), but it must not CHANGE or ADD anything. List only SUBSTANTIVE problems: a number, date, name, unit or fact that
+differs from the English; a claim in the Malayalam that is not in the English; a reversed or distorted meaning.
+Style, word choice and omissions are fine and must NOT be listed.
+Return JSON {{"issues": [str]}} (an empty list when faithful). Describe each issue in English.
+
+ENGLISH:
+{english}
+
+MALAYALAM:
+{malayalam}"""
+
 META_PROMPT = """Translate this YouTube video's metadata into Malayalam for a Kerala audience.
 - title: natural and curiosity-driven, at most 70 characters, keep the main keyword (English terms may stay in English).
 - thumbnail_text: 2-4 punchy words for the thumbnail, Malayalam script.
@@ -131,6 +156,46 @@ def check_translation(english: str, malayalam: str, gen: Callable[[str], dict]) 
     except (llm.LLMError, KeyError, TypeError, ValueError, AttributeError):
         pass     # the exact checks above still applied; a reviewer outage must not block the edition
     return issues
+
+
+def added_numbers(english: str, malayalam: str) -> list[str]:
+    """Numbers in the Malayalam that the English does not have (a Short may leave details out, never invent a number)."""
+    have = set(NUMBER_RE.findall(english))
+    return sorted({n for n in NUMBER_RE.findall(malayalam) if n not in have})
+
+
+def check_short(english: str, malayalam: str, gen: Callable[[str], dict]) -> list[str]:
+    issues = [f"the number {n} is not in the English" for n in added_numbers(english, malayalam)]
+    try:
+        reported = [str(i) for i in gen(SHORT_CHECK_PROMPT.format(english=english, malayalam=malayalam)).get("issues", [])]
+        if reported:
+            real = gen(VERIFY_PROMPT.format(english=english, malayalam=malayalam,
+                                            issues="\n".join(f"{i + 1}. {r}" for i, r in enumerate(reported)))).get("real", [])
+            if len(real) != len(reported):
+                real = [True] * len(reported)
+            issues += [r for r, ok in zip(reported, real, strict=True) if ok is True]
+    except (llm.LLMError, KeyError, TypeError, ValueError, AttributeError):
+        pass
+    return issues
+
+
+def translate_short(short: dict, max_words: int, gen: Callable[[str], dict] = llm.generate_json,
+                    log: Callable[[str], None] = print) -> dict:
+    """A Short's Malayalam title and narration: translated to fit `max_words`, checked, repaired, or rejected."""
+    prompt = SHORT_PROMPT.format(seconds=52, max_words=max_words, title=short["title"], narration=short["narration"])
+    out = gen(prompt)
+    for attempt in range(REPAIR_ROUNDS + 1):
+        narration, title = str(out["narration"]).strip(), str(out.get("title", short["title"])).strip()
+        issues = check_short(short["narration"], narration, gen) if narration else ["the translation is empty"]
+        if len(narration.split()) > max_words * 1.15:
+            issues.append(f"too long: {len(narration.split())} words, the limit is {max_words}")
+        if not issues:
+            return {"title": title[:70], "narration": narration}
+        if attempt == REPAIR_ROUNDS:
+            raise TranslationRejected(f"Short {short['title']!r}: " + "; ".join(issues[:3]))
+        log(f"[ml] repairing the Short {short['title']!r}: {'; '.join(issues[:2])}")
+        out = gen(prompt + REPAIR_PROMPT.format(issues="\n".join(f"- {i}" for i in issues), previous=narration))
+    raise AssertionError("unreachable")
 
 
 def translate_section(sec: dict, gen: Callable[[str], dict], log: Callable[[str], None] = print) -> dict:
@@ -438,6 +503,117 @@ def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, transla
     return final
 
 
+# ---------- Malayalam Shorts ----------
+ML_SHORT_CAPTIONS = {"res": (1080, 1920), "font": 78, "margin_v": 600, "group": 3, "upper": False, "outline": 10,
+                     "fontname": "Noto Sans Malayalam", "font_path": FONT_ML_BOLD}
+SHORT_MAX_SECONDS = 58
+SHORT_WORDS = 80            # about 52 s at the Malayalam pace of ~0.65 s per word
+SHORT_DISCLOSURE = "ഈ വീഡിയോയുടെ തിരക്കഥ AI സഹായത്തോടെ തയ്യാറാക്കിയതും ശബ്ദം കൃത്രിമവുമാണ്."
+
+
+def build_short(short_dir: Path, long_items: list[list[dict]], out_dir: Path, work: Path, voice: dict,
+                translate=translate_short, speak=None) -> Path:
+    """The Malayalam edition of one English Short (short_dir holds its script.json). Raises if it cannot be made to fit
+    58 seconds or the translation stays unfaithful."""
+    from autopilot import audio, shots
+    from autopilot.render import render_short
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    short = json.loads((short_dir / "script.json").read_text())
+    sp, wav, tp = out_dir / "script_ml.json", out_dir / "narration.wav", out_dir / "timings.json"
+    speak = speak or (lambda s, w: make_voice({"sections": [{"heading": s["title"], "narration": s["narration"]}]}, w, voice))
+    if not (sp.exists() and tp.exists() and wav.exists()):
+        words = SHORT_WORDS
+        for attempt in range(3):
+            with ml_quota() if translate is translate_short else contextlib.nullcontext():
+                ml = translate(short, words)
+            timings = speak(ml, wav)
+            if timings[-1]["end"] <= SHORT_MAX_SECONDS:
+                break
+            print(f"[ml] Short is {timings[-1]['end']:.0f}s, over {SHORT_MAX_SECONDS}s: asking for a shorter version", flush=True)
+            wav.unlink(missing_ok=True)
+            words = int(words * 0.8)
+        else:
+            raise OSError(f"the Malayalam Short is still over {SHORT_MAX_SECONDS}s")
+        ml["section_index"] = short.get("section_index", 0)
+        sp.write_text(json.dumps(ml, ensure_ascii=False, indent=1))
+        tp.write_text(json.dumps(timings, ensure_ascii=False))
+    ml, timings = json.loads(sp.read_text()), json.loads(tp.read_text())
+    pool = shots.short_media_pool(long_items, ml.get("section_index", short.get("section_index", 0)))
+    items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]
+    music = audio.generate_ambient(timings[-1]["end"] + 3, out_dir / "music.wav", seed=int(short.get("section_index", 0)) + 1000)
+    final = out_dir / "final.mp4"
+    render_short(ml, timings, items, wav, final, work, music=music, look=ML_SHORT_CAPTIONS)
+    return final
+
+
+def short_description_ml(ml: dict, long_video_id: str | None, source_url: str | None, credits: list[str]) -> str:
+    from autopilot import shorts
+
+    hook = ml["narration"].split(". ")[0].rstrip(".") + "."
+    text = shorts.short_description(hook, None, source_url, credits)
+    text = text.replace("This video uses AI-assisted scripting and a synthetic voice.", SHORT_DISCLOSURE)
+    if long_video_id:
+        text = text.replace(hook, f"{hook}\n\nപൂർണ്ണ വീഡിയോ കാണുക: https://youtu.be/{long_video_id}", 1)
+    return text
+
+
+def run_daily_shorts(conn, cfg, long_job, src: Path, voice: dict, privacy: str, live: bool, build_only: bool) -> list[str]:
+    """Malayalam Shorts for today's video, one per English Short. Each is isolated: one failure does not stop the others."""
+    from autopilot import notify, schedule, shorts, upload
+
+    ml_cfg = cfg.malayalam or {}
+    rows = conn.execute("SELECT * FROM jobs WHERE kind = 'short' AND parent_id = ? AND video_id IS NOT NULL "
+                        "AND ml_video_id IS NULL AND COALESCE(ml_status, '') NOT LIKE 'failed%' "
+                        "AND COALESCE(ml_status, '') != 'built' ORDER BY short_idx", (long_job["id"],)).fetchall()
+    if not rows:
+        return []
+    long_row = conn.execute("SELECT ml_video_id, ml_publish_at FROM jobs WHERE id = ?", (long_job["id"],)).fetchone()
+    if live and not build_only and not long_row["ml_video_id"]:
+        return ["malayalam shorts: skipped (the Malayalam long video is not uploaded)"]
+    items = json.loads((src / "items.json").read_text())
+    credits = json.loads((src / "credits.json").read_text()) if (src / "credits.json").exists() else []
+    source_url = json.loads((src / "script.json").read_text()).get("source_url")
+    base = schedule.parse(long_row["ml_publish_at"]) if long_row["ml_publish_at"] else None
+    offsets = ml_cfg.get("short_offsets_hours", [10, 15, 21])
+    times = shorts.publish_times(len(rows), offsets, base) if base and privacy == "public" else [None] * len(rows)
+    lines = []
+    for row, when in zip(rows, times, strict=True):
+        sdir = src / f"short{row['short_idx']}"
+        if not (sdir / "script.json").exists():
+            lines.append(f"malayalam short {row['short_idx']}: skipped (its English files are gone)")
+            continue
+        try:
+            final = build_short(sdir, items, sdir / "ml", Path("work") / "ml" / f"{src.name}-short{row['short_idx']}", voice)
+            if live and not build_only:
+                ml = json.loads((sdir / "ml" / "script_ml.json").read_text())
+                vid = upload.insert_video(final, f"{ml['title']} #Shorts",
+                                          short_description_ml(ml, long_row["ml_video_id"], source_url, credits),
+                                          ["shorts", "science", "malayalam", "ശാസ്ത്രം"], privacy=privacy, publish_at=when,
+                                          profile="ml", language="ml")
+                conn.execute("UPDATE jobs SET ml_video_id = ?, ml_publish_at = ?, ml_status = 'done' WHERE id = ?",
+                             (vid, when, row["id"]))
+                lines.append(f"Short {row['short_idx'] + 1}: https://youtu.be/{vid} goes public {ist_text(when)}")
+                final.unlink(missing_ok=True)
+            else:
+                conn.execute("UPDATE jobs SET ml_status = 'built' WHERE id = ?", (row["id"],))
+                lines.append(f"Short {row['short_idx'] + 1}: built, not uploaded")
+            conn.commit()
+        except Exception as exc:  # noqa: BLE001
+            conn.execute("UPDATE jobs SET ml_status = ? WHERE id = ?", (f"failed: {type(exc).__name__}", row["id"]))
+            conn.commit()
+            lines.append(f"Short {row['short_idx'] + 1}: FAILED ({type(exc).__name__}: {str(exc)[:200]})")
+    if lines:
+        notify.send("Brightwork Malayalam Shorts:\n" + "\n".join(lines))
+    return lines
+
+
+def ist_text(ts: str | None) -> str:
+    from autopilot.cli import ist
+
+    return ist(ts)
+
+
 # ---------- the daily Malayalam edition: build it, upload it to the Malayalam channel, remember it ----------
 def edition_due(conn):
     """The newest English long video that is uploaded and has no Malayalam edition yet (and none failed today)."""
@@ -491,6 +667,8 @@ def run_daily_edition(conn, cfg, privacy: str, live: bool, root: Path) -> str:
     try:
         build_edition(src, src / "ml", Path("work") / "ml" / src.name, voice)
         vid = upload_edition(conn, job, src / "ml", src, ml_cfg.get("publish_hour_utc"), privacy, live and not build_only)
+        if ml_cfg.get("shorts") and (vid or build_only):
+            run_daily_shorts(conn, cfg, job, src, voice, privacy, live, build_only)
         if build_only:
             conn.execute("UPDATE jobs SET ml_status = 'built' WHERE id = ?", (job["id"],))
             conn.commit()

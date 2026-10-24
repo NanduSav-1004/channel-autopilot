@@ -29,6 +29,8 @@ audio:
 malayalam:                      # a second channel: the same videos, translated and spoken in Malayalam
   enabled: true                 # still does nothing until the Malayalam channel's login exists (YOUTUBE_REFRESH_TOKEN_ML)
   publish_hour_utc: 16          # 9:30 PM IST
+  shorts: true                  # Malayalam Shorts from the same Short scripts as the English channel
+  short_offsets_hours: [10, 15, 21]   # after the long video: 7:30 AM, 12:30 PM, 6:30 PM IST the next day
   voices:                       # rotated, never the same twice in a row (Gemini, on the Malayalam project's own key)
     - {engine: gemini, name: Charon}
     - {engine: gemini, name: Achird}

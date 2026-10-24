@@ -416,7 +416,7 @@ def _render_vstock(src: Path, frames: int, out: Path, offset: float = 0.0) -> No
 
 
 def render_short(script: dict, timings: list[dict], items: list[dict], narration: Path,
-                 out_mp4: Path, work: Path, music: Path | None = None) -> None:
+                 out_mp4: Path, work: Path, music: Path | None = None, look: dict = SHORT_CAPTIONS) -> None:
     """script: {"title"}; timings: one section with timed sentences; items: [{"kind","path"}]."""
     from concurrent.futures import ThreadPoolExecutor
 
@@ -448,5 +448,5 @@ def render_short(script: dict, timings: list[dict], items: list[dict], narration
     with ThreadPoolExecutor(max_workers=2) as ex:
         list(ex.map(run, jobs))
     (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
-    write_ass_words(timings, work / "captions.ass", SHORT_CAPTIONS)
+    write_ass_words(timings, work / "captions.ass", look)
     _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music)

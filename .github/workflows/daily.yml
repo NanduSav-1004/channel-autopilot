@@ -115,6 +115,7 @@ jobs:
           name: malayalam-edition-${{ github.run_id }}
           path: |
             output/*/ml/final.mp4
+            output/*/short*/ml/final.mp4
             output/*/ml/thumbnail.jpg
             output/*/ml/script_ml.json
           if-no-files-found: ignore
