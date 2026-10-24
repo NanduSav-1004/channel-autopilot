@@ -8,23 +8,26 @@ from autopilot.metadata import EDU_CATEGORY, clean_tags, clean_title
 from autopilot.youtube_auth import load_credentials
 
 
-def _client():
-    return build("youtube", "v3", credentials=load_credentials())
+def _client(profile: str = "en"):
+    return build("youtube", "v3", credentials=load_credentials(profile))
 
 
 def insert_video(
     video: Path, title: str, description: str, tags: list[str],
-    privacy: str = "private", publish_at: str | None = None,
+    privacy: str = "private", publish_at: str | None = None, profile: str = "en", language: str | None = None,
 ) -> str:
     """Upload the video and return its id. `publish_at` (RFC 3339 UTC) schedules it as private first."""
     status = {"privacyStatus": privacy, "selfDeclaredMadeForKids": False}
     if publish_at:
         status.update({"privacyStatus": "private", "publishAt": publish_at})
-    req = _client().videos().insert(
+    snippet = {"title": clean_title(title), "description": description,
+               "tags": clean_tags(tags), "categoryId": EDU_CATEGORY}
+    if language:
+        snippet.update({"defaultLanguage": language, "defaultAudioLanguage": language})
+    req = _client(profile).videos().insert(
         part="snippet,status",
         body={
-            "snippet": {"title": clean_title(title), "description": description,
-                        "tags": clean_tags(tags), "categoryId": EDU_CATEGORY},
+            "snippet": snippet,
             "status": status,
         },
         media_body=MediaFileUpload(str(video), resumable=True, chunksize=8 * 1024 * 1024),
@@ -35,5 +38,5 @@ def insert_video(
     return resp["id"]
 
 
-def set_thumbnail(video_id: str, thumbnail: Path) -> None:
-    _client().thumbnails().set(videoId=video_id, media_body=MediaFileUpload(str(thumbnail))).execute()
+def set_thumbnail(video_id: str, thumbnail: Path, profile: str = "en") -> None:
+    _client(profile).thumbnails().set(videoId=video_id, media_body=MediaFileUpload(str(thumbnail))).execute()

@@ -47,6 +47,8 @@ jobs:
       YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
       YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      GEMINI_API_KEY_ML: ${{ secrets.GEMINI_API_KEY_ML }}
+      YOUTUBE_REFRESH_TOKEN_ML: ${{ secrets.YOUTUBE_REFRESH_TOKEN_ML }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     steps:
       - uses: actions/checkout@v4
@@ -91,6 +93,20 @@ jobs:
           ARGS="daily --privacy $PRIVACY"
           [ "$LIVE" = "true" ] && ARGS="$ARGS --live"
           autopilot $ARGS 2>&1 | tee run.log
+
+      - name: Malayalam edition (a second channel; skipped until its login exists, and never affects the English video)
+        if: always()
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            LIVE="${{ inputs.live }}"; PRIVACY="${{ inputs.privacy }}"
+          else
+            LIVE="true"; PRIVACY="${{ vars.UPLOAD_PRIVACY || 'public' }}"
+          fi
+          ARGS="ml --auto --privacy $PRIVACY"
+          [ "$LIVE" = "true" ] && ARGS="$ARGS --live"
+          autopilot $ARGS 2>&1 | tee -a run.log
 
       - name: Save job database
         if: always()

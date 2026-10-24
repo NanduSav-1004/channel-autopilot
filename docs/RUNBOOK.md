@@ -24,6 +24,20 @@ about 12:00 UTC, check the Actions tab and start it by hand (Run workflow, tick 
 3. Open the run, then the step "Make today's video". A good log ends with `processed N job(s)`.
    Useful lines: `[topics] queued ...`, `[job N] qa done`, `scheduled to go public at ...`, `queued N Short(s)`.
 
+## Malayalam channel (second channel, same videos)
+- After the English video is uploaded, the same workflow run makes the **Malayalam edition**: the script is translated by
+  Gemini and fact-checked against the English (numbers must survive; a second model look filters false alarms; a
+  translation that still disagrees after 2 repairs is **rejected**, not published), spoken by a rotating voice
+  (Charon, Achird, Sulafat), captioned in Malayalam, and uploaded to the Malayalam channel, going public at 16:00 UTC
+  (9:30 PM IST). Settings: `malayalam:` in `config/channel.yaml`.
+- It uses its **own Gemini key** (`GEMINI_API_KEY_ML`, a separate free-tier project), so the English quota is untouched.
+- It needs the Malayalam channel's own login: `YOUTUBE_REFRESH_TOKEN_ML` (local: `python src/autopilot/youtube_auth.py --ml`,
+  choosing the Malayalam channel on the consent screen, then `scripts/set_github_secrets.py`). Without it the step is skipped.
+- If the edition fails you get a Telegram message; the English video is never affected. The edition is built in the same
+  run as the English video (the media is only on that runner), so a failed edition is not retried later.
+- Try one locally: `autopilot ml --src output/<job folder> --voice Charon` (builds `<job folder>/ml/`, uploads nothing).
+- No Shorts for the Malayalam channel yet.
+
 ## Phone alerts (Telegram)
 - Needs secrets `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` (local `.env`, then `python scripts/set_github_secrets.py`;
   `scripts/telegram_chat_id.py` finds the chat id after you message the bot). Without them alerts are silently skipped.

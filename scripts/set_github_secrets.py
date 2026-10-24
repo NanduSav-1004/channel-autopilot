@@ -28,12 +28,16 @@ secrets = {
     "GEMINI_API_KEY": env.get("GEMINI_API_KEY", ""),
     "GROQ_API_KEY": env.get("GROQ_API_KEY", ""),
     "PIXABAY_API_KEY": env.get("PIXABAY_API_KEY", ""),
+    "GEMINI_API_KEY_ML": env.get("GEMINI_API_KEY_ML", ""),
     "TELEGRAM_BOT_TOKEN": env.get("TELEGRAM_BOT_TOKEN", ""),
     "TELEGRAM_CHAT_ID": env.get("TELEGRAM_CHAT_ID", ""),
     "YOUTUBE_CLIENT_ID": client["client_id"],
     "YOUTUBE_CLIENT_SECRET": client["client_secret"],
     "YOUTUBE_REFRESH_TOKEN": token["refresh_token"],
 }
+ml_token = Path("secrets/token_ml.json")     # the Malayalam channel's login, once it exists
+if ml_token.exists():
+    secrets["YOUTUBE_REFRESH_TOKEN_ML"] = json.loads(ml_token.read_text())["refresh_token"]
 for name, value in secrets.items():
     if not value:
         print(f"SKIP {name}: empty")

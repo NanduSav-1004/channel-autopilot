@@ -5,7 +5,10 @@ DESC_LIMIT = 5000
 TAG_LIMIT = 450  # YouTube allows 500 chars total; keep a margin
 
 
-def build_description(script: dict, credits: list[str], source_url: str | None = None) -> str:
+DISCLOSURE = "This video uses AI-assisted scripting and a synthetic voice."
+
+
+def build_description(script: dict, credits: list[str], source_url: str | None = None, disclosure: str = DISCLOSURE) -> str:
     parts = [script.get("description", "").strip()]
     chapters = script.get("chapters")
     if chapters:
@@ -13,7 +16,7 @@ def build_description(script: dict, credits: list[str], source_url: str | None =
     src = source_url or script.get("source_url")
     if src:
         parts.append(f"Source: {src}")
-    parts.append("This video uses AI-assisted scripting and a synthetic voice.")
+    parts.append(disclosure)
     text = "\n\n".join(p for p in parts if p)
     if credits:
         header, kept = "\n\nImage and video credits:\n", []

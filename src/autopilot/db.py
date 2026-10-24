@@ -28,7 +28,8 @@ def connect(path: str | Path = "data/autopilot.db") -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
     cols = {r[1] for r in conn.execute("PRAGMA table_info(jobs)")}
-    for name, ddl in (("thumbnail_set", "INTEGER NOT NULL DEFAULT 0"), ("parent_id", "INTEGER"), ("short_idx", "INTEGER"), ("publish_at", "TEXT")):
+    for name, ddl in (("thumbnail_set", "INTEGER NOT NULL DEFAULT 0"), ("parent_id", "INTEGER"), ("short_idx", "INTEGER"), ("publish_at", "TEXT"),
+                      ("ml_video_id", "TEXT"), ("ml_publish_at", "TEXT"), ("ml_status", "TEXT")):
         if name not in cols:  # databases created before this column existed
             conn.execute(f"ALTER TABLE jobs ADD COLUMN {name} {ddl}")
     conn.commit()

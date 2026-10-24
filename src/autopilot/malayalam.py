@@ -55,6 +55,39 @@ Return JSON {{"heading": str, "narration": str}}.
 Heading: {heading}
 Narration: {narration}"""
 
+REPAIR_PROMPT = """
+
+A reviewer found these problems in an earlier Malayalam translation of this text. Translate it again and fix every one of them:
+{issues}
+Earlier translation: {previous}"""
+
+CHECK_PROMPT = """You check a Malayalam translation of a science explainer's narration against the English original.
+List only SUBSTANTIVE problems: a number, date, name, unit or fact that differs from the English; a claim that is in the
+Malayalam but not the English; a meaning that is reversed or distorted; an important sentence of the English that is missing.
+Differences of style, word choice, sentence splitting or the use of English technical terms are fine and must NOT be listed.
+Return JSON {{"issues": [str]}} (an empty list when the translation is faithful). Describe each issue in English.
+
+ENGLISH:
+{english}
+
+MALAYALAM:
+{malayalam}"""
+
+VERIFY_PROMPT = """A reviewer compared a Malayalam translation with its English original and reported the problems below.
+Reviewers sometimes make mistakes or misread the meaning. For each reported problem, read the Malayalam carefully and
+decide whether it is a REAL substantive error (the Malayalam really says something different from the English) or a
+false alarm (the Malayalam matches the English, or the difference is only style).
+Return JSON {{"real": [true or false for each problem, in order]}}.
+
+ENGLISH:
+{english}
+
+MALAYALAM:
+{malayalam}
+
+REPORTED PROBLEMS:
+{issues}"""
+
 META_PROMPT = """Translate this YouTube video's metadata into Malayalam for a Kerala audience.
 - title: natural and curiosity-driven, at most 70 characters, keep the main keyword (English terms may stay in English).
 - thumbnail_text: 2-4 punchy words for the thumbnail, Malayalam script.
@@ -67,15 +100,55 @@ Thumbnail text: {thumb}
 Description: {description}"""
 
 
-def translate_script(script: dict, gen: Callable[[str], dict] = llm.generate_json) -> dict:
-    """The Malayalam script: same sections, same order, translated. Raises LLMError if a section cannot be translated."""
-    sections = []
-    for sec in script["sections"]:
-        out = gen(SECTION_PROMPT.format(heading=sec["heading"], narration=sec["narration"]))
+NUMBER_RE = re.compile(r"\d[\d,.]*\d|\d")
+REPAIR_ROUNDS = 2
+
+
+class TranslationRejected(RuntimeError):
+    """The Malayalam still disagrees with the English after repairs: the edition is not published."""
+
+
+def missing_numbers(english: str, malayalam: str) -> list[str]:
+    """Numbers written in the English that do not appear in the Malayalam (digits must be kept as digits)."""
+    have = set(NUMBER_RE.findall(malayalam))
+    return sorted({n for n in NUMBER_RE.findall(english) if n not in have})
+
+
+def check_translation(english: str, malayalam: str, gen: Callable[[str], dict]) -> list[str]:
+    """Problems found, in English: numbers that went missing (exact check) plus what the model reviewer reports."""
+    issues = [f"the number {n} from the English is missing" for n in missing_numbers(english, malayalam)]
+    try:
+        reported = [str(i) for i in gen(CHECK_PROMPT.format(english=english, malayalam=malayalam)).get("issues", [])]
+        if reported:     # a second look filters the reviewer's own false alarms
+            real = gen(VERIFY_PROMPT.format(english=english, malayalam=malayalam,
+                                            issues="\n".join(f"{i + 1}. {r}" for i, r in enumerate(reported)))).get("real", [])
+            if len(real) != len(reported):
+                real = [True] * len(reported)
+            issues += [r for r, ok in zip(reported, real, strict=True) if ok is True]
+    except (llm.LLMError, KeyError, TypeError, ValueError, AttributeError):
+        pass     # the exact checks above still applied; a reviewer outage must not block the edition
+    return issues
+
+
+def translate_section(sec: dict, gen: Callable[[str], dict], log: Callable[[str], None] = print) -> dict:
+    """One section, translated, checked against the English, and re-translated with the problems as feedback."""
+    prompt = SECTION_PROMPT.format(heading=sec["heading"], narration=sec["narration"])
+    out = gen(prompt)
+    for attempt in range(REPAIR_ROUNDS + 1):
         narration = str(out["narration"]).strip()
-        if not narration:
-            raise llm.LLMError("empty translation")
-        sections.append({"heading": str(out.get("heading", sec["heading"])).strip(), "narration": narration})
+        issues = check_translation(sec["narration"], narration, gen) if narration else ["the translation is empty"]
+        if not issues:
+            return {"heading": str(out.get("heading", sec["heading"])).strip(), "narration": narration}
+        if attempt == REPAIR_ROUNDS:
+            raise TranslationRejected(f"{sec['heading']!r}: " + "; ".join(issues[:3]))
+        log(f"[ml] repairing the translation of {sec['heading']!r}: {'; '.join(issues[:2])}")
+        out = gen(prompt + REPAIR_PROMPT.format(issues="\n".join(f"- {i}" for i in issues), previous=narration))
+    raise AssertionError("unreachable")
+
+
+def translate_script(script: dict, gen: Callable[[str], dict] = llm.generate_json) -> dict:
+    """The Malayalam script: same sections, same order, translated and fact-checked against the English."""
+    sections = [translate_section(sec, gen) for sec in script["sections"]]
     meta = gen(META_PROMPT.format(title=script["title"], thumb=script.get("thumbnail_text", ""),
                                   description=script.get("description", "")))
     from autopilot.script import shorten_title
@@ -148,8 +221,9 @@ class MalayalamGeminiEngine(tts.GeminiEngine):
         return pcm, 24000, spans
 
 
-def pick_ml_voice(video_number: int) -> dict:
-    return tts.pick_voice(video_number, ML_VOICES)
+def pick_ml_voice(video_number: int, voices: list[dict] | None = None) -> dict:
+    """Rotating voice, never the same twice in a row (deterministic from the English job's number)."""
+    return tts.pick_voice(video_number, voices or ML_VOICES)
 
 
 def make_voice(script_ml: dict, out_wav: Path, voice: dict) -> list[dict]:
@@ -187,3 +261,71 @@ def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, transla
     images = [i["path"] for sec in items for i in sec if i["kind"] == "image"]
     thumbnail.make_thumbnail(ml, images, out_dir / "thumbnail.jpg", lang="ml")
     return final
+
+
+# ---------- the daily Malayalam edition: build it, upload it to the Malayalam channel, remember it ----------
+def edition_due(conn):
+    """The newest English long video that is uploaded and has no Malayalam edition yet (and none failed today)."""
+    return conn.execute(
+        "SELECT * FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL AND ml_video_id IS NULL "
+        "AND date(created_at) = date('now') AND COALESCE(ml_status, '') NOT LIKE 'failed%' ORDER BY id DESC LIMIT 1").fetchone()
+
+
+def upload_edition(conn, job, out_dir: Path, src_dir: Path, hour_utc: int | None, privacy: str, live: bool) -> str | None:
+    from autopilot import metadata, schedule, upload
+
+    ml = json.loads((out_dir / "script_ml.json").read_text())
+    timings = json.loads((out_dir / "timings.json").read_text())
+    ml["chapters"] = metadata.chapter_marks(timings)
+    credits = json.loads((src_dir / "credits.json").read_text()) if (src_dir / "credits.json").exists() else []
+    description = metadata.build_description(ml, credits, disclosure="")   # the Malayalam description carries its own
+    if not live:
+        print(f"[ml] dry run: would upload {out_dir / 'final.mp4'} as {ml['title']!r}")
+        return None
+    publish_at = None
+    if privacy == "public" and hour_utc is not None:
+        publish_at = schedule.rfc3339(schedule.next_slot(hour_utc))
+    vid = upload.insert_video(out_dir / "final.mp4", ml["title"], description, ml.get("tags", []), privacy=privacy,
+                              publish_at=publish_at, profile="ml", language="ml")
+    conn.execute("UPDATE jobs SET ml_video_id = ?, ml_publish_at = ?, ml_status = 'done' WHERE id = ?", (vid, publish_at, job["id"]))
+    conn.commit()                                   # saved at once so a retry can never upload it twice
+    try:
+        upload.set_thumbnail(vid, out_dir / "thumbnail.jpg", profile="ml")
+    except Exception as exc:  # noqa: BLE001 - best effort, as for the English channel
+        print(f"[ml] thumbnail not set ({type(exc).__name__})", flush=True)
+    return vid
+
+
+def run_daily_edition(conn, cfg, privacy: str, live: bool, root: Path) -> str:
+    """Called after the English daily run. Returns a status line. Never raises: the English video must not be affected."""
+    from autopilot import notify, youtube_auth
+
+    ml_cfg = cfg.malayalam or {}
+    if not ml_cfg.get("enabled"):
+        return "malayalam edition: disabled"
+    if live and not youtube_auth.configured("ml"):
+        return "malayalam edition: skipped (no Malayalam channel login yet)"
+    if not os.environ.get("GEMINI_API_KEY_ML"):
+        return "malayalam edition: skipped (GEMINI_API_KEY_ML is not set)"
+    job = edition_due(conn)
+    if not job:
+        return "malayalam edition: nothing due"
+    src = next(iter(sorted(root.glob(f"{job['id']:04d}-*"))), None)
+    if not src or not (src / "items.json").exists():
+        return f"malayalam edition: skipped (the English files for job {job['id']} are gone)"
+    voice = pick_ml_voice(job["id"], ml_cfg.get("voices"))
+    try:
+        build_edition(src, src / "ml", Path("work") / "ml" / src.name, voice)
+        vid = upload_edition(conn, job, src / "ml", src, ml_cfg.get("publish_hour_utc"), privacy, live)
+    except Exception as exc:  # noqa: BLE001
+        conn.execute("UPDATE jobs SET ml_status = ? WHERE id = ?", (f"failed: {type(exc).__name__}", job["id"]))
+        conn.commit()
+        notify.send(f"Brightwork Malayalam: the Malayalam edition of {job['topic']!r} FAILED ({type(exc).__name__}: {str(exc)[:300]}). "
+                    "The English video is unaffected.")
+        return f"malayalam edition FAILED: {type(exc).__name__}: {exc}"
+    if vid:
+        at = conn.execute("SELECT ml_publish_at FROM jobs WHERE id = ?", (job["id"],)).fetchone()[0]
+        from autopilot.cli import ist
+        notify.send(f"Brightwork Malayalam: uploaded {json.loads((src / 'ml' / 'script_ml.json').read_text())['title']!r}\n"
+                    f"https://youtu.be/{vid}\nGoes public: {ist(at)}\nVoice: {voice['name']}")
+    return f"malayalam edition: done ({vid or 'dry run'})"

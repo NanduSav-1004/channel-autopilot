@@ -12,6 +12,7 @@ class Config:
     forbidden_topics: list = field(default_factory=list)
     dry_run: bool = True
     audio: dict = field(default_factory=dict)  # voice_engine, voice_name, voice_speed, music_style
+    malayalam: dict = field(default_factory=dict)  # the Malayalam channel: enabled, publish_hour_utc, voices
 
 
 def load_config(path: str | Path = "config/channel.yaml") -> Config:
@@ -23,4 +24,5 @@ def load_config(path: str | Path = "config/channel.yaml") -> Config:
         forbidden_topics=data.get("forbidden_topics", []),
         dry_run=data.get("dry_run", True),
         audio=data.get("audio", {}),
+        malayalam=data.get("malayalam", {}),
     )
