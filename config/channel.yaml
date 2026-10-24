@@ -6,7 +6,7 @@ formats:
     target_words: 1500   # ~10 min at the Piper voice's pace
     min_words: 1150      # QA floor; below ~8 min there are no mid-roll ads
     min_sections: 6
-    publish_hour_utc: 15   # go live at 11:00 ET / 16:00 UK (only when uploads are public)
+    publish_hour_utc: 18   # go live at 14:00 ET / 19:00 UK (only when uploads are public)
     min_media_sections: 0.7   # at least this share of sections must have real images/footage, else retry
     min_source_chars: 6000   # thin Wikipedia articles cannot ground a 10-minute script
     per_day: 1

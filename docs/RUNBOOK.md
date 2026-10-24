@@ -5,11 +5,11 @@ How the channel runs, how to tell it is healthy, and what to do when it is not.
 ## What runs, and when
 - **GitHub Actions workflow "Daily video"** is scheduled five times a day, at **02:17, 04:43, 08:17, 09:43 and 11:11 UTC**
   (7:47 AM, 10:13 AM, 1:47 PM, 3:13 PM and 4:41 PM IST). GitHub has been starting scheduled runs 5+ hours late, so
-  the early slots exist to land before the 15:00 UTC go-live slot. GitHub's scheduler is best-effort and sometimes delays or drops runs, so the
+  the early slots exist to land before the 18:00 UTC go-live slot. GitHub's scheduler is best-effort and sometimes delays or drops runs, so the
   later times are backups. A run **skips itself** if today's video is already uploaded, so you still get one a day.
 - It queues one new topic (chosen by real search demand), writes the script, fact-checks it, voices it,
   finds licensed images and footage, renders the video, and uploads it.
-- The long video is **scheduled to go public at 15:00 UTC** (11:00 ET / 16:00 UK). Up to 3 Shorts are cut from it
+- The long video is **scheduled to go public at 18:00 UTC** (14:00 ET / 19:00 UK / 11:30 PM IST). Up to 3 Shorts are cut from it
   and scheduled 2, 6 and 10 hours after that.
 - A run takes about 15-30 minutes. Cost: $0 (free tiers only).
 - Job state is kept between runs on the single-commit `state` branch (`data/autopilot.db`).

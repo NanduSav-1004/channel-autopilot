@@ -22,7 +22,7 @@ topic (LLM brainstorm -> real search demand -> verified Wikipedia article)
   -> QA (fact-check narration + title + description; repair only the bad parts)
   -> voice (Piper TTS, sentence timings) -> visuals (Wikimedia Commons + Pixabay, vision-rated)
   -> render (1080p Ken Burns, boxed captions, generated ambient music with ducking) + thumbnail
-  -> upload (scheduled for 15:00 UTC prime time, chapters, source, credits, disclosure)
+  -> upload (scheduled for 18:00 UTC prime time, chapters, source, credits, disclosure)
   -> Shorts (up to 3 standalone 45 s scripts, fact-checked, 9:16 render, scheduled through the day)
 ```
 Orchestrated by `autopilot daily`; state in SQLite on a `state` branch; failures never block the queue.
