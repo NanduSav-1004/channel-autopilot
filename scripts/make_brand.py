@@ -5,7 +5,6 @@ usage: python scripts/make_brand.py "Brightwork Science" "How the world really w
 Drawn at 4x and downsampled for clean edges. Banner text stays inside YouTube's 1546x423 safe area.
 """
 import math
-import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
