@@ -128,15 +128,17 @@ class GeminiEngine:
     has no timing, so a whole section is spoken in one request and its sentences are located with Whisper."""
     name = "gemini"
     whole_section = True
+    key_env = "GEMINI_API_KEY"
+    style: str | None = None          # None: the English direction (GEMINI_STYLE); subclasses for other languages override
 
     def __init__(self, voice: str = "Sadachbia"):
         self.voice = voice
-        self.key = os.environ.get("GEMINI_API_KEY")
+        self.key = os.environ.get(self.key_env)
         if not self.key:
-            raise OSError("GEMINI_API_KEY is not set")
+            raise OSError(f"{self.key_env} is not set")
 
     def _speak(self, text: str) -> bytes:
-        body = json.dumps({"contents": [{"parts": [{"text": GEMINI_STYLE + text}]}], "generationConfig": {
+        body = json.dumps({"contents": [{"parts": [{"text": (GEMINI_STYLE if self.style is None else self.style) + text}]}], "generationConfig": {
             "responseModalities": ["AUDIO"],
             "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": self.voice}}}}}).encode()
         last = None
@@ -329,6 +331,7 @@ def synthesize_script(script: dict, out_wav: str | Path, engine=None, fallback=N
     If `engine` fails partway (for example a Gemini quota), the WHOLE script is redone with `fallback`, so one video
     never mixes two voices."""
     engine = engine or PiperEngine()
+    used = engine
     try:
         timings = _synthesize(script, out_wav, engine)
     except (OSError, wave.Error) as exc:
@@ -336,7 +339,13 @@ def synthesize_script(script: dict, out_wav: str | Path, engine=None, fallback=N
             raise
         print(f"[tts] {engine.name} failed ({exc}); redoing the whole narration with {fallback.name}", flush=True)
         timings = _synthesize(script, out_wav, fallback)
-    add_word_times(Path(out_wav), timings)
+        used = fallback
+    if getattr(used, "estimate_words_only", False):  # e.g. Malayalam: the Whisper refinement is English-only
+        for sec in timings:
+            for sent in sec["sentences"]:
+                sent["words"] = estimate_word_times(sent["text"], sent["start"], sent["end"])
+    else:
+        add_word_times(Path(out_wav), timings)
     return timings
 
 
@@ -355,7 +364,7 @@ def _synthesize(script: dict, out_wav: str | Path, engine) -> list[dict]:
 
         for section in script["sections"]:
             sec = {"heading": section["heading"], "start": t, "sentences": []}
-            sentences = split_sentences(section["narration"])
+            sentences = getattr(engine, "splitter", split_sentences)(section["narration"])
             if getattr(engine, "whole_section", False):
                 pcm, sr, spans = engine.synth_section(sentences)
                 if rate is None:

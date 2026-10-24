@@ -10,15 +10,21 @@ W, H = 1280, 720
 FONT_HEAVY = "/usr/share/fonts/truetype/lato/Lato-Black.ttf"
 FONT_BOLD = "/usr/share/fonts/truetype/lato/Lato-Bold.ttf"
 FONT_FALLBACK = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+FONT_ML = "/usr/share/fonts/truetype/noto/NotoSansMalayalam-Bold.ttf"
+_lang = {"fonts": None}   # set for the duration of one make_thumbnail call (e.g. Malayalam script)
 AMBER, NAVY, INK = (255, 190, 40), (14, 27, 61), (6, 10, 30)
 SERIES_TAG = {
     "how_it_works": "HOW IT WORKS", "myth_vs_reality": "MYTH OR FACT?", "origin_story": "THE ORIGIN STORY",
     "scale_and_numbers": "BY THE NUMBERS", "what_if": "WHAT IF?",
 }
+SERIES_TAG_ML = {
+    "how_it_works": "എങ്ങനെ പ്രവർത്തിക്കുന്നു", "myth_vs_reality": "മിഥ്യയോ സത്യമോ?", "origin_story": "കണ്ടെത്തലിന്റെ കഥ",
+    "scale_and_numbers": "കണക്കുകളിൽ", "what_if": "എങ്കിൽ എന്ത് സംഭവിക്കും?",
+}
 
 
-def _font(size: int, heavy: bool = True) -> ImageFont.FreeTypeFont:
-    for path in (FONT_HEAVY if heavy else FONT_BOLD, FONT_BOLD, FONT_FALLBACK):
+def _font(size: int, heavy: bool = True, latin: bool = False) -> ImageFont.FreeTypeFont:
+    for path in (*(() if latin else _lang["fonts"] or ()), FONT_HEAVY if heavy else FONT_BOLD, FONT_BOLD, FONT_FALLBACK):
         try:
             return ImageFont.truetype(path, size)
         except OSError:
@@ -229,13 +235,21 @@ def _draw_badge(canvas: Image.Image) -> None:
     d = ImageDraw.Draw(canvas)
     cx, cy, r = W - 96, 92, 56
     d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=NAVY, outline=AMBER, width=7)
-    font = _font(72)
+    font = _font(72, latin=True)   # the badge letter is Latin even on a Malayalam thumbnail
     bb = d.textbbox((0, 0), "B", font=font)
     d.text((cx - (bb[0] + bb[2]) / 2, cy - (bb[1] + bb[3]) / 2 - 3), "B", font=font, fill=(255, 255, 255))
 
 
-def make_thumbnail(script: dict, background: "Path | list[Path] | None", out: Path, pick=None) -> Path:
+def make_thumbnail(script: dict, background: "Path | list[Path] | None", out: Path, pick=None, lang: str = "en") -> Path:
     """`pick(script, paths)` chooses the image (the pipeline passes pick_with_vision); default is the colour score."""
+    _lang["fonts"] = (FONT_ML,) if lang == "ml" else None
+    try:
+        return _make(script, background, out, pick, lang)
+    finally:
+        _lang["fonts"] = None
+
+
+def _make(script: dict, background, out: Path, pick, lang: str) -> Path:
     paths = [background] if isinstance(background, Path) else list(background or [])
     paths = [Path(p) for p in paths if p and Path(p).exists()]
     chosen = pick(script, paths) if pick else pick_background(paths)
@@ -245,7 +259,8 @@ def make_thumbnail(script: dict, background: "Path | list[Path] | None", out: Pa
         base = Image.new("RGB", (W, H), NAVY)
     canvas = _overlay(base)
     _draw_headline(canvas, thumbnail_text(script))
-    _draw_tag(canvas, SERIES_TAG.get(script.get("series", ""), "EXPLAINED"))
+    tags, default = (SERIES_TAG_ML, "വിശദീകരണം") if lang == "ml" else (SERIES_TAG, "EXPLAINED")
+    _draw_tag(canvas, tags.get(script.get("series", ""), default))
     _draw_badge(canvas)
     out.parent.mkdir(parents=True, exist_ok=True)
     canvas.convert("RGB").save(out, quality=90)  # YouTube limit is 2 MB; a 1280x720 JPEG is well under

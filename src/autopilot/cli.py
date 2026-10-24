@@ -49,16 +49,29 @@ def ensure_progress(before: int, after: int) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="autopilot")
-    parser.add_argument("command", choices=["topics", "run", "daily", "status", "retry", "thumbnails"])
+    parser.add_argument("command", choices=["topics", "run", "daily", "status", "retry", "thumbnails", "ml"])
     parser.add_argument("--privacy", choices=["private", "unlisted", "public"], default="private")
     parser.add_argument("--live", action="store_true", help="really upload (overrides dry_run in config)")
     parser.add_argument("--force", action="store_true", help="make a video even if today's is already uploaded")
+    parser.add_argument("--src", help="ml: the finished English job folder to make a Malayalam edition of")
+    parser.add_argument("--voice", help="ml: Gemini voice name (default: rotates Charon, Achird, Sulafat)")
     args = parser.parse_args()
 
     load_env()
     cfg = load_config()
     if args.live:
         cfg.dry_run = False
+    if args.command == "ml":
+        from pathlib import Path
+
+        from autopilot import malayalam
+
+        src = Path(args.src)
+        voice = {"engine": "gemini", "name": args.voice} if args.voice else malayalam.pick_ml_voice(
+            int(src.name.split("-")[0]))
+        out = malayalam.build_edition(src, src / "ml", Path("work") / "ml" / src.name, voice)
+        print(f"Malayalam edition: {out}")
+        return
     conn = db.connect()
     done_before = done_count(conn)
     if args.command == "daily" and not cfg.dry_run and not args.force and already_done_today(conn, cfg):

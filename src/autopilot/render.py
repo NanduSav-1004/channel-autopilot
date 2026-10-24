@@ -48,7 +48,7 @@ def make_fits(look: dict):
     w = look["res"][0]
     limit = w - 2 * round(w * 0.06) - 2 * look["outline"]
     try:
-        font = ImageFont.truetype(FONT_CAPTION, look["font"])
+        font = ImageFont.truetype(look.get("font_path", FONT_CAPTION), look["font"])
     except OSError:
         budget = int(limit / (look["font"] * (0.66 if look["upper"] else 0.56)))
         return lambda words: len(" ".join(words)) <= budget
@@ -92,7 +92,7 @@ def write_ass_words(timings: list[dict], path: Path, look: dict) -> None:
         f"[Script Info]\nScriptType: v4.00+\nPlayResX: {w}\nPlayResY: {h}\nWrapStyle: 0\n\n"
         "[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,"
         "BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV\n"
-        f"Style: Cap,Lato,{look['font']},&H00FFFFFF,&H00FFFFFF,&H00000000,&H90000000,1,1,{look['outline']},3,2,"
+        f"Style: Cap,{look.get('fontname', 'Lato')},{look['font']},&H00FFFFFF,&H00FFFFFF,&H00000000,&H90000000,1,1,{look['outline']},3,2,"
         f"{round(w * 0.06)},{round(w * 0.06)},{look['margin_v']}\n\n"
         "[Events]\nFormat: Layer,Start,End,Style,Text\n"
     )
@@ -218,6 +218,7 @@ def _render_stock_clip(src: Path, frames: int, out: Path, offset: float = 0.0) -
 
 def render_photo_video(
     script, timings, images, plan, narration: Path, out_mp4: Path, work: Path, music: Path | None = None,
+    look: dict = LONG_CAPTIONS,
 ) -> None:
     """Ken Burns over gathered images; sections without images fall back to title cards."""
     from concurrent.futures import ThreadPoolExecutor
@@ -256,7 +257,7 @@ def render_photo_video(
     with ThreadPoolExecutor(max_workers=2) as ex:
         list(ex.map(run, jobs))
     (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
-    write_ass_words(timings, work / "captions.ass", LONG_CAPTIONS)
+    write_ass_words(timings, work / "captions.ass", look)
     _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music)
 
 
