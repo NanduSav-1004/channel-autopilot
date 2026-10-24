@@ -106,6 +106,8 @@ jobs:
           fi
           ARGS="ml --auto --privacy $PRIVACY"
           [ "$LIVE" = "true" ] && ARGS="$ARGS --live"
+          # a manual run retries a Malayalam edition that failed earlier today; the scheduled backups do not
+          [ "${{ github.event_name }}" = "workflow_dispatch" ] && ARGS="$ARGS --retry"
           autopilot $ARGS 2>&1 | tee -a run.log
 
       - name: Keep the Malayalam edition for review (only when it was built but not uploaded)

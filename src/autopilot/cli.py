@@ -55,6 +55,7 @@ def main() -> None:
     parser.add_argument("--force", action="store_true", help="make a video even if today's is already uploaded")
     parser.add_argument("--src", help="ml: the finished English job folder to make a Malayalam edition of")
     parser.add_argument("--auto", action="store_true", help="ml: make and upload today's Malayalam edition (after `daily`)")
+    parser.add_argument("--retry", action="store_true", help="ml --auto: also retry editions that failed earlier today")
     parser.add_argument("--voice", help="ml: Gemini voice name (default: rotates Charon, Achird, Sulafat)")
     args = parser.parse_args()
 
@@ -69,7 +70,7 @@ def main() -> None:
 
         if args.live:
             cfg.dry_run = False
-        print(malayalam.run_daily_edition(db.connect(), cfg, args.privacy, not cfg.dry_run, Path("output")), flush=True)
+        print(malayalam.run_daily_edition(db.connect(), cfg, args.privacy, not cfg.dry_run, Path("output"), args.retry), flush=True)
         return
     if args.command == "ml":
         from pathlib import Path

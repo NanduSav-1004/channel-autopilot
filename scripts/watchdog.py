@@ -13,6 +13,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from autopilot import notify
 
 
+def malayalam_missing(db_path: str) -> str | None:
+    """None if today's Malayalam long video is up (or there is nothing to make one from yet); else why it is missing."""
+    conn = sqlite3.connect(db_path)
+    try:
+        row = conn.execute("SELECT id, ml_video_id, ml_status FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL "
+                           "AND date(created_at) = date('now') ORDER BY id DESC LIMIT 1").fetchone()
+    except sqlite3.OperationalError:       # an older database without the Malayalam columns
+        return None
+    if row is None or row[1]:
+        return None
+    return f"status: {row[2] or 'not started'}"
+
+
 def uploaded_today(db_path: str) -> int:
     conn = sqlite3.connect(db_path)
     return conn.execute("SELECT COUNT(*) FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL "
@@ -34,6 +47,14 @@ def main() -> None:
         db = Path(tmp) / "autopilot.db"
         db.write_bytes(subprocess.run(["git", "-C", tmp, "show", "FETCH_HEAD:data/autopilot.db"], check=True, capture_output=True).stdout)
         n = uploaded_today(str(db))
+        ml_problem = malayalam_missing(str(db)) if n else None
+    if n and ml_problem and os.environ.get("TELEGRAM_BOT_TOKEN"):
+        msg = (f"Brightwork WATCHDOG ({now_ist()}): today's English video is up but the MALAYALAM video is not ({ml_problem}). "
+               "Run the workflow by hand (Run workflow, tick live, privacy public): it rebuilds the Malayalam edition. "
+               "https://github.com/NanduSav-1004/channel-autopilot/actions/workflows/daily.yml")
+        print(msg)
+        notify.send(msg)
+        sys.exit(1)
     if n:
         print(f"ok: {n} long video(s) uploaded today")
         return

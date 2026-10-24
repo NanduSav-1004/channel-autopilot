@@ -1,6 +1,8 @@
 import itertools
 import json
+import sqlite3
 import subprocess
+import sys
 import wave
 
 import numpy as np
@@ -250,3 +252,62 @@ def test_a_dramatic_pause_inside_a_sentence_is_matched_to_the_right_word_boundar
 def test_place_words_without_inner_pauses_is_proportional():
     out = ml.place_words(["അ" * 10, "അ" * 10], [], 0.0, 4.0)
     assert abs(out[0]["e"] - 2.0) < 1e-6
+
+
+def test_a_failed_edition_is_retried_only_when_asked(tmp_path):
+    from autopilot import db
+
+    conn = db.connect(tmp_path / "x.db")
+    a = db.add_job(conn, "t", "long")
+    conn.execute("UPDATE jobs SET video_id = 'V', ml_status = 'failed: OSError' WHERE id = ?", (a,))
+    conn.commit()
+    assert ml.edition_due(conn) is None and ml.edition_due(conn, retry=True)["id"] == a
+    conn.execute("UPDATE jobs SET ml_status = 'built' WHERE id = ?", (a,))
+    assert ml.edition_due(conn, retry=True) is None            # a review build is not redone
+
+
+def test_missing_malayalam_shorts_are_found_when_the_long_video_is_up(tmp_path):
+    from autopilot import db
+
+    conn = db.connect(tmp_path / "x.db")
+    a = db.add_job(conn, "t", "long")
+    s = db.add_job(conn, "s", "short", parent_id=a, short_idx=0)
+    conn.execute("UPDATE jobs SET video_id = 'V', ml_video_id = 'M' WHERE id = ?", (a,))
+    conn.execute("UPDATE jobs SET video_id = 'S' WHERE id = ?", (s,))
+    conn.commit()
+    assert ml.shorts_pending(conn)["id"] == a
+    conn.execute("UPDATE jobs SET ml_status = 'failed: X' WHERE id = ?", (s,))
+    assert ml.shorts_pending(conn) is None and ml.shorts_pending(conn, retry=True)["id"] == a
+    conn.execute("UPDATE jobs SET ml_video_id = 'MS', ml_status = 'done' WHERE id = ?", (s,))
+    assert ml.shorts_pending(conn, retry=True) is None
+
+
+def test_media_is_rebuilt_from_the_saved_script_when_the_run_is_gone(tmp_path):
+    (tmp_path / "script.json").write_text(json.dumps({"title": "T", "sections": [{"heading": "A", "narration": "word " * 100},
+                                                                                {"heading": "B", "narration": "word " * 100}]}))
+    timings = ml.estimate_timings(json.loads((tmp_path / "script.json").read_text()))
+    assert len(timings) == 2 and timings[1]["start"] == timings[0]["end"]
+    seen = {}
+
+    def gather(script, plan, topic):
+        seen["plan"], seen["topic"] = plan, topic
+        return [[{"kind": "image", "path": tmp_path / "a.jpg"}], []], ["credit"]
+
+    ml.recover_media(tmp_path, timings, "Topic", gather=gather)
+    assert seen["topic"] == "Topic" and len(seen["plan"]) == 2
+    assert json.loads((tmp_path / "items.json").read_text())[0][0]["kind"] == "image"
+    assert json.loads((tmp_path / "credits.json").read_text()) == ["credit"]
+
+
+def test_the_watchdog_notices_a_missing_malayalam_video(tmp_path):
+    sys.path.insert(0, "scripts")
+    import watchdog
+
+    c = sqlite3.connect(tmp_path / "a.db")
+    c.execute("CREATE TABLE jobs (id INTEGER PRIMARY KEY, kind TEXT, video_id TEXT, created_at TEXT, ml_video_id TEXT, ml_status TEXT)")
+    c.execute("INSERT INTO jobs (kind, video_id, created_at, ml_video_id, ml_status) VALUES ('long', 'V', datetime('now'), NULL, 'failed: OSError')")
+    c.commit()
+    assert "failed: OSError" in watchdog.malayalam_missing(str(tmp_path / "a.db"))
+    c.execute("UPDATE jobs SET ml_video_id = 'M'")
+    c.commit()
+    assert watchdog.malayalam_missing(str(tmp_path / "a.db")) is None

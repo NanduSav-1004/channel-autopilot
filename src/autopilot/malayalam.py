@@ -506,7 +506,24 @@ def make_voice(script_ml: dict, out_wav: Path, voice: dict) -> list[dict]:
     return timings
 
 
-def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, translate=translate_script) -> Path:
+def recover_media(src_dir: Path, timings: list[dict], topic: str, gather=None) -> None:
+    """The English run's media is gone (a later run, or a manual one): find new images and footage for the same script, on the
+    Malayalam project's quota, and write items.json and credits.json so the edition can be built."""
+    from autopilot import shots
+
+    script = json.loads((src_dir / "script.json").read_text())
+    plan = shots.plan_shots(timings)
+    if gather is None:
+        with ml_quota():
+            items, credits = shots.gather_images(script, plan, Path("work") / "assets", topic)
+    else:
+        items, credits = gather(script, plan, topic)
+    (src_dir / "items.json").write_text(json.dumps([[{"kind": i["kind"], "path": str(i["path"])} for i in sec] for sec in items]))
+    (src_dir / "credits.json").write_text(json.dumps(credits))
+    print(f"[ml] media rebuilt: {sum(len(s) for s in items)} items for {len(items)} sections", flush=True)
+
+
+def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, translate=translate_script, topic: str = "") -> Path:
     """Make the Malayalam video from an English job directory (script.json, items.json, credits.json)."""
     from autopilot import audio, shots, thumbnail
     from autopilot.render import render_photo_video
@@ -528,6 +545,8 @@ def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, transla
         timings = make_voice(ml, wav, voice)
         tp.write_text(json.dumps(timings, ensure_ascii=False))
     print(f"[ml] voice {voice['name']}: {timings[-1]['end']:.0f}s", flush=True)
+    if not (src_dir / "items.json").exists():
+        recover_media(src_dir, timings, topic or script.get("title", ""))
     items = shots.fill_sparse_sections([[{"kind": i["kind"], "path": Path(i["path"])} for i in sec]
                                         for sec in json.loads((src_dir / "items.json").read_text())])
     music = audio.generate_ambient(timings[-1]["end"] + 5, out_dir / "music.wav", seed=1)
@@ -597,14 +616,16 @@ def short_description_ml(ml: dict, long_video_id: str | None, source_url: str | 
     return text
 
 
-def run_daily_shorts(conn, cfg, long_job, src: Path, voice: dict, privacy: str, live: bool, build_only: bool) -> list[str]:
+def run_daily_shorts(conn, cfg, long_job, src: Path, voice: dict, privacy: str, live: bool, build_only: bool,
+                     retry: bool = False) -> list[str]:
     """Malayalam Shorts for today's video, one per English Short. Each is isolated: one failure does not stop the others."""
     from autopilot import notify, schedule, shorts, upload
 
     ml_cfg = cfg.malayalam or {}
+    skip = "" if retry else " AND COALESCE(ml_status, '') NOT LIKE 'failed%'"
     rows = conn.execute("SELECT * FROM jobs WHERE kind = 'short' AND parent_id = ? AND video_id IS NOT NULL "
-                        "AND ml_video_id IS NULL AND COALESCE(ml_status, '') NOT LIKE 'failed%' "
-                        "AND COALESCE(ml_status, '') != 'built' ORDER BY short_idx", (long_job["id"],)).fetchall()
+                        f"AND ml_video_id IS NULL AND COALESCE(ml_status, '') != 'built'{skip} ORDER BY short_idx",
+                        (long_job["id"],)).fetchall()
     if not rows:
         return []
     long_row = conn.execute("SELECT ml_video_id, ml_publish_at FROM jobs WHERE id = ?", (long_job["id"],)).fetchone()
@@ -613,12 +634,16 @@ def run_daily_shorts(conn, cfg, long_job, src: Path, voice: dict, privacy: str, 
     items = json.loads((src / "items.json").read_text())
     credits = json.loads((src / "credits.json").read_text()) if (src / "credits.json").exists() else []
     source_url = json.loads((src / "script.json").read_text()).get("source_url")
+    plans = json.loads((src / "shorts.json").read_text()) if (src / "shorts.json").exists() else []
     base = schedule.parse(long_row["ml_publish_at"]) if long_row["ml_publish_at"] else None
     offsets = ml_cfg.get("short_offsets_hours", [10, 15, 21])
     times = shorts.publish_times(len(rows), offsets, base) if base and privacy == "public" else [None] * len(rows)
     lines = []
     for row, when in zip(rows, times, strict=True):
         sdir = src / f"short{row['short_idx']}"
+        if not (sdir / "script.json").exists() and row["short_idx"] < len(plans):     # rebuilt run: the plan holds the script
+            sdir.mkdir(parents=True, exist_ok=True)
+            (sdir / "script.json").write_text(json.dumps(plans[row["short_idx"]]))
         if not (sdir / "script.json").exists():
             lines.append(f"malayalam short {row['short_idx']}: skipped (its English files are gone)")
             continue
@@ -654,11 +679,32 @@ def ist_text(ts: str | None) -> str:
 
 
 # ---------- the daily Malayalam edition: build it, upload it to the Malayalam channel, remember it ----------
-def edition_due(conn):
-    """The newest English long video that is uploaded and has no Malayalam edition yet (and none failed today)."""
+def edition_due(conn, retry: bool = False):
+    """The newest English long video that is uploaded and has no Malayalam edition yet. An edition that failed is retried
+    only when asked (a manual run), so five backup runs a day cannot repeat a failure five times."""
+    skip = "" if retry else " AND COALESCE(ml_status, '') NOT LIKE 'failed%'"
     return conn.execute(
         "SELECT * FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL AND ml_video_id IS NULL "
-        "AND date(created_at) = date('now') AND COALESCE(ml_status, '') NOT LIKE 'failed%' AND COALESCE(ml_status, '') != 'built' ORDER BY id DESC LIMIT 1").fetchone()
+        f"AND date(created_at) = date('now') AND COALESCE(ml_status, '') != 'built'{skip} ORDER BY id DESC LIMIT 1").fetchone()
+
+
+def shorts_pending(conn, retry: bool = False):
+    """Today's long video whose Malayalam edition is up but whose Malayalam Shorts are not all made."""
+    skip = "" if retry else " AND COALESCE(s.ml_status, '') NOT LIKE 'failed%'"
+    return conn.execute(
+        "SELECT l.* FROM jobs l WHERE l.kind = 'long' AND l.ml_video_id IS NOT NULL AND date(l.created_at) = date('now') "
+        "AND EXISTS (SELECT 1 FROM jobs s WHERE s.parent_id = l.id AND s.video_id IS NOT NULL AND s.ml_video_id IS NULL "
+        f"AND COALESCE(s.ml_status, '') != 'built'{skip}) ORDER BY l.id DESC LIMIT 1").fetchone()
+
+
+def estimate_timings(script: dict) -> list[dict]:
+    """Rough section timings from the English narration length (only used to decide how much media to look for)."""
+    t, out = 0.0, []
+    for sec in script["sections"]:
+        d = max(20.0, len(sec["narration"].split()) * 0.5)
+        out.append({"heading": sec["heading"], "start": t, "end": t + d, "sentences": []})
+        t += d
+    return out
 
 
 def upload_edition(conn, job, out_dir: Path, src_dir: Path, hour_utc: int | None, privacy: str, live: bool) -> str | None:
@@ -686,7 +732,7 @@ def upload_edition(conn, job, out_dir: Path, src_dir: Path, hour_utc: int | None
     return vid
 
 
-def run_daily_edition(conn, cfg, privacy: str, live: bool, root: Path) -> str:
+def run_daily_edition(conn, cfg, privacy: str, live: bool, root: Path, retry: bool = False) -> str:
     """Called after the English daily run. Returns a status line. Never raises: the English video must not be affected."""
     from autopilot import notify, youtube_auth
 
@@ -696,18 +742,21 @@ def run_daily_edition(conn, cfg, privacy: str, live: bool, root: Path) -> str:
     build_only = live and not youtube_auth.configured("ml")   # no channel yet: still build it so it can be reviewed
     if not os.environ.get("GEMINI_API_KEY_ML"):
         return "malayalam edition: skipped (GEMINI_API_KEY_ML is not set)"
-    job = edition_due(conn)
+    job = edition_due(conn, retry)
     if not job:
-        return "malayalam edition: nothing due"
+        late = shorts_pending(conn, retry) if ml_cfg.get("shorts") else None
+        if not late:
+            return "malayalam edition: nothing due"
+        return _only_shorts(conn, cfg, late, privacy, live, build_only, root, ml_cfg)
     src = next(iter(sorted(root.glob(f"{job['id']:04d}-*"))), None)
-    if not src or not (src / "items.json").exists():
-        return f"malayalam edition: skipped (the English files for job {job['id']} are gone)"
+    if not src or not (src / "script.json").exists():
+        return f"malayalam edition: skipped (the English script for job {job['id']} is gone)"
     voice = pick_ml_voice(job["id"], ml_cfg.get("voices"))
     try:
-        build_edition(src, src / "ml", Path("work") / "ml" / src.name, voice)
+        build_edition(src, src / "ml", Path("work") / "ml" / src.name, voice, topic=job["topic"])
         vid = upload_edition(conn, job, src / "ml", src, ml_cfg.get("publish_hour_utc"), privacy, live and not build_only)
         if ml_cfg.get("shorts") and (vid or build_only):
-            run_daily_shorts(conn, cfg, job, src, voice, privacy, live, build_only)
+            run_daily_shorts(conn, cfg, job, src, voice, privacy, live, build_only, retry)
         if build_only:
             conn.execute("UPDATE jobs SET ml_status = 'built' WHERE id = ?", (job["id"],))
             conn.commit()
@@ -727,3 +776,18 @@ def run_daily_edition(conn, cfg, privacy: str, live: bool, root: Path) -> str:
         notify.send(f"Brightwork Malayalam: uploaded {json.loads((src / 'ml' / 'script_ml.json').read_text())['title']!r}\n"
                     f"https://youtu.be/{vid}\nGoes public: {ist(at)}\nVoice: {voice['name']}")
     return f"malayalam edition: done ({vid or 'dry run'})"
+
+
+def _only_shorts(conn, cfg, job, privacy: str, live: bool, build_only: bool, root: Path, ml_cfg: dict) -> str:
+    """The Malayalam long video is up; make the Shorts that are still missing (a manual retry after a failure)."""
+    src = next(iter(sorted(root.glob(f"{job['id']:04d}-*"))), None)
+    if not src or not (src / "script.json").exists():
+        return f"malayalam shorts: skipped (the English script for job {job['id']} is gone)"
+    try:
+        if not (src / "items.json").exists():
+            recover_media(src, estimate_timings(json.loads((src / "script.json").read_text())), job["topic"])
+        lines = run_daily_shorts(conn, cfg, job, src, pick_ml_voice(job["id"], ml_cfg.get("voices")), privacy, live, build_only,
+                                 retry=True)
+    except Exception as exc:  # noqa: BLE001
+        return f"malayalam shorts FAILED: {type(exc).__name__}: {exc}"
+    return "malayalam shorts: " + ("; ".join(lines) if lines else "nothing to do")
