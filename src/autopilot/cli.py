@@ -55,8 +55,11 @@ def discover_with_retries(conn, cfg, want: int, tries: int = 3, pause: float = 6
 
     for attempt in range(tries):
         try:
-            return topics.discover(conn, cfg.niche, want, forbidden=cfg.forbidden_topics,
-                                   min_source_chars=cfg.formats["long"]["min_source_chars"])
+            ids = topics.discover(conn, cfg.niche, want, forbidden=cfg.forbidden_topics,
+                                  min_source_chars=cfg.formats["long"]["min_source_chars"])
+            if ids or attempt == tries - 1:
+                return ids
+            print(f"[topics] attempt {attempt + 1}/{tries}: every candidate was rejected; asking the model again", flush=True)
         except (TransientError, OSError) as exc:
             print(f"[topics] attempt {attempt + 1}/{tries} failed: {type(exc).__name__}: {exc}", flush=True)
             if attempt == tries - 1:

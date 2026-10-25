@@ -21,8 +21,13 @@ search to learn about it. Keep it SHORT, 3-6 words, the way people really type (
 Return JSON: {{"topics": [{{"topic": str, "wikipedia_title": str, "search_query": str}}]}}"""
 
 
+def _clean_title(title: str) -> str:
+    """Models often write Wikipedia titles URL-style ("Photovoltaic_system"): underscores are spaces."""
+    return " ".join(str(title).replace("_", " ").split())
+
+
 def _same_article(wanted: str, found: str) -> bool:
-    a, b = wanted.lower().strip(), found.lower().strip()
+    a, b = _clean_title(wanted).lower(), _clean_title(found).lower()
     return a == b or a in b or b in a
 
 
@@ -55,7 +60,7 @@ def discover(
         print("[topics] no search-demand signal (autocomplete unreachable or nothing matched): model order", flush=True)
     added: list[int] = []
     for cand in candidates:
-        topic, title = str(cand.get("topic", "")).strip(), str(cand.get("wikipedia_title", "")).strip()
+        topic, title = str(cand.get("topic", "")).strip(), _clean_title(cand.get("wikipedia_title", ""))
         if len(added) >= n:
             break
         reason = None

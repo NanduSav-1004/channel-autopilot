@@ -67,3 +67,21 @@ def test_a_candidate_whose_wikipedia_fetch_fails_is_skipped_not_fatal(tmp_path):
 
     ids = topics.discover(conn, "science", 1, gen=gen, fetch=fetch, min_source_chars=10, score=lambda q: 0.0)
     assert len(ids) == 1
+
+
+def test_underscore_style_wikipedia_titles_are_accepted(tmp_path):
+    from autopilot import db, topics
+
+    conn = db.connect(tmp_path / "x.db")
+    gen = lambda p: {"topics": [{"topic": "Solar panels", "wikipedia_title": "Photovoltaic_system", "search_query": "how solar panels work"}]}
+    fetch = lambda title: {"title": "Photovoltaic system", "url": "u", "text": "x" * 100}
+    assert len(topics.discover(conn, "science", 1, gen=gen, fetch=fetch, min_source_chars=10, score=lambda q: 1.0)) == 1
+
+
+def test_discovery_asks_again_when_every_candidate_is_rejected(monkeypatch):
+    from autopilot.config import Config
+
+    cfg = Config(niche="s", audience="a", formats={"long": {"min_source_chars": 10}})
+    answers = [[], [], [9]]
+    monkeypatch.setattr(cli.topics, "discover", lambda *a, **k: answers.pop(0))
+    assert cli.discover_with_retries(None, cfg, 1, tries=3, pause=0) == [9]
