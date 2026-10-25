@@ -66,7 +66,11 @@ def discover(
         elif topic.lower() in known or title.lower() in known:
             reason = "already covered"
         else:
-            src = fetch(title)
+            try:
+                src = fetch(title)
+            except OSError as exc:      # Wikipedia down: skip this candidate, try the next
+                print(f"[topics] could not fetch {title!r}: {exc}", flush=True)
+                continue
             if not src:
                 reason = "no Wikipedia article found"
             elif not _same_article(title, src["title"]):

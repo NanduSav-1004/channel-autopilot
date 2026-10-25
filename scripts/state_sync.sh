@@ -13,6 +13,7 @@ case "${1:-}" in
       git fetch --quiet --depth=1 "$REMOTE" state
       git show "FETCH_HEAD:$DB" > "$DB"
       git show "FETCH_HEAD:data/last_work_run.log" > data/last_work_run.log 2>/dev/null || rm -f data/last_work_run.log
+      git show "FETCH_HEAD:data/last_failed_run.log" > data/last_failed_run.log 2>/dev/null || rm -f data/last_failed_run.log
       # the latest video's small files (scripts, Short scripts, credits): enough to rebuild its Malayalam edition later
       git ls-tree -r --name-only FETCH_HEAD data/last_job 2>/dev/null | while read -r f; do
         mkdir -p "output/$(dirname "${f#data/last_job/}")"
@@ -42,6 +43,15 @@ case "${1:-}" in
       for f in script source credits shorts; do
         [ -f "$latest/$f.json" ] && cp "$latest/$f.json" "$tmp/data/last_job/$(basename "$latest")/" || true
       done
+      if [ -f "$latest/ml/script_ml.json" ]; then       # the Malayalam translation, so a thumbnail can be remade later
+        mkdir -p "$tmp/data/last_job/$(basename "$latest")/ml" && cp "$latest/ml/script_ml.json" "$tmp/data/last_job/$(basename "$latest")/ml/"
+      fi
+    fi
+    # Keep the most recent FAILED run's log too: a later successful run (for example a manual retry) must not erase why it failed.
+    if [ -f run.log ] && grep -qE "Traceback|^ERROR" run.log; then
+      cp "$tmp/data/last_run.log" "$tmp/data/last_failed_run.log" 2>/dev/null || true
+    elif [ -f data/last_failed_run.log ]; then
+      cp data/last_failed_run.log "$tmp/data/last_failed_run.log"
     fi
     cd "$tmp"
     git init -q -b state

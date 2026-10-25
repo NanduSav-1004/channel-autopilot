@@ -47,6 +47,24 @@ def ensure_progress(before: int, after: int) -> None:
         sys.exit(1)
 
 
+def discover_with_retries(conn, cfg, want: int, tries: int = 3, pause: float = 60.0) -> list[int]:
+    """A brief outage of the model providers or Wikipedia must not cost the day's video: wait and try again."""
+    import time
+
+    from autopilot.errors import TransientError
+
+    for attempt in range(tries):
+        try:
+            return topics.discover(conn, cfg.niche, want, forbidden=cfg.forbidden_topics,
+                                   min_source_chars=cfg.formats["long"]["min_source_chars"])
+        except (TransientError, OSError) as exc:
+            print(f"[topics] attempt {attempt + 1}/{tries} failed: {type(exc).__name__}: {exc}", flush=True)
+            if attempt == tries - 1:
+                raise
+            time.sleep(pause * (attempt + 1))
+    return []
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="autopilot")
     parser.add_argument("command", choices=["topics", "run", "daily", "status", "retry", "thumbnails", "ml"])
@@ -91,8 +109,7 @@ def main() -> None:
     if args.command in ("topics", "daily"):
         want = cfg.formats["long"]["per_day"] - db.pending_count(conn, "long")
         if want > 0:
-            ids = topics.discover(conn, cfg.niche, want, forbidden=cfg.forbidden_topics,
-                                  min_source_chars=cfg.formats["long"]["min_source_chars"])
+            ids = discover_with_retries(conn, cfg, want)
             print(f"queued {len(ids)} new topic(s)")
     if args.command in ("run", "daily"):
         n = run_pending(conn, Stages(conn, cfg, privacy=args.privacy).handlers())
