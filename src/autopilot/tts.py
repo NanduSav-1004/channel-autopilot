@@ -164,6 +164,9 @@ class GeminiEngine:
     def synth_section(self, sentences: list[str]) -> tuple[bytes, int, list[tuple[float, float]]]:
         pcm = self._speak(" ".join(sentences))
         rate = 24000
+        pcm, cut = trim_tail_artifact(pcm, rate)
+        if cut:
+            print(f"[tts] cut {cut:.2f}s of noise from the end of a section", flush=True)
         buf = io.BytesIO()
         with wave.open(buf, "wb") as w:
             w.setnchannels(1)
@@ -176,6 +179,74 @@ class GeminiEngine:
         pcm, words = strip_spoken_direction(pcm, rate, sentences[0], words)
         total = len(pcm) / 2 / rate
         return pcm, rate, align_sentences(sentences, words, total)
+
+
+def _islands(pcm: bytes, rate: int, win: float = 0.02) -> tuple[list[tuple[int, int]], object, float]:
+    """Runs of sound (frame indexes, merged when separated by under 0.12 s), the per-frame level, and its 98th percentile."""
+    import numpy as np
+
+    a = np.frombuffer(pcm, dtype="<i2").astype(float)
+    n = max(1, int(rate * win))
+    k = len(a) // n
+    rms = np.sqrt((a[: k * n].reshape(k, n) ** 2).mean(axis=1)) if k else np.zeros(0)
+    peak = float(np.percentile(rms, 98)) if k else 0.0
+    loud = rms > 0.06 * peak
+    out: list[list[int]] = []
+    i = 0
+    while i < k:
+        if loud[i]:
+            j = i
+            while j + 1 < k and loud[j + 1]:
+                j += 1
+            if out and (i - out[-1][1]) * win < 0.12:
+                out[-1][1] = j
+            else:
+                out.append([i, j])
+            i = j + 1
+        else:
+            i += 1
+    return [(s, e) for s, e in out], rms, peak
+
+
+def trim_tail_artifact(pcm: bytes, rate: int, win: float = 0.02) -> tuple[bytes, float]:
+    """Gemini's speech often ends with a short burst of noise after the last word (a glitch at the end of the stream; heard
+    as a hiss or click when the video ends). Cut trailing sound that is brief (under 0.35 s), set apart from the speech by
+    a pause, and noise-like or louder than the speech. Returns (audio, seconds cut)."""
+    import numpy as np
+
+    cut_total = 0.0
+    for _ in range(2):
+        isl, rms, peak = _islands(pcm, rate, win)
+        if len(isl) < 2:
+            break
+        (_, prev_end), (s, e) = isl[-2], isl[-1]
+        dur, gap = (e - s + 1) * win, (s - prev_end - 1) * win
+        if dur > 0.35 or gap < 0.15:
+            break
+        a = np.frombuffer(pcm, dtype="<i2").astype(float)
+        seg = a[int(s * win * rate): int((e + 1) * win * rate)]
+        x = seg[:4096] - seg[:4096].mean()
+        spec = np.abs(np.fft.rfft(x * np.hanning(len(x)))) + 1e-9
+        flat = float(np.exp(np.log(spec).mean()) / spec.mean())
+        zcr = float((np.diff(np.sign(seg)) != 0).mean())
+        if not (flat > 0.25 or zcr > 0.12 or float(rms[s:e + 1].max()) > 1.15 * peak):
+            break
+        keep = int((prev_end + 1) * win * rate + 0.1 * rate) * 2         # the last word's decay, then silence
+        keep = min(keep, int(s * win * rate) * 2)
+        cut_total += (len(pcm) - keep) / 2 / rate
+        pcm = pcm[:keep]
+    return pcm, cut_total
+
+
+def fade_out(pcm: bytes, rate: int, seconds: float = 0.06) -> bytes:
+    """A short fade at the very end, so a narration never stops with a click."""
+    import numpy as np
+
+    a = np.frombuffer(pcm, dtype="<i2").astype(float)
+    n = min(len(a), int(seconds * rate))
+    if n:
+        a[-n:] *= np.linspace(1.0, 0.0, n)
+    return a.astype("<i2").tobytes()
 
 
 def strip_spoken_direction(pcm: bytes, rate: int, first_sentence: str, words: list[dict]) -> tuple[bytes, list[dict]]:

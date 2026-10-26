@@ -303,7 +303,11 @@ class MalayalamGeminiEngine(tts.GeminiEngine):
 
     def synth_section(self, sentences: list[str]):
         pcm = self._speak(" ".join(sentences).translate(QUOTES))   # quote marks make Gemini act the quote as a second voice
+        pcm, cut = tts.trim_tail_artifact(pcm, 24000)
+        if cut:
+            print(f"[tts] cut {cut:.2f}s of noise from the end of a section", flush=True)
         pcm, spans = align_by_silence(sentences, pcm, 24000)
+        pcm = tts.fade_out(pcm, 24000)
         return pcm, 24000, spans
 
 
