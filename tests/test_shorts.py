@@ -46,7 +46,8 @@ def test_plan_shorts_drops_only_the_short_the_factchecker_flagged():
     def gen(prompt):
         if "Write" in prompt and "standalone" in prompt:
             return _plan_out((0, 100), (1, 100), (2, 100))
-        seen["claims"] = prompt
+        if prompt.startswith("You are a fact-checker"):
+            seen["claims"] = prompt
         return {"unsupported": ["[short 1] Did you know lasers are special."], "advice_given": False}
 
     res = shorts.plan_shorts(SCRIPT, SOURCE, 3, gen=gen)
@@ -307,3 +308,38 @@ def test_plan_shorts_drops_only_the_attributed_short_when_tags_are_missing():
     # both drafts share the same opening sentence, so the first best match (index 0) is the one dropped
     res = shorts.plan_shorts(SCRIPT, SOURCE, 2, gen=gen)
     assert len(res) == 1
+
+
+def test_questions_are_never_sent_to_the_fact_checker():
+    assert shorts._sentences("Can sunlight power your coffee maker right now? Panels turn light into current. Ok.") == [
+        "Panels turn light into current."]
+
+
+def test_a_short_with_an_unsupported_sentence_is_rewritten_and_kept_when_the_rewrite_passes():
+    checks = []
+
+    def gen(prompt):
+        if "Write" in prompt and "standalone" in prompt:
+            return _plan_out((0, 100), (1, 100), (2, 100))
+        if prompt.startswith("These YouTube Shorts scripts each contain"):
+            return {"shorts": [{"section_index": 1, "title": "t1", "narration": " ".join(["fixed"] * 100) + "."}]}
+        checks.append(prompt)
+        if len(checks) == 1:                         # first check flags Short 1 only
+            return {"unsupported": ["[short 1] Did you know lasers are special."], "advice_given": False}
+        return {"unsupported": [], "advice_given": False}        # the rewritten Short passes
+
+    res = shorts.plan_shorts(SCRIPT, SOURCE, 3, gen=gen)
+    assert sorted(s["section_index"] for s in res) == [0, 1, 2]
+    assert any("fixed" in s["narration"] for s in res if s["section_index"] == 1) and len(checks) == 2
+
+
+def test_a_short_that_keeps_failing_after_the_repair_rounds_is_dropped():
+    def gen(prompt):
+        if "Write" in prompt and "standalone" in prompt:
+            return _plan_out((0, 100), (1, 100), (2, 100))
+        if prompt.startswith("These YouTube Shorts scripts each contain"):
+            return {"shorts": [{"section_index": 1, "title": "t1", "narration": " ".join(["still"] * 100) + "."}]}
+        return {"unsupported": ["[short 1] Did you know lasers are special."], "advice_given": False}
+
+    res = shorts.plan_shorts(SCRIPT, SOURCE, 3, gen=gen)
+    assert [s["section_index"] for s in res] == [0, 2]

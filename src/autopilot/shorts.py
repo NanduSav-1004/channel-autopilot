@@ -34,6 +34,18 @@ facts already stated in the script, and cut the least important details. Count t
 {items}
 
 Return JSON: {{"shorts": [{{"section_index": int, "title": str, "narration": str}}]}}"""
+REPAIR_PROMPT = """These YouTube Shorts scripts each contain sentences that a fact-checker could NOT support from the SOURCE.
+Rewrite each script: replace every flagged sentence with one that states only what the SOURCE says, or delete the sentence if the
+SOURCE has nothing to say about it. Keep the opening hook first and a clear payoff sentence last; keep the script between
+{target_min} and {target_max} words; add no new facts, numbers or superlatives. Keep each script's section_index and title.
+
+{items}
+
+SOURCE:
+{source}
+
+Return JSON: {{"shorts": [{{"section_index": int, "title": str, "narration": str}}]}}"""
+REPAIR_ROUNDS = 2
 TARGET_MIN, TARGET_MAX = 85, 110
 
 
@@ -42,7 +54,8 @@ def _words(text: str) -> int:
 
 
 def _sentences(text: str) -> list[str]:
-    return [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if len(s.split()) >= 3]
+    """The sentences worth fact-checking: statements. A question asserts nothing, so it is never a claim."""
+    return [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if len(s.split()) >= 3 and not s.rstrip().endswith("?")]
 
 
 def trim_to_limit(narration: str, max_words: int = TARGET_MAX) -> str | None:
@@ -100,6 +113,50 @@ def attribute_unsupported(unsupported: list[str], cands: list[dict]) -> tuple[se
     return bad, unknown
 
 
+def attribute_each(unsupported: list[str], cands: list[dict]) -> tuple[dict[int, list[str]], list[str]]:
+    """Like attribute_unsupported, but keeps WHICH sentences were rejected for each Short: {short index: [sentences]}."""
+    per: dict[int, list[str]] = {}
+    unknown: list[str] = []
+    for u in unsupported:
+        u = str(u)
+        idxs, _ = attribute_unsupported([u], cands)
+        if idxs:
+            per.setdefault(next(iter(idxs)), []).append(re.sub(r"^\[short \d+\]\s*", "", u))
+        else:
+            unknown.append(u)
+    return per, unknown
+
+
+def _check(cands: list[dict], source: dict, gen: Callable) -> tuple[dict[int, list[str]], list[str], bool]:
+    """Fact-check the Shorts' statements: (rejected sentences per Short, unattributable ones, advice flag)."""
+    claims = "\n".join(f"- [short {i}] {sent}" for i, c in enumerate(cands) for sent in _sentences(c["narration"]))
+    if not claims:
+        return {}, [], False
+    verdict = gen(qa.FACTCHECK_PROMPT.format(source=source["text"], claims=claims))
+    per, unknown = attribute_each(verdict.get("unsupported", []), cands)
+    return per, unknown, bool(verdict.get("advice_given"))
+
+
+def repair_shorts(cands: list[dict], per: dict[int, list[str]], source: dict, gen: Callable) -> dict[int, dict]:
+    """One request to rewrite the Shorts that have unsupported sentences. Returns {index in cands: repaired candidate}."""
+    items = "\n\n".join(
+        f"[{cands[i]['section_index']}] {cands[i]['title']}:\n{cands[i]['narration']}\nFLAGGED:\n" + "\n".join(f"- {s}" for s in per[i])
+        for i in sorted(per))
+    out = gen(REPAIR_PROMPT.format(target_min=TARGET_MIN, target_max=TARGET_MAX, items=items, source=source["text"]))
+    by_section = {c["section_index"]: i for i, c in enumerate(cands)}
+    fixed: dict[int, dict] = {}
+    for s in out.get("shorts", []) if isinstance(out, dict) else []:
+        i = by_section.get(s.get("section_index"))
+        narration = str(s.get("narration", "")).strip()
+        if i is None or i not in per:
+            continue
+        if _words(narration) > MAX_WORDS:
+            narration = trim_to_limit(narration) or ""
+        if MIN_WORDS <= _words(narration) <= MAX_WORDS:
+            fixed[i] = {**cands[i], "narration": narration}
+    return fixed
+
+
 def plan_shorts(
     script: dict, source: dict, n: int, gen: Callable = llm.generate_json,
 ) -> list[dict]:
@@ -132,21 +189,43 @@ def plan_shorts(
         print(f"[shorts] after trimming in code: {len(cands)} usable", flush=True)
     if not cands:
         return []
-    claims = "\n".join(f"- [short {i}] {sent}" for i, c in enumerate(cands) for sent in _sentences(c["narration"]))
-    verdict = gen(qa.FACTCHECK_PROMPT.format(source=source["text"], claims=claims))
-    if verdict.get("advice_given"):
+    per, unknown, advice = _check(cands, source, gen)
+    if advice:
         print("[shorts] dropped all: the fact-checker saw advice", flush=True)
         return []
-    unsupported = verdict.get("unsupported", [])
-    bad, unknown = attribute_unsupported(unsupported, cands)
     if unknown:  # a rejected sentence that matches no Short: be safe and drop them all
         print(f"[shorts] dropped all: could not attribute {len(unknown)} unsupported claim(s), e.g.: "
               f"{'; '.join(u[:120] for u in unknown[:3])}", flush=True)
         return []
-    if bad:
-        print(f"[shorts] dropped {len(bad)} Short(s) with unsupported claims, e.g.: "
-              f"{'; '.join(str(u)[:110] for u in unsupported[:3])}", flush=True)
-    return [c for i, c in enumerate(cands) if i not in bad][:n]
+    dropped = 0
+    for rnd in range(REPAIR_ROUNDS):          # a Short with an unsupported sentence is rewritten from the source, then re-checked
+        if not per:
+            break
+        print(f"[shorts] repairing {len(per)} Short(s) with unsupported sentences, e.g.: "
+              f"{'; '.join(s[:100] for v in list(per.values())[:2] for s in v[:1])}", flush=True)
+        fixed = repair_shorts(cands, per, source, gen)
+        for i in per:
+            if i not in fixed:
+                cands[i]["_bad"] = True         # the model gave nothing usable back: this one goes
+                dropped += 1
+            else:
+                cands[i] = fixed[i]
+        cands = [c for c in cands if not c.get("_bad")]
+        if not cands:
+            break
+        if not fixed:                          # nothing was rewritten: the rest passed the first check
+            per = {}
+            break
+        per, unknown, advice = _check(cands, source, gen)
+        if advice or unknown:
+            print("[shorts] dropped all after repair: advice or unattributable claims", flush=True)
+            return []
+    if per:                                   # still unsupported after the repair rounds
+        cands = [c for i, c in enumerate(cands) if i not in per]
+        dropped += len(per)
+    if dropped:
+        print(f"[shorts] dropped {dropped} Short(s) that could not be repaired", flush=True)
+    return cands[:n]
 
 
 def caption_chunks(sentences: list[dict], max_words: int = 6) -> list[tuple[str, float, float]]:
