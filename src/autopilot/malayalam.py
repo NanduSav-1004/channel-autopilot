@@ -65,11 +65,18 @@ A reviewer found these problems in an earlier Malayalam translation of this text
 {issues}
 Earlier translation: {previous}"""
 
+SEVERITY = """Classify every problem you list:
+- "major": a number, date, name or unit that differs from the English; a claim that is in the Malayalam but NOT in the English;
+  a meaning that is reversed or contradicted; a concrete fact stated wrongly.
+- "minor": anything else: wording, nuance, simplification or generalisation, a metaphor made literal or the reverse, a part left
+  out, reordering. Minor problems are acceptable: list them as "minor" (or leave them out)."""
+
 CHECK_PROMPT = """You check a Malayalam translation of a science explainer's narration against the English original.
-List only SUBSTANTIVE problems: a number, date, name, unit or fact that differs from the English; a claim that is in the
-Malayalam but not the English; a meaning that is reversed or distorted; an important sentence of the English that is missing.
-Differences of style, word choice, sentence splitting or the use of English technical terms are fine and must NOT be listed.
-Return JSON {{"issues": [str]}} (an empty list when the translation is faithful). Describe each issue in English.
+Look for substantive problems: a number, date, name, unit or fact that differs; something added that is not in the English; a
+meaning that is reversed or distorted; an important sentence of the English that is missing.
+""" + SEVERITY + """
+Return JSON {{"issues": [{{"severity": "major" or "minor", "issue": str}}]}} (an empty list when the translation is faithful).
+Describe each issue in English.
 
 ENGLISH:
 {english}
@@ -104,11 +111,10 @@ Return JSON {{"title": str, "narration": str}}.
 Title: {title}
 Narration: {narration}"""
 
-SHORT_CHECK_PROMPT = """You check a Malayalam Short script against its English original. The Malayalam may leave out minor details
-(it has to be shorter), but it must not CHANGE or ADD anything. List only SUBSTANTIVE problems: a number, date, name, unit or fact that
-differs from the English; a claim in the Malayalam that is not in the English; a reversed or distorted meaning.
-Style, word choice and omissions are fine and must NOT be listed.
-Return JSON {{"issues": [str]}} (an empty list when faithful). Describe each issue in English.
+SHORT_CHECK_PROMPT = """You check a Malayalam Short script against its English original. The Malayalam is deliberately shorter: it may leave out
+details and simplify. It must not CHANGE or ADD facts.
+""" + SEVERITY + """
+Return JSON {{"issues": [{{"severity": "major" or "minor", "issue": str}}]}} (an empty list when faithful). Describe each in English.
 
 ENGLISH:
 {english}
@@ -142,11 +148,23 @@ def missing_numbers(english: str, malayalam: str) -> list[str]:
     return sorted({n for n in NUMBER_RE.findall(english) if n not in have})
 
 
+def major_issues(reported) -> list[str]:
+    """Only the problems a reviewer calls major count; a bare string (an older style answer) is treated as major."""
+    out = []
+    for r in reported or []:
+        if isinstance(r, dict):
+            if str(r.get("severity", "major")).lower() == "major":
+                out.append(str(r.get("issue", r)))
+        else:
+            out.append(str(r))
+    return out
+
+
 def check_translation(english: str, malayalam: str, gen: Callable[[str], dict]) -> list[str]:
     """Problems found, in English: numbers that went missing (exact check) plus what the model reviewer reports."""
     issues = [f"the number {n} from the English is missing" for n in missing_numbers(english, malayalam)]
     try:
-        reported = [str(i) for i in gen(CHECK_PROMPT.format(english=english, malayalam=malayalam)).get("issues", [])]
+        reported = major_issues(gen(CHECK_PROMPT.format(english=english, malayalam=malayalam)).get("issues", []))
         if reported:     # a second look filters the reviewer's own false alarms
             real = gen(VERIFY_PROMPT.format(english=english, malayalam=malayalam,
                                             issues="\n".join(f"{i + 1}. {r}" for i, r in enumerate(reported)))).get("real", [])
@@ -167,7 +185,7 @@ def added_numbers(english: str, malayalam: str) -> list[str]:
 def check_short(english: str, malayalam: str, gen: Callable[[str], dict]) -> list[str]:
     issues = [f"the number {n} is not in the English" for n in added_numbers(english, malayalam)]
     try:
-        reported = [str(i) for i in gen(SHORT_CHECK_PROMPT.format(english=english, malayalam=malayalam)).get("issues", [])]
+        reported = major_issues(gen(SHORT_CHECK_PROMPT.format(english=english, malayalam=malayalam)).get("issues", []))
         if reported:
             real = gen(VERIFY_PROMPT.format(english=english, malayalam=malayalam,
                                             issues="\n".join(f"{i + 1}. {r}" for i, r in enumerate(reported)))).get("real", [])

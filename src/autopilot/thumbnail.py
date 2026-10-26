@@ -32,6 +32,41 @@ def _font(size: int, heavy: bool = True, latin: bool = False) -> ImageFont.FreeT
     return ImageFont.load_default()
 
 
+def _is_latin(ch: str) -> bool:
+    return ch.isascii() and not ch.isspace()
+
+
+def _runs(text: str) -> list[tuple[str, bool]]:
+    """Split text into runs of Latin (ASCII) and other letters: the Malayalam font has no Latin glyphs, so "CPU" inside a
+    Malayalam headline vanished. Spaces stay with the run before them."""
+    runs: list[list] = []
+    for ch in text:
+        latin = _is_latin(ch) if not ch.isspace() else (runs[-1][1] if runs else False)
+        if runs and runs[-1][1] == latin:
+            runs[-1][0] += ch
+        else:
+            runs.append([ch, latin])
+    return [(s, lat) for s, lat in runs]
+
+
+def _width(draw: ImageDraw.ImageDraw, text: str, size: int, heavy: bool = True) -> float:
+    if not _lang["fonts"]:
+        return draw.textlength(text, font=_font(size, heavy))
+    return sum(draw.textlength(s, font=_font(size, heavy, latin=lat)) for s, lat in _runs(text))
+
+
+def _draw_text(draw: ImageDraw.ImageDraw, xy: tuple[float, float], text: str, size: int, heavy: bool = True, **kw) -> None:
+    """Draw text; on a Malayalam thumbnail each script gets a font that has its letters, sharing one baseline."""
+    if not _lang["fonts"]:
+        draw.text(xy, text, font=_font(size, heavy), **kw)
+        return
+    x, base = xy[0], xy[1] + size * 0.86
+    for seg, lat in _runs(text):
+        font = _font(size, heavy, latin=lat)
+        draw.text((x, base), seg, font=font, anchor="ls", **kw)
+        x += draw.textlength(seg, font=font)
+
+
 def thumbnail_text(script: dict) -> str:
     text = script.get("thumbnail_text") or script["title"].split(":")[0]
     return " ".join(text.split()[:5]).upper()
@@ -172,8 +207,7 @@ def _fit(text: str, draw: ImageDraw.ImageDraw, max_w: int, max_h: int) -> tuple[
     for lines in _splits(text.split()):
         size = 240
         while size > 40:
-            font = _font(size)
-            if max(draw.textlength(line, font=font) for line in lines) <= max_w and len(lines) * size * 1.0 <= max_h:
+            if max(_width(draw, line, size) for line in lines) <= max_w and len(lines) * size * 1.0 <= max_h:
                 break
             size -= 4
         if size > best_size:
@@ -193,7 +227,6 @@ def _draw_headline(canvas: Image.Image, text: str) -> None:
     draw = ImageDraw.Draw(canvas)
     hi = key_word(text)
     lines, size = _fit(text, draw, int(W * 0.64), int(H * 0.70))
-    font = _font(size)
     stroke = max(7, size // 14)
     line_h = int(size * 1.0)
     y = (H - len(lines) * line_h) // 2 + 12
@@ -207,27 +240,26 @@ def _draw_headline(canvas: Image.Image, text: str) -> None:
             is_hi = (word == hi) and not marked
             marked = marked or is_hi
             parts.append((word, x, is_hi))
-            x += draw.textlength(word + " ", font=font)
+            x += _width(draw, word + " ", size)
         placed.append((y, parts))
         y += line_h
     for ly, parts in placed:                                   # drop shadow first, blurred
         for word, wx, _ in parts:
-            sd.text((wx + 7, ly + 9), word, font=font, fill=(0, 0, 0, 200), stroke_width=stroke, stroke_fill=(0, 0, 0, 200))
+            _draw_text(sd, (wx + 7, ly + 9), word, size, fill=(0, 0, 0, 200), stroke_width=stroke, stroke_fill=(0, 0, 0, 200))
     canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(5)))
     draw = ImageDraw.Draw(canvas)
     for ly, parts in placed:
         for word, wx, is_hi in parts:
-            draw.text((wx, ly), word, font=font, fill=AMBER if is_hi else (255, 255, 255),
+            _draw_text(draw, (wx, ly), word, size, fill=AMBER if is_hi else (255, 255, 255),
                       stroke_width=stroke, stroke_fill=(10, 12, 24))
 
 
 def _draw_tag(canvas: Image.Image, label: str) -> None:
     draw = ImageDraw.Draw(canvas)
-    font = _font(44, heavy=True)
-    tw = draw.textlength(label, font=font)
+    tw = _width(draw, label, 44)
     box = (48, 40, 48 + tw + 52, 40 + 70)
     draw.rounded_rectangle(box, radius=14, fill=AMBER)
-    draw.text((48 + 26, 40 + 8), label, font=font, fill=INK)
+    _draw_text(draw, (48 + 26, 40 + 8), label, 44, fill=INK)
 
 
 def _draw_badge(canvas: Image.Image) -> None:

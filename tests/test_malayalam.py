@@ -311,3 +311,15 @@ def test_the_watchdog_notices_a_missing_malayalam_video(tmp_path):
     c.execute("UPDATE jobs SET ml_video_id = 'M'")
     c.commit()
     assert watchdog.malayalam_missing(str(tmp_path / "a.db")) is None
+
+
+def test_only_major_problems_count():
+    assert ml.major_issues([{"severity": "minor", "issue": "wording"}, {"severity": "major", "issue": "year changed"},
+                            "an old style string"]) == ["year changed", "an old style string"]
+
+    def gen(prompt):
+        if prompt.startswith("You check"):
+            return {"issues": [{"severity": "minor", "issue": "a metaphor became literal"}]}
+        raise AssertionError("a minor-only report must not even reach the second look")
+
+    assert ml.check_translation("English.", "മലയാളം.", gen) == []
