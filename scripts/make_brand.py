@@ -57,14 +57,25 @@ def logo(name: str, out: Path, letter: str | None = None, font_path: str = FONT)
     bg.save(out)
 
 
+def _round_emblem(path: Path, size: int) -> Image.Image:
+    """The logo picture (already a circle's worth of artwork) cropped to an anti-aliased circle."""
+    big = Image.open(path).convert("RGB").resize((size * 4, size * 4), Image.LANCZOS)
+    mask = Image.new("L", (size * 4, size * 4), 0)
+    ImageDraw.Draw(mask).ellipse([0, 0, size * 4 - 1, size * 4 - 1], fill=255)
+    out = Image.new("RGBA", (size * 4, size * 4), (0, 0, 0, 0))
+    out.paste(big, mask=mask)
+    return out.resize((size, size), Image.LANCZOS)
+
+
 def banner(name: str, tagline: str, out: Path, letter: str | None = None, tag_font: str = FONT_LIGHT,
-           letter_font: str = FONT) -> None:
+           letter_font: str = FONT, emblem_image: Path | None = None, palette: tuple | None = None) -> None:
     w, h = 2560, 1440
-    img = Image.new("RGB", (w, h), DEEP)
+    deep, mid = palette or (DEEP, NAVY)
+    img = Image.new("RGB", (w, h), deep)
     px = ImageDraw.Draw(img)
     for y in range(h):  # soft vertical gradient
         f = y / h
-        px.line([(0, y), (w, y)], fill=tuple(int(DEEP[i] + (NAVY[i] - DEEP[i]) * (1 - abs(f - 0.5) * 2)) for i in range(3)))
+        px.line([(0, y), (w, y)], fill=tuple(int(deep[i] + (mid[i] - deep[i]) * (1 - abs(f - 0.5) * 2)) for i in range(3)))
     # faint orbit rings for texture, far from the safe area
     ring = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     rd = ImageDraw.Draw(ring)
@@ -72,7 +83,7 @@ def banner(name: str, tagline: str, out: Path, letter: str | None = None, tag_fo
         rd.ellipse([w // 2 - rr * 2, h // 2 - rr, w // 2 + rr * 2, h // 2 + rr], outline=ICE + (18 - k * 4,), width=3)
     img = Image.alpha_composite(img.convert("RGBA"), ring)
     d = ImageDraw.Draw(img)
-    emblem, gap = 280, 60
+    emblem, gap = (320 if emblem_image else 280), 64
     for size in range(118, 70, -4):         # a longer name gets a slightly smaller type size instead of failing
         big, small = ImageFont.truetype(FONT, size), ImageFont.truetype(tag_font, round(size * 0.44))
         text_w = max(d.textlength(name, font=big), d.textlength(tagline, font=small))
@@ -82,7 +93,7 @@ def banner(name: str, tagline: str, out: Path, letter: str | None = None, tag_fo
     if total > SAFE_W:  # YouTube only guarantees the centre 1546 px is visible on every device
         raise SystemExit(f"banner content is {total:.0f}px wide; must be <= {SAFE_W}. Use a shorter name or tagline.")
     x0 = (w - total) / 2
-    m = mark(emblem, letter or name[0].upper(), letter_font)
+    m = _round_emblem(emblem_image, emblem) if emblem_image else mark(emblem, letter or name[0].upper(), letter_font)
     img.alpha_composite(m, (int(x0), h // 2 - emblem // 2))
     tx = x0 + emblem + gap
     d.text((tx, h // 2 - 100), name, font=big, fill=(255, 255, 255))
@@ -100,10 +111,15 @@ if __name__ == "__main__":
     ap.add_argument("--letter", help="the emblem's letter (default: the name's first letter)")
     ap.add_argument("--tag-font", choices=["latin", "malayalam"], default="latin")
     ap.add_argument("--out", default="assets/brand")
+    ap.add_argument("--emblem", help="use this logo picture as the emblem instead of the letter mark")
+    ap.add_argument("--palette", choices=["navy", "teal"], default="navy")
     a = ap.parse_args()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     ml = a.tag_font == "malayalam"
-    logo(a.name, out / "logo.png", a.letter, FONT_ML_BOLD if ml else FONT)
-    banner(a.name, a.tagline, out / "banner.jpg", a.letter, FONT_ML if ml else FONT_LIGHT, FONT_ML_BOLD if ml else FONT)
+    if not a.emblem:
+        logo(a.name, out / "logo.png", a.letter, FONT_ML_BOLD if ml else FONT)
+    palette = ((3, 20, 34), (10, 84, 100)) if a.palette == "teal" else None
+    banner(a.name, a.tagline, out / "banner.jpg", a.letter, FONT_ML if ml else FONT_LIGHT, FONT_ML_BOLD if ml else FONT,
+           Path(a.emblem) if a.emblem else None, palette)
     print("wrote", out / "logo.png", out / "banner.jpg")
