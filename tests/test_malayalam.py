@@ -323,3 +323,11 @@ def test_only_major_problems_count():
         raise AssertionError("a minor-only report must not even reach the second look")
 
     assert ml.check_translation("English.", "മലയാളം.", gen) == []
+
+
+def test_thousands_separators_do_not_split_or_change_numbers():
+    assert ml.numbers_in("sent 319 terabits over 3 000 km in 2021") == ["319", "3000", "2021"]
+    assert ml.numbers_in("3,000 km, 3 000 km and 3000 km") == ["3000", "3000", "3000"]
+    assert ml.numbers_in("44.7% in 2023") == ["44.7", "2023"] and ml.numbers_in("15 12 students") == ["15", "12"]
+    assert ml.missing_numbers("over 3 000 km", "3,000 കിലോമീറ്ററിലധികം") == []
+    assert ml.missing_numbers("over 3 000 km", "ദൂരം") == ["3000"]

@@ -134,7 +134,14 @@ Thumbnail text: {thumb}
 Description: {description}"""
 
 
-NUMBER_RE = re.compile(r"\d[\d,.]*\d|\d")
+NUMBER_RE = re.compile(r"\d+(?:\.\d+)?")
+THOUSANDS_RE = re.compile(r"(?<=\d)[,\u202f\u00a0\u2009 ](?=\d{3}(?!\d))")
+
+
+def numbers_in(text: str) -> list[str]:
+    """The numbers a text contains, with thousands separators removed: "3\u202f000", "3,000" and "3000" are the same number.
+    (English scripts use narrow no-break spaces between digit groups, which once made "3 000 km" look like two numbers.)"""
+    return NUMBER_RE.findall(THOUSANDS_RE.sub("", text))
 REPAIR_ROUNDS = 2
 
 
@@ -144,8 +151,8 @@ class TranslationRejected(RuntimeError):
 
 def missing_numbers(english: str, malayalam: str) -> list[str]:
     """Numbers written in the English that do not appear in the Malayalam (digits must be kept as digits)."""
-    have = set(NUMBER_RE.findall(malayalam))
-    return sorted({n for n in NUMBER_RE.findall(english) if n not in have})
+    have = set(numbers_in(malayalam))
+    return sorted({n for n in numbers_in(english) if n not in have})
 
 
 def major_issues(reported) -> list[str]:
@@ -178,8 +185,8 @@ def check_translation(english: str, malayalam: str, gen: Callable[[str], dict]) 
 
 def added_numbers(english: str, malayalam: str) -> list[str]:
     """Numbers in the Malayalam that the English does not have (a Short may leave details out, never invent a number)."""
-    have = set(NUMBER_RE.findall(english))
-    return sorted({n for n in NUMBER_RE.findall(malayalam) if n not in have})
+    have = set(numbers_in(english))
+    return sorted({n for n in numbers_in(malayalam) if n not in have})
 
 
 def check_short(english: str, malayalam: str, gen: Callable[[str], dict]) -> list[str]:
