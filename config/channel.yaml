@@ -35,4 +35,6 @@ malayalam:                      # a second channel: the same videos, translated 
     - {engine: gemini, name: Charon}
     - {engine: gemini, name: Achird}
     - {engine: gemini, name: Sulafat}
+render:
+  callouts: false                # key numbers pop up on screen while they are spoken (off until the owner approves it)
 dry_run: true   # no public upload until the upload spike passes and this is set to false

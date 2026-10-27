@@ -198,7 +198,8 @@ class Stages:
         music = self.make_music(d / "music.wav", timings[-1]["end"] + 5, job["id"])
         wd = self.work / d.name
         render_photo_video(script, timings, items, shots.plan_cuts(timings, [len(s) for s in items]), d / "narration.wav",
-                           d / "final.mp4", wd, music=music)
+                           d / "final.mp4", wd, music=music,
+                           callouts=bool(self.cfg.render.get("callouts")))
         images = [i["path"] for sec in items for i in sec if i["kind"] == "image"]
         thumbnail.make_thumbnail(script, images, d / "thumbnail.jpg", pick=thumbnail.pick_with_vision)
         shutil.rmtree(wd, ignore_errors=True)
@@ -301,7 +302,8 @@ class Stages:
         items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]
         music = self.make_music(d / "music.wav", timings[-1]["end"] + 3, job["id"] + 1000)
         wd = self.work / f"{self.dir(self._parent(job)).name}-{d.name}"
-        render_short(s, timings, items, d / "narration.wav", d / "final.mp4", wd, music=music)
+        render_short(s, timings, items, d / "narration.wav", d / "final.mp4", wd, music=music,
+                     callouts=bool(self.cfg.render.get("callouts")))
         shutil.rmtree(wd, ignore_errors=True)
 
     def short_upload(self, job) -> None:
