@@ -21,7 +21,7 @@ def _glass(size: int) -> Image.Image:
     d = ImageDraw.Draw(img)
     cx, cy, r = s // 2, int(s * 0.42), int(s * 0.34)
     halo = Image.new("RGBA", (s, s), (0, 0, 0, 0))                       # soft glow behind the glass
-    ImageDraw.Draw(halo).ellipse([cx - r * 1.3, cy - r * 1.3, cx + r * 1.3, cy + r * 1.3], fill=GLOW + (70,))
+    ImageDraw.Draw(halo).ellipse([cx - r * 1.18, cy - r * 1.18, cx + r * 1.18, cy + r * 1.18], fill=GLOW + (70,))   # inside the canvas: no hard edge
     img.alpha_composite(halo.filter(ImageFilter.GaussianBlur(s * 0.05)))
     d.polygon([(cx - r * 0.62, cy + r * 0.62), (cx + r * 0.62, cy + r * 0.62), (cx + r * 0.36, cy + r * 1.22),
                (cx - r * 0.36, cy + r * 1.22)], fill=AMBER)             # the neck
