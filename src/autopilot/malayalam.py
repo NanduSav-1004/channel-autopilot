@@ -15,6 +15,7 @@ from pathlib import Path
 import numpy as np
 
 from autopilot import llm, tts
+from autopilot.config import mascot_style
 
 TRANSLATE_MODELS = "gemini-3.5-flash,gemini-3.1-flash-lite"
 ML_VOICES = [{"engine": "gemini", "name": n} for n in ("Charon", "Achird", "Sulafat")]
@@ -553,7 +554,7 @@ def recover_media(src_dir: Path, timings: list[dict], topic: str, gather=None) -
 
 
 def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, translate=translate_script, topic: str = "",
-                  callouts: bool = False, mascot: bool = False) -> Path:
+                  mascot: str | None = None) -> Path:
     """Make the Malayalam video from an English job directory (script.json, items.json, credits.json)."""
     from autopilot import audio, shots, thumbnail
     from autopilot.render import render_photo_video
@@ -585,7 +586,7 @@ def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, transla
     cut = shots.CUT_SECONDS * max(1.0, timings[-1]["end"] / en_total) if en_total else shots.CUT_SECONDS
     plan = shots.plan_cuts(timings, [len(s) for s in items], cut_seconds=cut)   # longer audio, same number of shots
     render_photo_video(ml, timings, items, plan, wav, final, work,
-                       music=music, look=ML_CAPTIONS, callouts=callouts, mascot=mascot)
+                       music=music, look=ML_CAPTIONS, mascot=mascot)
     images = [i["path"] for sec in items for i in sec if i["kind"] == "image"]
     thumbnail.make_thumbnail(ml, images, out_dir / "thumbnail.jpg", lang="ml")
     return final
@@ -600,7 +601,7 @@ SHORT_DISCLOSURE = "ഈ വീഡിയോയുടെ തിരക്കഥ AI 
 
 
 def build_short(short_dir: Path, long_items: list[list[dict]], out_dir: Path, work: Path, voice: dict,
-                translate=translate_short, speak=None, callouts: bool = False, mascot: bool = False) -> Path:
+                translate=translate_short, speak=None, mascot: str | None = None) -> Path:
     """The Malayalam edition of one English Short (short_dir holds its script.json). Raises if it cannot be made to fit
     58 seconds or the translation stays unfaithful."""
     from autopilot import audio, shots
@@ -631,7 +632,7 @@ def build_short(short_dir: Path, long_items: list[list[dict]], out_dir: Path, wo
     items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]
     music = audio.generate_ambient(timings[-1]["end"] + 3, out_dir / "music.wav", seed=int(short.get("section_index", 0)) + 1000)
     final = out_dir / "final.mp4"
-    render_short(ml, timings, items, wav, final, work, music=music, look=ML_SHORT_CAPTIONS, callouts=callouts, mascot=mascot)
+    render_short(ml, timings, items, wav, final, work, music=music, look=ML_SHORT_CAPTIONS, mascot=mascot)
     return final
 
 
@@ -679,7 +680,7 @@ def run_daily_shorts(conn, cfg, long_job, src: Path, voice: dict, privacy: str, 
             continue
         try:
             final = build_short(sdir, items, sdir / "ml", Path("work") / "ml" / f"{src.name}-short{row['short_idx']}", voice,
-                                callouts=bool((cfg.render or {}).get("callouts")), mascot=bool((cfg.render or {}).get("mascot")))
+                                mascot=mascot_style(cfg, short=True))
             if live and not build_only:
                 ml = json.loads((sdir / "ml" / "script_ml.json").read_text())
                 vid = upload.insert_video(final, f"{ml['title']} #Shorts",
@@ -785,7 +786,7 @@ def run_daily_edition(conn, cfg, privacy: str, live: bool, root: Path, retry: bo
     voice = pick_ml_voice(job["id"], ml_cfg.get("voices"))
     try:
         build_edition(src, src / "ml", Path("work") / "ml" / src.name, voice, topic=job["topic"],
-                      callouts=bool((cfg.render or {}).get("callouts")), mascot=bool((cfg.render or {}).get("mascot")))
+                      mascot=mascot_style(cfg, short=False))
         vid = upload_edition(conn, job, src / "ml", src, ml_cfg.get("publish_hour_utc"), privacy, live and not build_only)
         if ml_cfg.get("shorts") and (vid or build_only):
             run_daily_shorts(conn, cfg, job, src, voice, privacy, live, build_only, retry)

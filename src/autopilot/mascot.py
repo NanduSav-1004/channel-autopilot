@@ -1,5 +1,5 @@
-"""A small animated mascot ("Beam", a friendly light bulb) that talks along with the narration: its mouth follows the voice's
-loudness, it blinks and bobs. Drawn in code (no assets, no GPU), rendered as a transparent video track and overlaid in the
+"""A small animated mascot that talks along with the narration: its mouth follows the voice's loudness, it blinks and bobs.
+Two characters: "bulb" (Beam, a friendly light bulb) and "atom" (Orbit, a nucleus with electrons circling it). Drawn in code (no assets, no GPU), rendered as a transparent video track and overlaid in the
 final pass. It works for any language because it listens to the audio, not the words."""
 import math
 import subprocess
@@ -37,11 +37,11 @@ def _glass(size: int) -> Image.Image:
     return img
 
 
-def _face(size: int, mouth: int, blink: bool) -> Image.Image:
+def _face(size: int, mouth: int, blink: bool, centre: tuple[float, float] = (0.5, 0.42), radius: float = 0.34) -> Image.Image:
     s = size * SS
     img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    cx, cy, r = s // 2, int(s * 0.42), int(s * 0.34)
+    cx, cy, r = int(s * centre[0]), int(s * centre[1]), int(s * radius)
     ex, ey, er = r * 0.38, cy - r * 0.12, r * 0.17
     for sign in (-1, 1):
         x = cx + sign * ex
@@ -66,14 +66,54 @@ def _face(size: int, mouth: int, blink: bool) -> Image.Image:
     return img
 
 
+ORBITS = (0, 60, 120)       # degrees
+PHASES = 30                 # electron positions in one lap
+
+
+def _atom(size: int, phase: int) -> tuple[Image.Image, Image.Image]:
+    """(everything behind the face, electrons in front of it): a blue nucleus ball with three tilted orbits and amber electrons."""
+    s = size * SS
+    back = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    front = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    c, rx, ry, nr = s / 2, s * 0.44, s * 0.16, s * 0.27
+    glow = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    ImageDraw.Draw(glow).ellipse([c - nr * 1.5, c - nr * 1.5, c + nr * 1.5, c + nr * 1.5], fill=(110, 190, 255, 70))
+    back.alpha_composite(glow.filter(ImageFilter.GaussianBlur(s * 0.05)))
+    for k, deg in enumerate(ORBITS):
+        ring = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+        ImageDraw.Draw(ring).ellipse([c - rx, c - ry, c + rx, c + ry], outline=(214, 232, 255, 200), width=int(s * 0.014))
+        back.alpha_composite(ring.rotate(deg, resample=Image.BICUBIC, center=(c, c)))
+    nd = ImageDraw.Draw(back)
+    nd.ellipse([c - nr, c - nr, c + nr, c + nr], fill=(70, 150, 255))
+    nd.ellipse([c - nr * 0.9, c - nr * 0.9, c + nr * 0.9, c + nr * 0.9], fill=(120, 185, 255))
+    nd.arc([c - nr * 0.78, c - nr * 0.78, c + nr * 0.78, c + nr * 0.78], 200, 250, fill=(235, 245, 255), width=int(s * 0.02))
+    for k, deg in enumerate(ORBITS):                                  # an electron on each orbit
+        ang = 2 * math.pi * (phase / PHASES + k / 3)
+        x0, y0 = rx * math.cos(ang), ry * math.sin(ang)
+        a = math.radians(deg)
+        x, y = c + x0 * math.cos(a) - y0 * math.sin(a), c + x0 * math.sin(a) + y0 * math.cos(a)
+        g = s * 0.035
+        layer = front if math.sin(ang) > 0 else back                  # the far half of the orbit passes behind the ball
+        ed = ImageDraw.Draw(layer)
+        ed.ellipse([x - g * 1.8, y - g * 1.8, x + g * 1.8, y + g * 1.8], fill=AMBER + (80,))
+        ed.ellipse([x - g, y - g, x + g, y + g], fill=AMBER)
+    return back, front
+
+
 _cache: dict = {}
 
 
-def sprite(size: int, mouth: int, blink: bool) -> Image.Image:
-    key = (size, mouth, blink)
+def sprite(size: int, mouth: int, blink: bool, style: str = "bulb", phase: int = 0) -> Image.Image:
+    phase = phase % PHASES if style == "atom" else 0
+    key = (size, mouth, blink, style, phase)
     if key not in _cache:
-        img = _glass(size)
-        img.alpha_composite(_face(size, mouth, blink))
+        if style == "atom":
+            img, front = _atom(size, phase)
+            img.alpha_composite(_face(size, mouth, blink, (0.5, 0.5), 0.27))
+            img.alpha_composite(front)
+        else:
+            img = _glass(size)
+            img.alpha_composite(_face(size, mouth, blink))
         _cache[key] = img.resize((size, size), Image.LANCZOS)
     return _cache[key]
 
@@ -109,7 +149,7 @@ def blink_frames(count: int, fps: int = FPS, seed: int = 7) -> set[int]:
     return out
 
 
-def render_track(narration: Path, out: Path, size: int = 260, fps: int = FPS, seed: int = 7) -> Path:
+def render_track(narration: Path, out: Path, size: int = 260, fps: int = FPS, seed: int = 7, style: str = "bulb") -> Path:
     """A transparent video (QuickTime Animation, alpha) of the mascot talking along with `narration`."""
     levels = mouth_levels(narration, fps)
     blinks = blink_frames(len(levels), fps, seed)
@@ -123,7 +163,7 @@ def render_track(narration: Path, out: Path, size: int = 260, fps: int = FPS, se
         speaking = lv > 0
         bob = round(math.sin(i / fps * 2 * math.pi * 1.1) * pad * 0.35 * (1.0 if speaking else 0.4))
         frame = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
-        frame.alpha_composite(sprite(size, lv, i in blinks), (pad // 2, pad // 2 + bob))
+        frame.alpha_composite(sprite(size, lv, i in blinks, style, i // 1), (pad // 2, pad // 2 + bob))
         raw = frame.tobytes()
         proc.stdin.write(raw)
         prev = raw

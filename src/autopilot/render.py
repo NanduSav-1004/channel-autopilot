@@ -82,7 +82,7 @@ def caption_groups(words: list[dict], group: int, fits=None) -> list[list[dict]]
     return chunks
 
 
-def write_ass_words(timings: list[dict], path: Path, look: dict, callouts: list[dict] | None = None) -> None:
+def write_ass_words(timings: list[dict], path: Path, look: dict) -> None:
     """Word-by-word captions: a short phrase on screen, the word being spoken in amber. One ASS event per word, so
     the highlight moves exactly with the voice."""
     from autopilot.tts import estimate_word_times
@@ -93,10 +93,7 @@ def write_ass_words(timings: list[dict], path: Path, look: dict, callouts: list[
         "[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,"
         "BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV\n"
         f"Style: Cap,{look.get('fontname', 'Lato')},{look['font']},&H00FFFFFF,&H00FFFFFF,&H00000000,&H90000000,1,1,{look['outline']},3,2,"
-        f"{round(w * 0.06)},{round(w * 0.06)},{look['margin_v']}\n"
-        # callouts: amber figure in a navy box at the top of the picture (BorderStyle 3 draws the box in the outline colour)
-        f"Style: Pop,{look.get('fontname', 'Lato')},{round(look['font'] * (1.3 if w >= h else 0.9))},{HILITE},{HILITE},&H403D1B0E,&H00000000,1,3,"
-        f"{round(look['font'] * 0.26)},0,8,{round(w * 0.06)},{round(w * 0.06)},{round(h * (0.12 if h > w else 0.07))}\n\n"
+        f"{round(w * 0.06)},{round(w * 0.06)},{look['margin_v']}\n\n"
         "[Events]\nFormat: Layer,Start,End,Style,Text\n"
     )
 
@@ -119,10 +116,6 @@ def write_ass_words(timings: list[dict], path: Path, look: dict, callouts: list[
     for ev, nxt in itertools.pairwise(events):  # a phrase lingers a moment, but never into the next one
         ev[1] = min(ev[1], nxt[0])
     lines = [f"Dialogue: 0,{_ass_time(s)},{_ass_time(max(e, s + 0.04))},Cap,{text}" for s, e, text in events]
-    for c in callouts or []:        # pops in (a quick scale-up with a fade), holds, fades out
-        text = c["text"].replace("{", "(").replace("}", ")").replace("\\", "")
-        lines.append(f"Dialogue: 1,{_ass_time(c['start'])},{_ass_time(c['end'])},Pop,"
-                     f"{{\\fad(140,260)\\fscx82\\fscy82\\t(0,180,\\fscx100\\fscy100)}}{text}")
     path.write_text(header + "\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -225,7 +218,7 @@ def _render_stock_clip(src: Path, frames: int, out: Path, offset: float = 0.0) -
 
 def render_photo_video(
     script, timings, images, plan, narration: Path, out_mp4: Path, work: Path, music: Path | None = None,
-    look: dict = LONG_CAPTIONS, callouts: bool = False, mascot: bool = False,
+    look: dict = LONG_CAPTIONS, mascot: str | None = None,
 ) -> None:
     """Ken Burns over gathered images; sections without images fall back to title cards."""
     from concurrent.futures import ThreadPoolExecutor
@@ -264,15 +257,9 @@ def render_photo_video(
     with ThreadPoolExecutor(max_workers=2) as ex:
         list(ex.map(run, jobs))
     (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
-    write_ass_words(timings, work / "captions.ass", look, _callouts(timings) if callouts else None)
+    write_ass_words(timings, work / "captions.ass", look)
     _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music,
-                _mascot(narration, work, vertical=False) if mascot else None)
-
-
-def _callouts(timings: list[dict]) -> list[dict]:
-    from autopilot.callouts import find_callouts
-
-    return find_callouts(timings)
+                _mascot(narration, work, vertical=False, style=mascot) if mascot else None)
 
 
 # Voice to -16 LUFS; the music bed to -21 LUFS, then ducked hard by sidechain compression while the narrator speaks.
@@ -356,13 +343,18 @@ def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: P
     subprocess.run(cmd, check=True, capture_output=True)
 
 
-def _mascot(narration: Path, work: Path, vertical: bool) -> tuple[Path, int, int]:
-    """The talking mascot's track and where it sits: bottom-left, clear of the captions and of YouTube's own buttons."""
-    from autopilot import mascot
+def _mascot(narration: Path, work: Path, vertical: bool, style: str) -> tuple[Path, int, int] | None:
+    """The talking mascot's track and where it sits: bottom-left, clear of the captions and of YouTube's own buttons.
+    The mascot is an extra: if anything about it fails, the video is rendered without it rather than not at all."""
+    try:
+        from autopilot import mascot
 
-    size = 300 if vertical else 230
-    track = mascot.render_track(narration, work / "mascot.mov", size=size)
-    return (track, 24, 1380) if vertical else (track, 18, 396)
+        size = 300 if vertical else 230
+        track = mascot.render_track(narration, work / "mascot.mov", size=size, style=style)
+        return (track, 24, 1380) if vertical else (track, 18, 396)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[mascot] WARNING: rendering without the mascot ({type(exc).__name__}: {exc})", flush=True)
+        return None
 
 
 # ---------- vertical 9:16 renderer for Shorts ----------
@@ -447,7 +439,7 @@ def _render_vstock(src: Path, frames: int, out: Path, offset: float = 0.0) -> No
 
 def render_short(script: dict, timings: list[dict], items: list[dict], narration: Path,
                  out_mp4: Path, work: Path, music: Path | None = None, look: dict = SHORT_CAPTIONS,
-                 callouts: bool = False, mascot: bool = False) -> None:
+                 mascot: str | None = None) -> None:
     """script: {"title"}; timings: one section with timed sentences; items: [{"kind","path"}]."""
     from concurrent.futures import ThreadPoolExecutor
 
@@ -479,6 +471,6 @@ def render_short(script: dict, timings: list[dict], items: list[dict], narration
     with ThreadPoolExecutor(max_workers=2) as ex:
         list(ex.map(run, jobs))
     (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
-    write_ass_words(timings, work / "captions.ass", look, _callouts(timings) if callouts else None)
+    write_ass_words(timings, work / "captions.ass", look)
     _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music,
-                _mascot(narration, work, vertical=True) if mascot else None)
+                _mascot(narration, work, vertical=True, style=mascot) if mascot else None)

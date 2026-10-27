@@ -36,6 +36,6 @@ malayalam:                      # a second channel: the same videos, translated 
     - {engine: gemini, name: Achird}
     - {engine: gemini, name: Sulafat}
 render:
-  callouts: false                # key numbers pop up on screen while they are spoken (tried, not adopted)
-  mascot: false                  # "Beam", a talking light-bulb character in the corner (a test: off until the owner approves it)
+  mascot: false                  # a talking character in the corner: false | shorts | all (a test: off until the owner approves it)
+  mascot_style: bulb             # bulb ("Beam") | atom ("Orbit")
 dry_run: true   # no public upload until the upload spike passes and this is set to false
