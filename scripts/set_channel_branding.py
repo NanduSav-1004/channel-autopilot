@@ -1,6 +1,7 @@
 """Set a channel's banner, description, keywords, country and default language through the API.
 
-usage: python scripts/set_channel_branding.py ml        (the Malayalam channel; needs secrets/token_ml.json)
+usage: python scripts/set_channel_branding.py ml            (the Malayalam channel: banner, description, keywords, country, language)
+       python scripts/set_channel_branding.py banner en|ml  (only the banner; every other setting is left as it is)
 Every other branding setting (title, trailer, ...) is read first and written back unchanged. The profile picture and the
 handle cannot be set through the API: do those in YouTube Studio (Customization).
 """
@@ -39,5 +40,23 @@ def main(profile: str) -> None:
     print("banner, description, keywords, country and default language set")
 
 
+BANNERS = {"en": Path("assets/brand/banner.jpg"), "ml": Path("assets/brand_ml/banner.jpg")}
+
+
+def banner_only(profile: str) -> None:
+    load_env()
+    yt = build("youtube", "v3", credentials=load_credentials(profile))
+    ch = yt.channels().list(part="brandingSettings,snippet", mine=True).execute()["items"][0]
+    print("channel:", ch["snippet"]["title"], ch["id"])
+    banner = yt.channelBanners().insert(media_body=MediaFileUpload(str(BANNERS[profile]), mimetype="image/jpeg")).execute()
+    new = json.loads(json.dumps(ch["brandingSettings"]))
+    new.setdefault("image", {})["bannerExternalUrl"] = banner["url"]
+    yt.channels().update(part="brandingSettings", body={"id": ch["id"], "brandingSettings": new}).execute()
+    print("banner set; everything else unchanged")
+
+
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "ml")
+    if len(sys.argv) > 2 and sys.argv[1] == "banner":
+        banner_only(sys.argv[2])
+    else:
+        main(sys.argv[1] if len(sys.argv) > 1 else "ml")
