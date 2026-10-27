@@ -225,7 +225,7 @@ def _render_stock_clip(src: Path, frames: int, out: Path, offset: float = 0.0) -
 
 def render_photo_video(
     script, timings, images, plan, narration: Path, out_mp4: Path, work: Path, music: Path | None = None,
-    look: dict = LONG_CAPTIONS, callouts: bool = False,
+    look: dict = LONG_CAPTIONS, callouts: bool = False, mascot: bool = False,
 ) -> None:
     """Ken Burns over gathered images; sections without images fall back to title cards."""
     from concurrent.futures import ThreadPoolExecutor
@@ -265,7 +265,8 @@ def render_photo_video(
         list(ex.map(run, jobs))
     (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
     write_ass_words(timings, work / "captions.ass", look, _callouts(timings) if callouts else None)
-    _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music)
+    _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music,
+                _mascot(narration, work, vertical=False) if mascot else None)
 
 
 def _callouts(timings: list[dict]) -> list[dict]:
@@ -336,16 +337,32 @@ def mix_audio(narration: Path, music: Path | None, out_wav: Path) -> str:
     return "voice only"
 
 
-def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: Path | None) -> None:
-    """Burn captions into the video and attach the pre-mixed, verified audio."""
+def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: Path | None,
+                mascot: tuple[Path, int, int] | None = None) -> None:
+    """Burn captions into the video and attach the pre-mixed, verified audio. `mascot` = (transparent video, x, y): the talking
+    character is overlaid at that position."""
     mixed = out_mp4.with_suffix(".mix.wav")
     how = mix_audio(narration, music, mixed)
     print(f"[mix] audio: {how}", flush=True)
-    subprocess.run(
-        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(clips), "-i", str(mixed), "-vf", f"ass={ass}",
-         "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p",
-         "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-shortest", str(out_mp4)],
-        check=True, capture_output=True)
+    cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(clips), "-i", str(mixed)]
+    if mascot:
+        track, x, y = mascot
+        cmd += ["-i", str(track), "-filter_complex",
+                f"[0:v]ass={ass}[v];[v][2:v]overlay={x}:{y}:eof_action=pass,format=yuv420p[out]", "-map", "[out]"]
+    else:
+        cmd += ["-vf", f"ass={ass}", "-map", "0:v"]
+    cmd += ["-map", "1:a", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-shortest", str(out_mp4)]
+    subprocess.run(cmd, check=True, capture_output=True)
+
+
+def _mascot(narration: Path, work: Path, vertical: bool) -> tuple[Path, int, int]:
+    """The talking mascot's track and where it sits: bottom-left, clear of the captions and of YouTube's own buttons."""
+    from autopilot import mascot
+
+    size = 300 if vertical else 230
+    track = mascot.render_track(narration, work / "mascot.mov", size=size)
+    return (track, 24, 1380) if vertical else (track, 18, 396)
 
 
 # ---------- vertical 9:16 renderer for Shorts ----------
@@ -430,7 +447,7 @@ def _render_vstock(src: Path, frames: int, out: Path, offset: float = 0.0) -> No
 
 def render_short(script: dict, timings: list[dict], items: list[dict], narration: Path,
                  out_mp4: Path, work: Path, music: Path | None = None, look: dict = SHORT_CAPTIONS,
-                 callouts: bool = False) -> None:
+                 callouts: bool = False, mascot: bool = False) -> None:
     """script: {"title"}; timings: one section with timed sentences; items: [{"kind","path"}]."""
     from concurrent.futures import ThreadPoolExecutor
 
@@ -463,4 +480,5 @@ def render_short(script: dict, timings: list[dict], items: list[dict], narration
         list(ex.map(run, jobs))
     (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
     write_ass_words(timings, work / "captions.ass", look, _callouts(timings) if callouts else None)
-    _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music)
+    _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music,
+                _mascot(narration, work, vertical=True) if mascot else None)
