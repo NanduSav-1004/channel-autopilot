@@ -6,7 +6,20 @@ import sqlite3
 from pathlib import Path
 from typing import ClassVar
 
-from autopilot import audio, db, metadata, music, qa, schedule, shorts, shots, thumbnail, tts, wiki
+from autopilot import (
+    audio,
+    db,
+    metadata,
+    music,
+    qa,
+    schedule,
+    shorts,
+    shots,
+    thumbnail,
+    topics,
+    tts,
+    wiki,
+)
 from autopilot.config import Config, mascot_style
 from autopilot.errors import RestartJob, TransientError
 from autopilot.render import render_photo_video, render_short
@@ -118,7 +131,8 @@ class Stages:
         feedback = _read(d / "qa_issues.json") if (d / "qa_issues.json").exists() else None
         _write(d / "source.json", src)
         script = generate_script(
-            job["topic"], src, self.cfg.niche, words=self.cfg.formats["long"]["target_words"], feedback=feedback)
+            job["topic"], src, self.cfg.niche, series=topics.series_for(job["category"]),
+            words=self.cfg.formats["long"]["target_words"], feedback=feedback)
         _write(d / "script.json", script)
         st = style_stats(" ".join(s["narration"] for s in script.get("sections", [])))
         print(f"[job {job['id']}] style: avg {st['avg']:.1f} words/sentence, longest {st['longest']}, "
@@ -175,7 +189,8 @@ class Stages:
         if (d / "items.json").exists():
             return
         plan = shots.plan_shots(_read(d / "timings.json"))
-        items, credits = shots.gather_images(_read(d / "script.json"), plan, self.work / "assets", job["topic"])
+        items, credits = shots.gather_images(_read(d / "script.json"), plan, self.work / "assets", job["topic"],
+                                            use_nasa=job["category"] == "space")
         with_media = sum(1 for sec in items if sec)
         n_img = sum(i["kind"] == "image" for sec in items for i in sec)
         n_vid = sum(i["kind"] == "video" for sec in items for i in sec)

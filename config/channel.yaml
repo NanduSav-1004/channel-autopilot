@@ -35,6 +35,13 @@ malayalam:                      # a second channel: the same videos, translated 
     - {engine: gemini, name: Charon}
     - {engine: gemini, name: Achird}
     - {engine: gemini, name: Sulafat}
+topics:
+  enabled: false                # the mix below is used only when this is true (off until the owner approves the sample topics)
+  mix:                           # how often each kind of topic is picked (the least-served kind goes next)
+    core: 0.50                   # evergreen science and technology
+    space: 0.20                  # space and astronomy (NASA media is added for these)
+    what_if: 0.15                # "what if" questions answered with established science
+    history: 0.15                # history mysteries and the history of science
 render:
   mascot: shorts                 # a talking character in the corner: false | shorts | all (approved for Shorts only, 2026-10-27)
   mascot_style: bulb             # bulb ("Beam", chosen) | atom ("Orbit")

@@ -7,7 +7,21 @@ from autopilot import db, demand, llm, wiki
 
 CANDIDATES_PER_SLOT = 5  # ask for more candidates than we need, so demand can pick the best
 
+CATEGORIES = {
+    "core": "evergreen science and technology: how everyday devices and big ideas work (physics, chemistry, engineering, "
+            "computing, inventions)",
+    "space": "space and astronomy: planets, moons, stars, galaxies, black holes, telescopes, space missions and spaceflight history",
+    "what_if": "'what if' science: a vivid question about a real phenomenon whose answer follows from established science "
+               "(for example what would happen to the tides if the Moon were gone). The topic is the question; the "
+               "Wikipedia article is the science behind it",
+    "history": "history mysteries and the history of science: documented puzzles, enigmatic discoveries, lost knowledge, "
+               "famous experiments and long-running debates (NOT crimes or victims, NOT living people)",
+}
+SERIES_FOR = {"what_if": ["what_if"], "history": ["origin_story", "myth_vs_reality"],
+              "space": ["how_it_works", "scale_and_numbers", "origin_story"]}
+
 PROMPT = """Suggest {n} topics for a YouTube channel about: {niche}.
+This batch of topics must be about: {focus}.
 Each must be an evergreen concept, device, discovery or phenomenon that has its own Wikipedia article
 (physics, chemistry, engineering, space, computing, inventions, history of science).
 Do NOT suggest: medicine or health, diseases, diet, finance, law, politics, current events, or living people.
@@ -26,6 +40,27 @@ def _clean_title(title: str) -> str:
     return " ".join(str(title).replace("_", " ").split())
 
 
+def pick_category(conn: sqlite3.Connection, mix: dict[str, float], window: int = 8) -> str:
+    """The category furthest below its target share among the last `window` long videos (jobs made before categories existed
+    count as core). With no mix configured every topic is core."""
+    mix = {k: v for k, v in (mix or {}).items() if k in CATEGORIES and v > 0} or {"core": 1.0}
+    rows = conn.execute("SELECT category FROM jobs WHERE kind = 'long' ORDER BY id DESC LIMIT ?", (window,)).fetchall()
+    counts = {k: 0 for k in mix}
+    for r in rows:
+        counts[r["category"] if r["category"] in counts else "core" if "core" in counts else next(iter(counts))] += 1
+    total = sum(mix.values())
+    n = max(1, len(rows))
+    return max(mix, key=lambda k: (mix[k] / total - counts[k] / n, mix[k]))
+
+
+def series_for(category: str | None) -> str | None:
+    """The script style that suits a category (None: any, as before)."""
+    import random
+
+    options = SERIES_FOR.get(category or "")
+    return random.choice(options) if options else None
+
+
 def _same_article(wanted: str, found: str) -> bool:
     a, b = _clean_title(wanted).lower(), _clean_title(found).lower()
     return a == b or a in b or b in a
@@ -42,14 +77,25 @@ def _candidates(out) -> list[dict]:
     return [c for c in lst if isinstance(c, dict)]
 
 
+def discover_mix(conn: sqlite3.Connection, niche: str, n: int, mix: dict[str, float], **kwargs) -> list[int]:
+    """Queue n topics, one slot at a time, each from the category the mix says is due next."""
+    ids: list[int] = []
+    for _ in range(n):
+        cat = pick_category(conn, mix)
+        print(f"[topics] next category: {cat}", flush=True)
+        ids += discover(conn, niche, 1, category=cat, **kwargs)
+    return ids
+
+
 def discover(
     conn: sqlite3.Connection, niche: str, n: int, gen: Callable = llm.generate_json,
     fetch: Callable = wiki.fetch_source, forbidden: list[str] | None = None, min_source_chars: int = 2500,
-    score: Callable[[str], float] = demand.demand_score,
+    score: Callable[[str], float] = demand.demand_score, category: str = "core",
 ) -> list[int]:
     """Queue up to n verified, non-duplicate long-form jobs, preferring topics with real search demand."""
     known = db.known_topics(conn)
-    out = gen(PROMPT.format(n=n * CANDIDATES_PER_SLOT, niche=niche, known=", ".join(sorted(known)[:80]) or "none"))
+    out = gen(PROMPT.format(n=n * CANDIDATES_PER_SLOT, niche=niche, focus=CATEGORIES.get(category, CATEGORIES["core"]),
+                            known=", ".join(sorted(known)[:80]) or "none"))
     candidates = _candidates(out)
     print(f"[topics] LLM proposed {len(candidates)} candidate(s); need {n}", flush=True)
     for c in candidates:  # demand first (cheap), Wikipedia verification only for the best (slower)
@@ -86,7 +132,7 @@ def discover(
             print(f"[topics] rejected {title or topic!r}: {reason}", flush=True)
             continue
         known |= {topic.lower(), src["title"].lower()}
-        added.append(db.add_job(conn, topic, "long", src["title"]))
-        print(f"[topics] queued {topic!r} (search demand {cand['_demand']:.2f}; source: {src['title']!r}, "
+        added.append(db.add_job(conn, topic, "long", src["title"], category=category))
+        print(f"[topics] queued [{category}] {topic!r} (search demand {cand['_demand']:.2f}; source: {src['title']!r}, "
               f"{len(src['text'])} chars)", flush=True)
     return added

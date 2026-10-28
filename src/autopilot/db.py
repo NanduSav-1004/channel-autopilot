@@ -29,7 +29,7 @@ def connect(path: str | Path = "data/autopilot.db") -> sqlite3.Connection:
     conn.executescript(SCHEMA)
     cols = {r[1] for r in conn.execute("PRAGMA table_info(jobs)")}
     for name, ddl in (("thumbnail_set", "INTEGER NOT NULL DEFAULT 0"), ("parent_id", "INTEGER"), ("short_idx", "INTEGER"), ("publish_at", "TEXT"),
-                      ("ml_video_id", "TEXT"), ("ml_publish_at", "TEXT"), ("ml_status", "TEXT")):
+                      ("ml_video_id", "TEXT"), ("ml_publish_at", "TEXT"), ("ml_status", "TEXT"), ("category", "TEXT")):
         if name not in cols:  # databases created before this column existed
             conn.execute(f"ALTER TABLE jobs ADD COLUMN {name} {ddl}")
     conn.commit()
@@ -38,11 +38,11 @@ def connect(path: str | Path = "data/autopilot.db") -> sqlite3.Connection:
 
 def add_job(
     conn: sqlite3.Connection, topic: str, kind: str, source_title: str | None = None,
-    parent_id: int | None = None, short_idx: int | None = None,
+    parent_id: int | None = None, short_idx: int | None = None, category: str | None = None,
 ) -> int:
     cur = conn.execute(
-        "INSERT INTO jobs (topic, kind, source_title, parent_id, short_idx) VALUES (?, ?, ?, ?, ?)",
-        (topic, kind, source_title, parent_id, short_idx),
+        "INSERT INTO jobs (topic, kind, source_title, parent_id, short_idx, category) VALUES (?, ?, ?, ?, ?, ?)",
+        (topic, kind, source_title, parent_id, short_idx, category),
     )
     conn.commit()
     return cur.lastrowid

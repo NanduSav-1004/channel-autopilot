@@ -536,7 +536,7 @@ def make_voice(script_ml: dict, out_wav: Path, voice: dict) -> list[dict]:
     return timings
 
 
-def recover_media(src_dir: Path, timings: list[dict], topic: str, gather=None) -> None:
+def recover_media(src_dir: Path, timings: list[dict], topic: str, gather=None, use_nasa: bool = False) -> None:
     """The English run's media is gone (a later run, or a manual one): find new images and footage for the same script, on the
     Malayalam project's quota, and write items.json and credits.json so the edition can be built."""
     from autopilot import shots
@@ -545,7 +545,7 @@ def recover_media(src_dir: Path, timings: list[dict], topic: str, gather=None) -
     plan = shots.plan_shots(timings)
     if gather is None:
         with ml_quota():
-            items, credits = shots.gather_images(script, plan, Path("work") / "assets", topic)
+            items, credits = shots.gather_images(script, plan, Path("work") / "assets", topic, use_nasa=use_nasa)
     else:
         items, credits = gather(script, plan, topic)
     (src_dir / "items.json").write_text(json.dumps([[{"kind": i["kind"], "path": str(i["path"])} for i in sec] for sec in items]))
@@ -554,7 +554,7 @@ def recover_media(src_dir: Path, timings: list[dict], topic: str, gather=None) -
 
 
 def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, translate=translate_script, topic: str = "",
-                  mascot: str | None = None) -> Path:
+                  mascot: str | None = None, use_nasa: bool = False) -> Path:
     """Make the Malayalam video from an English job directory (script.json, items.json, credits.json)."""
     from autopilot import audio, shots, thumbnail
     from autopilot.render import render_photo_video
@@ -577,7 +577,7 @@ def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, transla
         tp.write_text(json.dumps(timings, ensure_ascii=False))
     print(f"[ml] voice {voice['name']}: {timings[-1]['end']:.0f}s", flush=True)
     if not (src_dir / "items.json").exists():
-        recover_media(src_dir, timings, topic or script.get("title", ""))
+        recover_media(src_dir, timings, topic or script.get("title", ""), use_nasa=use_nasa)
     items = shots.fill_sparse_sections([[{"kind": i["kind"], "path": Path(i["path"])} for i in sec]
                                         for sec in json.loads((src_dir / "items.json").read_text())])
     music = audio.generate_ambient(timings[-1]["end"] + 5, out_dir / "music.wav", seed=1)
@@ -786,7 +786,7 @@ def run_daily_edition(conn, cfg, privacy: str, live: bool, root: Path, retry: bo
     voice = pick_ml_voice(job["id"], ml_cfg.get("voices"))
     try:
         build_edition(src, src / "ml", Path("work") / "ml" / src.name, voice, topic=job["topic"],
-                      mascot=mascot_style(cfg, short=False))
+                      mascot=mascot_style(cfg, short=False), use_nasa=job["category"] == "space")
         vid = upload_edition(conn, job, src / "ml", src, ml_cfg.get("publish_hour_utc"), privacy, live and not build_only)
         if ml_cfg.get("shorts") and (vid or build_only):
             run_daily_shorts(conn, cfg, job, src, voice, privacy, live, build_only, retry)
@@ -818,7 +818,8 @@ def _only_shorts(conn, cfg, job, privacy: str, live: bool, build_only: bool, roo
         return f"malayalam shorts: skipped (the English script for job {job['id']} is gone)"
     try:
         if not (src / "items.json").exists():
-            recover_media(src, estimate_timings(json.loads((src / "script.json").read_text())), job["topic"])
+            recover_media(src, estimate_timings(json.loads((src / "script.json").read_text())), job["topic"],
+                          use_nasa=job["category"] == "space")
         lines = run_daily_shorts(conn, cfg, job, src, pick_ml_voice(job["id"], ml_cfg.get("voices")), privacy, live, build_only,
                                  retry=True)
     except Exception as exc:  # noqa: BLE001

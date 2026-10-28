@@ -39,16 +39,16 @@ def test_topic_discovery_waits_and_retries_after_a_transient_failure(monkeypatch
     cfg = Config(niche="s", audience="a", formats={"long": {"min_source_chars": 10}})
     attempts = []
 
-    def discover(conn, niche, want, **kw):
+    def discover(conn, niche, want, *a, **kw):
         attempts.append(1)
         if len(attempts) < 3:
             raise TransientError("providers busy")
         return [7]
 
-    monkeypatch.setattr(cli.topics, "discover", discover)
+    monkeypatch.setattr(cli.topics, "discover_mix", discover)
     assert cli.discover_with_retries(None, cfg, 1, tries=3, pause=0) == [7] and len(attempts) == 3
     attempts.clear()
-    monkeypatch.setattr(cli.topics, "discover", lambda *a, **k: (_ for _ in ()).throw(OSError("down")))
+    monkeypatch.setattr(cli.topics, "discover_mix", lambda *a, **k: (_ for _ in ()).throw(OSError("down")))
     with pytest.raises(OSError):
         cli.discover_with_retries(None, cfg, 1, tries=2, pause=0)
 
@@ -83,5 +83,5 @@ def test_discovery_asks_again_when_every_candidate_is_rejected(monkeypatch):
 
     cfg = Config(niche="s", audience="a", formats={"long": {"min_source_chars": 10}})
     answers = [[], [], [9]]
-    monkeypatch.setattr(cli.topics, "discover", lambda *a, **k: answers.pop(0))
+    monkeypatch.setattr(cli.topics, "discover_mix", lambda *a, **k: answers.pop(0))
     assert cli.discover_with_retries(None, cfg, 1, tries=3, pause=0) == [9]

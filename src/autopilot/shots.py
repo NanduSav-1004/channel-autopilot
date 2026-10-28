@@ -9,7 +9,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from autopilot import commons, llm, stock
+from autopilot import commons, llm, nasa, stock
 
 SHOT_SECONDS = 6.0          # how much media to GATHER: about one distinct image per this many seconds
 CUT_SECONDS = 3.5           # how often a long video CUTS to a new shot
@@ -179,8 +179,17 @@ def _search_pool(queries: list[str], search: Callable, limit: int, seen: set[str
     return pool[:limit]
 
 
+NASA_CANDIDATES = 8
+
+
+def _thumb(item: dict, cache: Path) -> Path:
+    if item.get("source") == "nasa":
+        return nasa.download_thumb(item, cache)
+    return commons.download(item, cache) if item["kind"] == "image" else stock.download_thumb(item, cache)
+
+
 def gather_images(
-    script: dict, plan: list, cache: Path, topic: str, gen: Callable = llm.generate_json,
+    script: dict, plan: list, cache: Path, topic: str, gen: Callable = llm.generate_json, use_nasa: bool = False,
 ) -> tuple[list[list[dict]], list[str]]:
     """Return (items per section, credit lines). Each item is {"kind": "image"|"video", "path": Path}.
     A section with no items gets [] (title-card fallback)."""
@@ -190,11 +199,13 @@ def gather_images(
     for qs in queries:
         pool = (_search_pool(qs["commons"], commons.search, COMMONS_CANDIDATES, seen)
                 + _search_pool(qs["stock"], stock.search, STOCK_CANDIDATES, seen))
+        if use_nasa:       # space topics: NASA's public-domain pictures and footage, found with the same specific queries
+            pool += (_search_pool(qs["commons"], nasa.search_images, NASA_CANDIDATES, seen)
+                     + _search_pool(qs["commons"], nasa.search_videos, 3, seen))
         files, ok = [], []
         for item in pool:
             try:
-                grab = commons.download if item["kind"] == "image" else stock.download_thumb
-                files.append(grab(item, cache))
+                files.append(_thumb(item, cache))
                 ok.append(item)
             except OSError:
                 continue
@@ -211,10 +222,14 @@ def gather_images(
         chosen = []
         for item in _interleave(keep):
             try:
-                path = files[ok.index(item)] if item["kind"] == "image" else stock.download_video(item, cache)
+                if item.get("source") == "nasa":
+                    path = nasa.download_image(item, cache) if item["kind"] == "image" else nasa.download_video(item, cache)
+                else:
+                    path = files[ok.index(item)] if item["kind"] == "image" else stock.download_video(item, cache)
             except OSError:
                 continue
-            credits.append(commons.credit_line(item) if item["kind"] == "image" else stock.credit_line(item))
+            credits.append(nasa.credit_line(item) if item.get("source") == "nasa" else
+                           commons.credit_line(item) if item["kind"] == "image" else stock.credit_line(item))
             chosen.append({"kind": item["kind"], "path": path})
         per_section.append(chosen)
     return per_section, credits

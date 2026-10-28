@@ -55,8 +55,8 @@ def discover_with_retries(conn, cfg, want: int, tries: int = 3, pause: float = 6
 
     for attempt in range(tries):
         try:
-            ids = topics.discover(conn, cfg.niche, want, forbidden=cfg.forbidden_topics,
-                                  min_source_chars=cfg.formats["long"]["min_source_chars"])
+            ids = topics.discover_mix(conn, cfg.niche, want, active_mix(cfg), forbidden=cfg.forbidden_topics,
+                                      min_source_chars=cfg.formats["long"]["min_source_chars"])
             if ids or attempt == tries - 1:
                 return ids
             print(f"[topics] attempt {attempt + 1}/{tries}: every candidate was rejected; asking the model again", flush=True)
@@ -68,6 +68,28 @@ def discover_with_retries(conn, cfg, want: int, tries: int = 3, pause: float = 6
     return []
 
 
+def active_mix(cfg) -> dict:
+    """The topic mix, only when switched on (topics.enabled); otherwise every topic is core, as before."""
+    t = cfg.topics or {}
+    return t.get("mix", {}) if t.get("enabled") else {}
+
+
+def preview_topics(conn, cfg, n: int) -> None:
+    """What the mix would pick for the next n videos, on a scratch copy of the job list: nothing is queued."""
+    scratch = db.connect(":memory:")
+    for r in conn.execute("SELECT topic, source_title, kind, category FROM jobs WHERE kind = 'long' ORDER BY id"):
+        scratch.execute("INSERT INTO jobs (topic, source_title, kind, category) VALUES (?, ?, ?, ?)",
+                        (r["topic"], r["source_title"], r["kind"], r["category"]))
+    mix = (cfg.topics or {}).get("mix", {})
+    for i in range(n):
+        ids = topics.discover_mix(scratch, cfg.niche, 1, mix, forbidden=cfg.forbidden_topics,
+                                  min_source_chars=cfg.formats["long"]["min_source_chars"])
+        for row in scratch.execute("SELECT category, topic, source_title FROM jobs WHERE id = ?", (ids[0],)) if ids else []:
+            print(f"PROPOSED {i + 1}: [{row['category']}] {row['topic']}  (source: {row['source_title']})", flush=True)
+        if not ids:
+            print(f"PROPOSED {i + 1}: nothing found this time", flush=True)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="autopilot")
     parser.add_argument("command", choices=["topics", "run", "daily", "status", "retry", "thumbnails", "ml"])
@@ -76,6 +98,7 @@ def main() -> None:
     parser.add_argument("--force", action="store_true", help="make a video even if today's is already uploaded")
     parser.add_argument("--src", help="ml: the finished English job folder to make a Malayalam edition of")
     parser.add_argument("--auto", action="store_true", help="ml: make and upload today's Malayalam edition (after `daily`)")
+    parser.add_argument("--preview", type=int, metavar="N", help="topics: show the next N proposed topics without queueing any")
     parser.add_argument("--retry", action="store_true", help="ml --auto: also retry editions that failed earlier today")
     parser.add_argument("--voice", help="ml: Gemini voice name (default: rotates Charon, Achird, Sulafat)")
     args = parser.parse_args()
@@ -103,6 +126,9 @@ def main() -> None:
             int(src.name.split("-")[0]))
         out = malayalam.build_edition(src, src / "ml", Path("work") / "ml" / src.name, voice)
         print(f"Malayalam edition: {out}")
+        return
+    if args.command == "topics" and args.preview:
+        preview_topics(db.connect(), cfg, args.preview)
         return
     conn = db.connect()
     done_before = done_count(conn)

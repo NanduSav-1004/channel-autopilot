@@ -13,6 +13,7 @@ class Config:
     dry_run: bool = True
     audio: dict = field(default_factory=dict)  # voice_engine, voice_name, voice_speed, music_style
     malayalam: dict = field(default_factory=dict)  # the Malayalam channel: enabled, publish_hour_utc, voices
+    topics: dict = field(default_factory=dict)  # mix: share of each topic category (core, space, what_if, history)
     render: dict = field(default_factory=dict)  # look options: mascot (false | shorts | all), mascot_style (bulb | atom)
 
 
@@ -26,6 +27,7 @@ def load_config(path: str | Path = "config/channel.yaml") -> Config:
         dry_run=data.get("dry_run", True),
         audio=data.get("audio", {}),
         malayalam=data.get("malayalam", {}),
+        topics=data.get("topics", {}),
         render=data.get("render", {}),
     )
 
