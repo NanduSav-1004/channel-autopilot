@@ -262,12 +262,29 @@ def _draw_tag(canvas: Image.Image, label: str) -> None:
     _draw_text(draw, (48 + 26, 40 + 8), label, 44, fill=INK)
 
 
-def _draw_badge(canvas: Image.Image) -> None:
-    """Brand badge in the top-right; the bottom-right is where YouTube overlays the video length."""
+ASSETS = Path(__file__).resolve().parents[2] / "assets"
+
+
+def _draw_badge(canvas: Image.Image, lang: str = "en") -> None:
+    """The channel's logo in the top-right (the bottom-right is where YouTube overlays the video length): the spark-and-orbit
+    mark, navy for English and teal for Malayalam. Falls back to a plain "B" badge if the logo file is missing."""
+    logo = ASSETS / ("brand_ml" if lang == "ml" else "brand") / "icon.png"
+    size, cx, cy = 140, W - 100, 100
+    if logo.exists():
+        big = Image.open(logo).convert("RGB").resize((size * 4, size * 4), Image.LANCZOS)
+        mask = Image.new("L", big.size, 0)
+        ImageDraw.Draw(mask).ellipse([0, 0, big.width - 1, big.height - 1], fill=255)
+        badge = Image.new("RGBA", big.size, (0, 0, 0, 0))
+        badge.paste(big, mask=mask)
+        shadow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+        ImageDraw.Draw(shadow).ellipse([cx - size // 2 + 4, cy - size // 2 + 8, cx + size // 2 + 4, cy + size // 2 + 8], fill=(0, 0, 0, 150))
+        canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(6)))
+        canvas.alpha_composite(badge.resize((size, size), Image.LANCZOS), (cx - size // 2, cy - size // 2))
+        return
     d = ImageDraw.Draw(canvas)
-    cx, cy, r = W - 96, 92, 56
+    r = 56
     d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=NAVY, outline=AMBER, width=7)
-    font = _font(72, latin=True)   # the badge letter is Latin even on a Malayalam thumbnail
+    font = _font(72, latin=True)
     bb = d.textbbox((0, 0), "B", font=font)
     d.text((cx - (bb[0] + bb[2]) / 2, cy - (bb[1] + bb[3]) / 2 - 3), "B", font=font, fill=(255, 255, 255))
 
@@ -293,7 +310,7 @@ def _make(script: dict, background, out: Path, pick, lang: str) -> Path:
     _draw_headline(canvas, thumbnail_text(script))
     tags, default = (SERIES_TAG_ML, "വിശദീകരണം") if lang == "ml" else (SERIES_TAG, "EXPLAINED")
     _draw_tag(canvas, tags.get(script.get("series", ""), default))
-    _draw_badge(canvas)
+    _draw_badge(canvas, lang)
     out.parent.mkdir(parents=True, exist_ok=True)
     canvas.convert("RGB").save(out, quality=90)  # YouTube limit is 2 MB; a 1280x720 JPEG is well under
     return out
