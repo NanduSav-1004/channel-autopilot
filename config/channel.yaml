@@ -36,7 +36,7 @@ malayalam:                      # a second channel: the same videos, translated 
     - {engine: gemini, name: Achird}
     - {engine: gemini, name: Sulafat}
 topics:
-  enabled: false                # the mix below is used only when this is true (off until the owner approves the sample topics)
+  enabled: true                 # the mix below is used only when this is true (approved by the owner 2026-10-28)
   mix:                           # how often each kind of topic is picked (the least-served kind goes next)
     core: 0.50                   # evergreen science and technology
     space: 0.20                  # space and astronomy (NASA media is added for these)
