@@ -31,8 +31,8 @@ def test_the_sprites_differ_by_mouth_and_blink_and_are_transparent():
 
 
 def test_blinks_are_occasional_and_repeatable():
-    f = mascot.blink_frames(12 * 60)
-    assert 5 <= len(f) // 2 <= 30 and f == mascot.blink_frames(12 * 60)
+    f = mascot.blink_frames(24 * 60)
+    assert 5 <= len(f) // 2 <= 30 and f == mascot.blink_frames(24 * 60)
 
 
 @pytest.mark.skipif(not shutil.which("ffmpeg"), reason="needs ffmpeg")
@@ -42,7 +42,7 @@ def test_the_track_is_a_transparent_video_as_long_as_the_narration(tmp_path):
     out = mascot.render_track(p, tmp_path / "m.mov", size=100)
     info = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_name,pix_fmt,width,height:format=duration",
                            "-of", "default=nw=1", str(out)], capture_output=True, text=True, check=True).stdout
-    assert "qtrle" in info and "width=108" in info and 1.8 < float(info.split("duration=")[1]) < 2.2
+    assert "qtrle" in info and "width=108" in info and 3.8 < float(info.split("duration=")[1]) < 4.4      # 2 s + the 2 s tail
 
 
 def test_the_config_decides_which_videos_get_which_mascot():

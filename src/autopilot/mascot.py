@@ -11,7 +11,8 @@ from PIL import Image, ImageDraw, ImageFilter
 
 NAVY, STEEL, AMBER, GLOW = (14, 27, 61), (74, 90, 128), (255, 190, 40), (255, 214, 102)
 SS = 4                      # drawn at 4x, shown at 1x: smooth edges
-FPS = 12
+FPS = 24                    # the same rate as the video, so the overlay never has to guess which frame to show
+TAIL_SECONDS = 2.0          # the track runs a little past the narration, so the character never vanishes before the video ends
 
 
 def _glass(size: int) -> Image.Image:
@@ -130,7 +131,7 @@ def mouth_levels(wav_path: Path, fps: int = FPS) -> list[int]:
     if not k:
         return []
     top = float(np.percentile(rms, 95)) or 1.0
-    x = np.convolve(rms / top, [0.25, 0.5, 0.25], mode="same")
+    x = np.convolve(rms / top, np.ones(3) / 3 if fps > 16 else [0.25, 0.5, 0.25], mode="same")
     levels, cur = [], 0
     for v in x:
         want = 0 if v < 0.10 else 1 if v < 0.38 else 2 if v < 0.7 else 3
@@ -151,7 +152,7 @@ def blink_frames(count: int, fps: int = FPS, seed: int = 7) -> set[int]:
 
 def render_track(narration: Path, out: Path, size: int = 260, fps: int = FPS, seed: int = 7, style: str = "bulb") -> Path:
     """A transparent video (QuickTime Animation, alpha) of the mascot talking along with `narration`."""
-    levels = mouth_levels(narration, fps)
+    levels = mouth_levels(narration, fps) + [0] * int(TAIL_SECONDS * fps)
     blinks = blink_frames(len(levels), fps, seed)
     pad = int(size * 0.08)
     canvas = size + pad
@@ -163,7 +164,7 @@ def render_track(narration: Path, out: Path, size: int = 260, fps: int = FPS, se
         speaking = lv > 0
         bob = round(math.sin(i / fps * 2 * math.pi * 1.1) * pad * 0.35 * (1.0 if speaking else 0.4))
         frame = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
-        frame.alpha_composite(sprite(size, lv, i in blinks, style, i // 1), (pad // 2, pad // 2 + bob))
+        frame.alpha_composite(sprite(size, lv, i in blinks, style, i * 12 // fps), (pad // 2, pad // 2 + bob))
         raw = frame.tobytes()
         proc.stdin.write(raw)
         prev = raw

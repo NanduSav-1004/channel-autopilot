@@ -335,7 +335,7 @@ def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: P
     if mascot:
         track, x, y = mascot
         cmd += ["-i", str(track), "-filter_complex",
-                f"[0:v]ass={ass}[v];[v][2:v]overlay={x}:{y}:eof_action=pass,format=yuv420p[out]", "-map", "[out]"]
+                f"[0:v]ass={ass}[v];[2:v]format=rgba[m];[v][m]overlay={x}:{y}:eof_action=repeat:repeatlast=1,format=yuv420p[out]", "-map", "[out]"]
     else:
         cmd += ["-vf", f"ass={ass}", "-map", "0:v"]
     cmd += ["-map", "1:a", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p",
