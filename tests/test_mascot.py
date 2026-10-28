@@ -42,7 +42,7 @@ def test_the_track_is_a_transparent_video_as_long_as_the_narration(tmp_path):
     out = mascot.render_track(p, tmp_path / "m.mov", size=100)
     info = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_name,pix_fmt,width,height:format=duration",
                            "-of", "default=nw=1", str(out)], capture_output=True, text=True, check=True).stdout
-    assert "qtrle" in info and "width=108" in info and 3.8 < float(info.split("duration=")[1]) < 4.4      # 2 s + the 2 s tail
+    assert "png" in info and "width=108" in info and 3.8 < float(info.split("duration=")[1]) < 4.4      # 2 s + the 2 s tail
 
 
 def test_the_config_decides_which_videos_get_which_mascot():
@@ -104,3 +104,18 @@ def test_a_broken_mascot_never_stops_the_video_from_rendering(tmp_path, monkeypa
     monkeypatch.setattr(mascot, "render_track", boom)
     out = _tiny_render(tmp_path, "bulb")
     assert out.exists() and out.stat().st_size > 5_000
+
+
+@pytest.mark.skipif(not (shutil.which("ffmpeg") and shutil.which("ffprobe")), reason="needs ffmpeg")
+def test_the_self_check_sees_a_present_mascot_and_a_missing_one(tmp_path):
+    from PIL import Image
+
+    base = tmp_path / "base.mp4"
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-f", "lavfi", "-i", "color=c=0x204060:s=400x400:r=24:d=4", "-pix_fmt", "yuv420p", str(base)], check=True)
+    png = tmp_path / "bulb.png"
+    mascot.sprite(200, 0, False).save(png)
+    with_bulb = tmp_path / "with.mp4"
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(base), "-i", str(png), "-filter_complex", "overlay=100:100", str(with_bulb)], check=True)
+    assert mascot.visible_share(with_bulb, 100, 100, 200, "bulb") > 0.95
+    assert mascot.visible_share(base, 100, 100, 200, "bulb") < 0.05
+    assert Image.open(png).size == (200, 200)

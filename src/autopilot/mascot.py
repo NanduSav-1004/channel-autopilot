@@ -150,14 +150,22 @@ def blink_frames(count: int, fps: int = FPS, seed: int = 7) -> set[int]:
     return out
 
 
-def render_track(narration: Path, out: Path, size: int = 260, fps: int = FPS, seed: int = 7, style: str = "bulb") -> Path:
-    """A transparent video (QuickTime Animation, alpha) of the mascot talking along with `narration`."""
+CODECS = {
+    "png": ["-c:v", "png", "-pix_fmt", "rgba"],                                     # every frame is a full picture
+    "prores": ["-c:v", "prores_ks", "-profile:v", "4444", "-pix_fmt", "yuva444p10le"],  # also intra-only, alpha
+}
+
+
+def render_track(narration: Path, out: Path, size: int = 260, fps: int = FPS, seed: int = 7, style: str = "bulb",
+                 codec: str = "png") -> Path:
+    """A transparent video of the mascot talking along with `narration`. Both codecs store each frame completely: the old QuickTime
+    Animation track skipped repeated frames, which some ffmpeg versions turned into see-through frames (the character blinked out)."""
     levels = mouth_levels(narration, fps) + [0] * int(TAIL_SECONDS * fps)
     blinks = blink_frames(len(levels), fps, seed)
     pad = int(size * 0.08)
     canvas = size + pad
     cmd = ["ffmpeg", "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", f"{canvas}x{canvas}", "-r", str(fps),
-           "-i", "-", "-c:v", "qtrle", "-pix_fmt", "argb", str(out)]
+           "-i", "-", *CODECS[codec], str(out)]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     prev = None
     for i, lv in enumerate(levels):
@@ -172,3 +180,27 @@ def render_track(narration: Path, out: Path, size: int = 260, fps: int = FPS, se
     if proc.wait() != 0 or prev is None:
         raise OSError("could not render the mascot track")
     return out
+
+
+def visible_share(video: Path, x: int, y: int, canvas: int, style: str, per_second: int = 3) -> float:
+    """Share of sampled frames in which the mascot can be seen in its corner (its body colour is there). A self-check after
+    rendering: it must be close to 1.0."""
+    import shutil
+    import tempfile
+
+    tmp = Path(tempfile.mkdtemp(prefix="mascot_check_"))
+    try:
+        subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(video), "-vf",
+                        f"fps={per_second},crop={canvas}:{canvas}:{x}:{y},scale=64:64", str(tmp / "f%05d.png")], check=True)
+        hits = total = 0
+        for f in sorted(tmp.glob("f*.png")):
+            a = np.asarray(Image.open(f).convert("RGB")).astype(int)
+            if style == "atom":
+                body = (a[..., 2] > 200) & (a[..., 0] < 150) & (a[..., 1] > 110)
+            else:
+                body = (a[..., 0] > 200) & (a[..., 1] > 140) & (a[..., 2] < 140)
+            total += 1
+            hits += float(body.mean()) > 0.06
+        return hits / total if total else 1.0
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)

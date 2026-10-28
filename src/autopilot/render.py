@@ -259,7 +259,7 @@ def render_photo_video(
     (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
     write_ass_words(timings, work / "captions.ass", look)
     _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music,
-                _mascot(narration, work, vertical=False, style=mascot) if mascot else None)
+                (work, False, mascot) if mascot else None)
 
 
 # Voice to -16 LUFS; the music bed to -21 LUFS, then ducked hard by sidechain compression while the narrator speaks.
@@ -324,18 +324,13 @@ def mix_audio(narration: Path, music: Path | None, out_wav: Path) -> str:
     return "voice only"
 
 
-def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: Path | None,
-                mascot: tuple[Path, int, int] | None = None) -> None:
-    """Burn captions into the video and attach the pre-mixed, verified audio. `mascot` = (transparent video, x, y): the talking
-    character is overlaid at that position."""
-    mixed = out_mp4.with_suffix(".mix.wav")
-    how = mix_audio(narration, music, mixed)
-    print(f"[mix] audio: {how}", flush=True)
+def _mux(clips: Path, mixed: Path, ass: Path, out_mp4: Path, mascot: tuple[Path, int, int] | None) -> None:
     cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(clips), "-i", str(mixed)]
     if mascot:
         track, x, y = mascot
         cmd += ["-i", str(track), "-filter_complex",
-                f"[0:v]ass={ass}[v];[2:v]format=rgba[m];[v][m]overlay={x}:{y}:eof_action=repeat:repeatlast=1,format=yuv420p[out]", "-map", "[out]"]
+                f"[0:v]ass={ass}[v];[2:v]format=rgba[m];[v][m]overlay={x}:{y}:eof_action=repeat:repeatlast=1,format=yuv420p[out]",
+                "-map", "[out]"]
     else:
         cmd += ["-vf", f"ass={ass}", "-map", "0:v"]
     cmd += ["-map", "1:a", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p",
@@ -343,18 +338,34 @@ def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: P
     subprocess.run(cmd, check=True, capture_output=True)
 
 
-def _mascot(narration: Path, work: Path, vertical: bool, style: str) -> tuple[Path, int, int] | None:
-    """The talking mascot's track and where it sits: bottom-left, clear of the captions and of YouTube's own buttons.
-    The mascot is an extra: if anything about it fails, the video is rendered without it rather than not at all."""
-    try:
-        from autopilot import mascot
+def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: Path | None,
+                mascot: tuple[Path, bool, str] | None = None) -> None:
+    """Burn captions into the video and attach the pre-mixed, verified audio. `mascot` = (work folder, vertical, style): the talking
+    character is overlaid, then CHECKED in the finished video; if it drops out of frames, another method is tried, and if that
+    also fails the video is made without it (a plain video is better than a flickering one)."""
+    mixed = out_mp4.with_suffix(".mix.wav")
+    how = mix_audio(narration, music, mixed)
+    print(f"[mix] audio: {how}", flush=True)
+    if mascot:
+        from autopilot import mascot as mascot_art
 
-        size = 300 if vertical else 230
-        track = mascot.render_track(narration, work / "mascot.mov", size=size, style=style)
-        return (track, 24, 1380) if vertical else (track, 18, 396)
-    except Exception as exc:  # noqa: BLE001
-        print(f"[mascot] WARNING: rendering without the mascot ({type(exc).__name__}: {exc})", flush=True)
-        return None
+        work, vertical, style = mascot
+        for codec in mascot_art.CODECS:
+            try:
+                size = 300 if vertical else 230
+                track = mascot_art.render_track(narration, work / f"mascot_{codec}.mov", size=size, style=style, codec=codec)
+                x, y = (24, 1380) if vertical else (18, 396)
+                _mux(clips, mixed, ass, out_mp4, (track, x, y))
+                share = mascot_art.visible_share(out_mp4, x, y, size + int(size * 0.08), style)
+            except Exception as exc:  # noqa: BLE001 - the mascot is an extra, never a reason to lose the video
+                print(f"[mascot] WARNING: {codec} method failed ({type(exc).__name__}: {exc})", flush=True)
+                continue
+            if share >= 0.9:
+                return
+            print(f"[mascot] WARNING: the character was missing from {100 * (1 - share):.0f}% of sampled frames ({codec} method); "
+                  "trying another", flush=True)
+        print("[mascot] WARNING: rendering without the mascot", flush=True)
+    _mux(clips, mixed, ass, out_mp4, None)
 
 
 # ---------- vertical 9:16 renderer for Shorts ----------
@@ -473,4 +484,4 @@ def render_short(script: dict, timings: list[dict], items: list[dict], narration
     (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
     write_ass_words(timings, work / "captions.ass", look)
     _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music,
-                _mascot(narration, work, vertical=True, style=mascot) if mascot else None)
+                (work, True, mascot) if mascot else None)
