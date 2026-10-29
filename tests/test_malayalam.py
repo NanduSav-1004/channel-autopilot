@@ -395,3 +395,20 @@ def test_redo_deletes_only_still_private_scheduled_shorts_and_clears_them(tmp_pa
     assert deleted == [("PRIV", "ml")] and "deleted" in lines[0] and "kept" in lines[1]
     rows = {r["short_idx"]: r for r in conn.execute("SELECT * FROM jobs WHERE parent_id = ?", (long_id,))}
     assert rows[0]["ml_video_id"] is None and rows[0]["ml_status"] is None and rows[1]["ml_video_id"] == "PUB"
+
+
+def test_equations_symbols_and_units_are_weighted_by_how_they_are_read_aloud():
+    w = ml.spoken_weight
+    assert w("E=mc²") >= 7 and w("E=mc²,") == w("E=mc²")            # "E equals m c squared": far more than one short word
+    assert w("ΔE") >= 3 and w("H₂O") >= 3 and w("x=3") >= 5
+    assert w("Tb/s") >= 8 and w("km/h") >= 6
+    assert w("Wi-Fi") <= 3 and w("opcode") == 3 and w("CPU") == 3     # ordinary Latin words stay by their sounds
+    assert w("CPU-നുള്ളിൽ") < 8 and w("ആൽബർട്ട്") == 2                # a Malayalam word with a Latin stem is an ordinary word
+
+
+def test_captions_after_an_equation_wait_for_the_voice():
+    words = ["ഐൻസ്റ്റൈന്റെ", "സമവാക്യം", "E=mc²", "ആണ്"]
+    out = ml.words_in((0.0, 6.0), words)
+    equation = out[2]
+    assert equation["e"] - equation["s"] > 1.5                        # the equation is on screen for a while, not flashed past
+    assert out[3]["s"] == equation["e"]

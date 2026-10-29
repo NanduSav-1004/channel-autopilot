@@ -275,11 +275,55 @@ VIRAMA = "്"
 SPOKEN_DIGITS = {1: 2, 2: 6, 3: 9, 4: 13}      # syllables when a number is read out in Malayalam (1905 is about thirteen)
 
 
+OPERATORS = {"=": 3.0, "+": 1.5, "−": 1.5, "×": 2.0, "÷": 2.0, "/": 1.5, "^": 1.5, "±": 2.0, "≈": 2.0, "≤": 2.0, "≥": 2.0,
+             "<": 1.5, ">": 1.5, "²": 3.0, "³": 3.0, "√": 2.0, "∞": 2.5, "∑": 2.0, "∫": 2.0, "∂": 2.0, "°": 1.5}
+UNIT_WORDS = {"tb/s": 9, "gb/s": 9, "mb/s": 9, "kb/s": 9, "km/h": 7, "m/s": 5, "m/s²": 8, "ghz": 5, "mhz": 5, "khz": 5, "thz": 5,
+              "kw": 4, "mw": 4, "gw": 4, "tw": 4, "kv": 4, "ev": 3, "mev": 4, "gev": 4, "tev": 4, "°c": 4, "°f": 4}
+LETTER_SYLLABLES = 1.2     # a Latin letter read as its name ("എം", "സി"); Greek letters ("ഡെൽറ്റ", "ന്യൂ") take two
+
+
+def formula_weight(token: str) -> float | None:
+    """The spoken length of an equation, unit or symbol-laden token such as "E=mc²", "ΔE", "H₂O" or "Tb/s", or None if the token is
+    an ordinary word. Gemini reads these out letter by letter and symbol by symbol ("E equals m c squared"), so the
+    captions that treated them as one short word flipped far ahead of the voice."""
+    bare = token.strip("(),;:.!?\"'“”‘’")
+    if re.search(r"[ക-ഹഅ-ഔ]", bare):                         # contains Malayalam: an ordinary word (like "CPU-നുള്ളിൽ")
+        return None
+    if bare.lower() in UNIT_WORDS:
+        return float(UNIT_WORDS[bare.lower()])
+    symbols = any(c in OPERATORS or c in "₀₁₂₃₄₅₆₇₈₉" for c in bare) or bool(re.search(r"[α-ωΑ-Ω]", bare))
+    mixed = bool(re.search(r"[A-Za-z]", bare) and re.search(r"[0-9]", bare))
+    if not (symbols or mixed):
+        return None                                             # "Wi-Fi", "opcode", "CPU": ordinary words
+    n = 0.0
+    for m in re.finditer(r"\d+(?:[.,]\d+)?|[A-Za-z]|[α-ωΑ-Ω]|[₀-₉]|\S", bare):
+        s = m.group()
+        if re.fullmatch(r"[0-9]+(?:[.,][0-9]+)?", s):
+            digits = len(re.sub(r"[^0-9]", "", s))
+            n += SPOKEN_DIGITS.get(digits, 3 * digits)
+        elif s in OPERATORS:
+            n += OPERATORS[s]
+        elif s.isascii() and s.isalpha():
+            n += LETTER_SYLLABLES
+        elif re.match(r"[α-ωΑ-Ω]", s):
+            n += 2.0
+        elif s in "₀₁₂₃₄₅₆₇₈₉":
+            n += 1.0
+        elif s == "-":
+            n += 1.5
+        else:
+            n += 0.5
+    return max(1.0, n)
+
+
 def spoken_weight(token: str) -> float:
     """How long a word takes to SAY, in syllables: Malayalam by aksharas (a consonant with its vowel is one, a consonant
     closing a syllable or joining a conjunct is none), Latin words by vowel groups, and numbers by how they are read aloud.
     Letter counts badly under-weight numbers: "1905" is five letters but over a second of speech, and every caption word after
     it ran early until the next pause."""
+    formula = formula_weight(token)
+    if formula is not None:
+        return formula
     n = 0.0
     rest = token
     for m in re.finditer(r"\d+(?:[.,]\d+)?", token):
