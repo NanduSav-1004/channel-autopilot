@@ -314,3 +314,30 @@ def place_shot(shot: dict, sentences: list[dict], hold: float = 6.0) -> dict | N
         if target in numbers_in(s["text"]):
             return {"start": round(s["start"], 2), "seconds": hold}
     return None
+
+
+def shots_for(sections: list[dict], size: tuple[int, int], work: Path, gen: Callable[[str], dict] | None = None, min_gap: float = 10.0,
+              render=None, log: Callable[[str], None] = print) -> list[dict]:
+    """The data shots of a video: for each section ({"heading", "narration", "sentences"} with timed words) ask for a shot, check it against
+    the narration, place it where the figure is spoken, and render its clip. Returns [{"start", "seconds", "clip", "kind"}], at least
+    `min_gap` seconds apart. Any failure just means one shot fewer: a data shot is an extra and never stops a video."""
+    from autopilot import llm
+
+    gen = gen or llm.generate_json
+    render = render or render_shot
+    out: list[dict] = []
+    for i, sec in enumerate(sections):
+        try:
+            shot = extract_shot(sec["heading"], sec["narration"], gen)
+            when = place_shot(shot, sec["sentences"]) if shot else None
+            if not (shot and when):
+                continue
+            if out and when["start"] - out[-1]["start"] < min_gap:
+                continue
+            clip = render(shot, size, work / f"datashot_{i}.mp4", seconds=when["seconds"])
+        except Exception as exc:  # noqa: BLE001
+            log(f"[datashot] skipped one shot ({type(exc).__name__}: {exc})")
+            continue
+        log(f"[datashot] {shot['kind']} '{shot['title']}' at {when['start']:.1f}s")
+        out.append({**when, "clip": clip, "kind": shot["kind"]})
+    return out

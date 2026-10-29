@@ -44,5 +44,6 @@ topics:
     history: 0.15                # history mysteries and the history of science
 render:
   mascot: shorts                 # a talking character in the corner: false | shorts | all (approved for Shorts only, 2026-10-27)
+  data_shots: shorts             # animated number, bar, timeline and line-chart shots at the moment the figures are spoken: false | shorts | all
   mascot_style: bulb             # bulb ("Beam", chosen) | atom ("Orbit")
 dry_run: true   # no public upload until the upload spike passes and this is set to false

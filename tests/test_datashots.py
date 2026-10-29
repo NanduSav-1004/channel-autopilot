@@ -75,3 +75,94 @@ def test_every_kind_renders_a_clip_of_the_requested_length(tmp_path):
             info = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=width,height:format=duration", "-of", "default=nw=1", str(out)],
                                   capture_output=True, text=True, check=True).stdout
             assert f"width={size[0]}" in info and 1.3 < float(info.split("duration=")[1]) < 1.8, (kind, size)
+
+
+def _words(text, t0):
+    return [{"w": w, "s": t0 + i * 0.4, "e": t0 + i * 0.4 + 0.3} for i, w in enumerate(text.split())]
+
+
+def test_shots_for_places_a_shot_per_section_spaces_them_and_survives_failures():
+    secs = [
+        {"heading": "A", "narration": "Light travels 299792 km every second.",
+         "sentences": [{"text": "Light travels 299792 km every second.", "start": 2.0, "end": 6.0, "words": _words("Light travels 299792 km every second.", 2.0)}]},
+        {"heading": "B", "narration": "It was 1911 when mercury hit 4.2 K.",
+         "sentences": [{"text": "It was 1911 when mercury hit 4.2 K.", "start": 8.0, "end": 12.0, "words": _words("It was 1911 when mercury hit 4.2 K.", 8.0)}]},
+        {"heading": "C", "narration": "Then 77 K.",
+         "sentences": [{"text": "Then 77 K.", "start": 40.0, "end": 42.0, "words": _words("Then 77 K.", 40.0)}]},
+    ]
+
+    def gen(prompt):
+        if "SECTION: A" in prompt:
+            return {"shots": [{"kind": "number", "title": "Speed of light", "items": [{"label": "per second", "value": 299792, "unit": "km"}]}]}
+        if "SECTION: B" in prompt:       # 8 s after A's shot starts: too close, skipped
+            return {"shots": [{"kind": "number", "title": "Cold", "items": [{"label": "mercury", "value": 4.2, "unit": "K"}]}]}
+        raise RuntimeError("model down")
+
+    rendered = []
+
+    def fake_render(shot, size, out, seconds):
+        rendered.append((shot["title"], size))
+        return out
+
+    logs = []
+    out = ds.shots_for(secs, (1280, 720), __import__("pathlib").Path("/tmp/x"), gen=gen, render=fake_render, log=logs.append)
+    assert [s["kind"] for s in out] == ["number"] and rendered == [("Speed of light", (1280, 720))]
+    assert out[0]["start"] < 4.0 and out[0]["seconds"] == 6.0
+
+
+def test_shots_for_never_raises_when_rendering_fails(tmp_path):
+    secs = [{"heading": "A", "narration": "It reached 319 Tb/s.",
+             "sentences": [{"text": "It reached 319 Tb/s.", "start": 1.0, "end": 3.0, "words": _words("It reached 319 Tb/s.", 1.0)}]}]
+    good = {"shots": [{"kind": "number", "title": "Speed", "items": [{"label": "", "value": 319, "unit": "Tb/s"}]}]}
+
+    def boom(*a, **k):
+        raise OSError("ffmpeg missing")
+
+    logs = []
+    assert ds.shots_for(secs, (1280, 720), tmp_path, gen=lambda p: good, render=boom, log=logs.append) == []
+    assert any("skipped" in line for line in logs)
+
+
+def test_the_config_switch_picks_which_videos_get_data_shots():
+    from autopilot.config import Config, data_shots_on
+
+    def cfg(**r):
+        return Config(niche="s", audience="a", formats={}, render=r)
+
+    assert not data_shots_on(cfg(), True) and not data_shots_on(cfg(data_shots=False), True)
+    assert data_shots_on(cfg(data_shots="shorts"), True) and not data_shots_on(cfg(data_shots="shorts"), False)
+    assert data_shots_on(cfg(data_shots="all"), False)
+
+
+@pytest.mark.skipif(not (shutil.which("ffmpeg") and shutil.which("ffprobe")), reason="needs ffmpeg")
+def test_a_short_renders_with_a_data_shot_and_keeps_its_length(tmp_path):
+    import wave
+
+    import numpy as np
+    from PIL import Image
+
+    from autopilot.render import render_short
+
+    img = tmp_path / "i.jpg"
+    Image.new("RGB", (1280, 720), (40, 90, 160)).save(img)
+    nar = tmp_path / "n.wav"
+    with wave.open(str(nar), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(24000)
+        w.writeframes((np.sin(np.arange(24000 * 8) / 20) * 6000).astype("<i2").tobytes())
+    words = _words("It reached 319 Tb/s today", 1.0)
+    timings = [{"heading": "A", "start": 0.0, "end": 8.0,
+                "sentences": [{"text": "It reached 319 Tb/s today", "start": 1.0, "end": 3.5, "words": words}]}]
+    shot = {"kind": "number", "title": "Speed", "items": [{"label": "record", "value": 319, "unit": "Tb/s"}]}
+    clip = ds.render_shot(shot, (1080, 1920), tmp_path / "s.mp4", seconds=3.0)
+    plain, with_shot = tmp_path / "plain.mp4", tmp_path / "with.mp4"
+    item = [{"kind": "image", "path": img}]
+    render_short({"title": "T"}, timings, item, nar, plain, tmp_path / "w1")
+    render_short({"title": "T"}, timings, item, nar, with_shot, tmp_path / "w2", data_shots=[{"start": 1.5, "seconds": 3.0, "clip": clip}])
+
+    def dur(p):
+        return float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(p)],
+                                    capture_output=True, text=True, check=True).stdout)
+
+    assert abs(dur(plain) - dur(with_shot)) < 0.1

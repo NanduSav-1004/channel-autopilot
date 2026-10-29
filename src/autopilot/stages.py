@@ -8,6 +8,7 @@ from typing import ClassVar
 
 from autopilot import (
     audio,
+    datashots,
     db,
     metadata,
     music,
@@ -20,7 +21,7 @@ from autopilot import (
     tts,
     wiki,
 )
-from autopilot.config import Config, mascot_style
+from autopilot.config import Config, data_shots_on, mascot_style
 from autopilot.errors import RestartJob, TransientError
 from autopilot.render import render_photo_video, render_short
 from autopilot.script import (
@@ -212,8 +213,13 @@ class Stages:
             [[{"kind": i["kind"], "path": Path(i["path"])} for i in sec] for sec in _read(d / "items.json")])
         music = self.make_music(d / "music.wav", timings[-1]["end"] + 5, job["id"])
         wd = self.work / d.name
+        wd.mkdir(parents=True, exist_ok=True)
+        data = []
+        if data_shots_on(self.cfg, short=False):
+            data = datashots.shots_for([{"heading": sec["heading"], "narration": sec["narration"], "sentences": tm["sentences"]}
+                                        for sec, tm in zip(script["sections"], timings, strict=False)], (1280, 720), wd)
         render_photo_video(script, timings, items, shots.plan_cuts(timings, [len(s) for s in items]), d / "narration.wav",
-                           d / "final.mp4", wd, music=music,
+                           d / "final.mp4", wd, music=music, data_shots=data or None,
                            mascot=mascot_style(self.cfg, short=False))
         images = [i["path"] for sec in items for i in sec if i["kind"] == "image"]
         thumbnail.make_thumbnail(script, images, d / "thumbnail.jpg", pick=thumbnail.pick_with_vision)
@@ -317,7 +323,12 @@ class Stages:
         items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]
         music = self.make_music(d / "music.wav", timings[-1]["end"] + 3, job["id"] + 1000)
         wd = self.work / f"{self.dir(self._parent(job)).name}-{d.name}"
-        render_short(s, timings, items, d / "narration.wav", d / "final.mp4", wd, music=music,
+        wd.mkdir(parents=True, exist_ok=True)
+        data = []
+        if data_shots_on(self.cfg, short=True):
+            data = datashots.shots_for([{"heading": s["title"], "narration": s["narration"], "sentences": timings[0]["sentences"]}],
+                                       (1080, 1920), wd)
+        render_short(s, timings, items, d / "narration.wav", d / "final.mp4", wd, music=music, data_shots=data or None,
                      mascot=mascot_style(self.cfg, short=True))
         shutil.rmtree(wd, ignore_errors=True)
 

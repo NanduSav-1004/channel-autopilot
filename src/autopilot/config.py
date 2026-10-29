@@ -41,3 +41,9 @@ def mascot_style(cfg: Config, short: bool) -> str | None:
         style = (cfg.render or {}).get("mascot_style", "bulb")
         return style if style in ("bulb", "atom") else "bulb"
     return None
+
+
+def data_shots_on(cfg: Config, short: bool) -> bool:
+    """Are animated data shots drawn into this kind of video? render.data_shots is false, "shorts" or "all"."""
+    where = (cfg.render or {}).get("data_shots")
+    return where is True or where == "all" or (where == "shorts" and short)
