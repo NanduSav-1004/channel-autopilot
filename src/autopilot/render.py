@@ -205,6 +205,39 @@ def _render_clip(img: Path, frames: int, variant: int, out: Path, cycle: int = 0
     )
 
 
+def _cut_datashot(src: Path, frames: int, out: Path, offset: float = 0.0) -> None:
+    """Take `frames` frames of a data-shot clip from `offset` seconds, holding its last picture if the span outlasts it."""
+    subprocess.run(
+        ["ffmpeg", "-y", "-ss", f"{offset:.2f}", "-i", str(src), "-an", "-vf", f"tpad=stop_mode=clone:stop_duration=12,fps={FPS},format=yuv420p",
+         "-frames:v", str(frames), "-c:v", "libx264", "-preset", "veryfast", "-crf", "22", str(out)],
+        check=True, capture_output=True)
+
+
+def carve_span(a: int, b: int, shots: list[dict], fps: int = FPS, min_piece: int = 8) -> list[tuple[int, int, int | None]]:
+    """Split one cut (frames a..b) around the data shots that overlap it: [(from, to, shot index or None)]. A sliver of ordinary footage
+    next to a shot (under `min_piece` frames) is absorbed into the shot."""
+    pieces: list[tuple[int, int, int | None]] = [(a, b, None)]
+    for si, s in enumerate(shots):
+        sa, sb = round(s["start"] * fps), round((s["start"] + s["seconds"]) * fps)
+        out = []
+        for x, y, k in pieces:
+            lo, hi = max(x, sa), min(y, sb)
+            if k is not None or lo >= hi:
+                out.append((x, y, k))
+                continue
+            if lo - x < min_piece:
+                lo = x
+            if y - hi < min_piece:
+                hi = y
+            if lo > x:
+                out.append((x, lo, None))
+            out.append((lo, hi, si))
+            if hi < y:
+                out.append((hi, y, None))
+        pieces = out
+    return pieces
+
+
 def _render_stock_clip(src: Path, frames: int, out: Path, offset: float = 0.0) -> None:
     """Loop/trim a stock clip to the shot length, cover-crop to 16:9, strip its audio. `offset` starts a re-used
     clip from a different point so the second appearance does not look like a repeat."""
@@ -218,7 +251,7 @@ def _render_stock_clip(src: Path, frames: int, out: Path, offset: float = 0.0) -
 
 def render_photo_video(
     script, timings, images, plan, narration: Path, out_mp4: Path, work: Path, music: Path | None = None,
-    look: dict = LONG_CAPTIONS, mascot: str | None = None,
+    look: dict = LONG_CAPTIONS, mascot: str | None = None, data_shots: list[dict] | None = None,
 ) -> None:
     """Ken Burns over gathered images; sections without images fall back to title cards."""
     from concurrent.futures import ThreadPoolExecutor
@@ -230,26 +263,33 @@ def render_photo_video(
     jobs = []
     for si, (sec, spans) in enumerate(zip(timings, plan, strict=True)):
         pool = images[si]
-        for ji, (a, b) in enumerate(spans):
-            out = work / f"clip_{len(jobs):04d}.mp4"
-            item_idx, cycle, variant = cut_choice(ji, len(pool)) if pool else (0, 0, ji)
-            item = pool[item_idx] if pool else None
-            if item and item.get("borrowed"):  # shown in another section already: use a different part of it here
-                cycle = min(cycle + 1, 2)
-            if item and item["kind"] == "video":
-                jobs.append(("video", item["path"], b - a, 2.0 * cycle, out))
-                continue
-            src = item["path"] if item else work / f"card_{si:02d}.png"
-            if not item:
-                make_card(script["title"], sec["heading"], si, len(timings), src)
-            prepped = work / f"prep_{item_idx if pool else 'c'}_{si}.jpg"
-            if not prepped.exists():
-                _prep_image(src, prepped)
-            jobs.append(("image", prepped, b - a, (variant, cycle), out))
+        for ji, (a0, b0) in enumerate(spans):
+            for a, b, shot_i in carve_span(a0, b0, data_shots or []):
+                out = work / f"clip_{len(jobs):04d}.mp4"
+                if shot_i is not None:                   # an animated data shot instead of the usual footage for this stretch
+                    s = data_shots[shot_i]
+                    jobs.append(("datashot", s["clip"], b - a, max(0.0, (a - round(s["start"] * FPS)) / FPS), out))
+                    continue
+                item_idx, cycle, variant = cut_choice(ji, len(pool)) if pool else (0, 0, ji)
+                item = pool[item_idx] if pool else None
+                if item and item.get("borrowed"):  # shown in another section already: use a different part of it here
+                    cycle = min(cycle + 1, 2)
+                if item and item["kind"] == "video":
+                    jobs.append(("video", item["path"], b - a, 2.0 * cycle, out))
+                    continue
+                src = item["path"] if item else work / f"card_{si:02d}.png"
+                if not item:
+                    make_card(script["title"], sec["heading"], si, len(timings), src)
+                prepped = work / f"prep_{item_idx if pool else 'c'}_{si}.jpg"
+                if not prepped.exists():
+                    _prep_image(src, prepped)
+                jobs.append(("image", prepped, b - a, (variant, cycle), out))
 
     def run(job):
         kind, src, frames, extra, out = job
-        if kind == "video":
+        if kind == "datashot":
+            _cut_datashot(src, frames, out, extra)
+        elif kind == "video":
             _render_stock_clip(src, frames, out, extra)
         else:
             _render_clip(src, frames, extra[0], out, extra[1])
@@ -450,7 +490,7 @@ def _render_vstock(src: Path, frames: int, out: Path, offset: float = 0.0) -> No
 
 def render_short(script: dict, timings: list[dict], items: list[dict], narration: Path,
                  out_mp4: Path, work: Path, music: Path | None = None, look: dict = SHORT_CAPTIONS,
-                 mascot: str | None = None) -> None:
+                 mascot: str | None = None, data_shots: list[dict] | None = None) -> None:
     """script: {"title"}; timings: one section with timed sentences; items: [{"kind","path"}]."""
     from concurrent.futures import ThreadPoolExecutor
 
@@ -460,24 +500,34 @@ def render_short(script: dict, timings: list[dict], items: list[dict], narration
     out_mp4.parent.mkdir(parents=True, exist_ok=True)
     spans = plan_cuts([{"start": 0.0, "end": timings[-1]["end"]}], [len(items)], FPS, SHORT_CUT_SECONDS, SHORT_MAX_REUSE)[0]
     jobs = []
-    for i, (a, b) in enumerate(spans):
-        out = work / f"vclip_{i:03d}.mp4"
-        item_idx, cycle, variant = cut_choice(i, len(items)) if items else (0, 0, i)
-        item = items[item_idx] if items else None
-        if item and item["kind"] == "video":
-            jobs.append(("video", item["path"], b - a, 2.0 * cycle, out))
-            continue
-        src = item["path"] if item else work / "vcard.png"
-        if not item:
-            make_vertical_card(script["title"], src)
-        prepped = work / f"vprep_{item_idx}.jpg"
-        if not prepped.exists():
-            _prep_vertical(src, prepped)
-        jobs.append(("image", prepped, b - a, variant, out))
+    for i, (a0, b0) in enumerate(spans):
+        for a, b, shot_i in carve_span(a0, b0, data_shots or []):
+            out = work / f"vclip_{len(jobs):03d}.mp4"
+            if shot_i is not None:
+                s = data_shots[shot_i]
+                jobs.append(("datashot", s["clip"], b - a, max(0.0, (a - round(s["start"] * FPS)) / FPS), out))
+                continue
+            item_idx, cycle, variant = cut_choice(i, len(items)) if items else (0, 0, i)
+            item = items[item_idx] if items else None
+            if item and item["kind"] == "video":
+                jobs.append(("video", item["path"], b - a, 2.0 * cycle, out))
+                continue
+            src = item["path"] if item else work / "vcard.png"
+            if not item:
+                make_vertical_card(script["title"], src)
+            prepped = work / f"vprep_{item_idx}.jpg"
+            if not prepped.exists():
+                _prep_vertical(src, prepped)
+            jobs.append(("image", prepped, b - a, variant, out))
 
     def run(job):
         kind, src, frames, extra, out = job
-        _render_vstock(src, frames, out, extra) if kind == "video" else _render_vclip(src, frames, extra, out)
+        if kind == "datashot":
+            _cut_datashot(src, frames, out, extra)
+        elif kind == "video":
+            _render_vstock(src, frames, out, extra)
+        else:
+            _render_vclip(src, frames, extra, out)
 
     with ThreadPoolExecutor(max_workers=2) as ex:
         list(ex.map(run, jobs))
