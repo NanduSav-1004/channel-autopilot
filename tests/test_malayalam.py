@@ -349,3 +349,18 @@ def test_the_last_round_for_a_short_may_leave_out_what_it_cannot_translate_exact
 
     out = ml.translate_short({"title": "T", "narration": "He received it on May 11."}, 80, gen, log=lambda s: None)
     assert out["narration"] == "ഭാഗികമായ വിവർത്തനം." and any("LEAVE OUT" in p for p in prompts)
+
+
+def test_numbers_are_weighted_by_how_long_they_take_to_say():
+    w = ml.spoken_weight
+    assert w("1905-ൽ") >= 12 and w("1921-ൽ") >= 12                # a year read out in Malayalam is a mouthful
+    assert w("7") < w("42") < w("1905") and w("44.7%") > w("44")
+    assert w("ആൽബർട്ട്") == 2 and w("സ്പേസ്,") == 1 and w("CPU") == 3     # aksharas; a closing consonant adds nothing; acronyms letter by letter
+    assert ml._letters("1905-ൽ ആൽബർട്ട് ഐൻസ്റ്റൈൻ") > 3 * ml._letters("ആൽബർട്ട് ഐൻസ്റ്റൈൻ") / 2
+
+
+def test_words_after_a_year_are_not_pulled_early():
+    words = ["1905-ൽ", "ആൽബർട്ട്", "ഐൻസ്റ്റൈൻ"]
+    out = ml.words_in((0.0, 4.0), words)
+    assert out[0]["e"] > 2.5                                       # the year takes most of the first two seconds
+    assert out[1]["s"] == out[0]["e"] and out[2]["e"] == 4.0

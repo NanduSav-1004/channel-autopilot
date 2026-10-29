@@ -271,8 +271,36 @@ def _frame_rms(pcm: bytes, rate: int, win: float = 0.02) -> np.ndarray:
     return np.sqrt((a ** 2).mean(axis=1))
 
 
-def _letters(sentence: str) -> int:
-    return max(1, sum(c.isalnum() or "഻" <= c <= "്" for c in sentence))   # consonants, vowels, and Malayalam signs
+VIRAMA = "്"
+SPOKEN_DIGITS = {1: 2, 2: 6, 3: 9, 4: 13}      # syllables when a number is read out in Malayalam (1905 is about thirteen)
+
+
+def spoken_weight(token: str) -> float:
+    """How long a word takes to SAY, in syllables: Malayalam by aksharas (a consonant with its vowel is one, a consonant
+    closing a syllable or joining a conjunct is none), Latin words by vowel groups, and numbers by how they are read aloud.
+    Letter counts badly under-weight numbers: "1905" is five letters but over a second of speech, and every caption word after
+    it ran early until the next pause."""
+    n = 0.0
+    rest = token
+    for m in re.finditer(r"\d+(?:[.,]\d+)?", token):
+        digits = len(re.sub(r"\D", "", m.group()))
+        n += SPOKEN_DIGITS.get(digits, 3 * digits) + (2 if "." in m.group() else 0)
+        rest = rest.replace(m.group(), "", 1)
+    chars = list(rest)
+    for i, c in enumerate(chars):
+        if "അ" <= c <= "ഔ" or "ക" <= c <= "ഹ" and (chars[i + 1] if i + 1 < len(chars) else "") != VIRAMA:                                       # independent vowels
+            n += 1
+    lat = "".join(ch for ch in rest if ch.isascii() and ch.isalpha())
+    if lat:
+        n += len(lat) if lat.isupper() and len(lat) <= 5 else max(1, len(re.findall(r"[aeiouyAEIOUY]+", lat)))
+    if re.search(r"\d", token) and re.search(r"[ക-ഹൺ-ൿ]", rest):   # "1905-ൽ": the suffix is one more syllable
+        n += 1
+    return max(1.0, n)
+
+
+def _letters(sentence: str) -> float:
+    """The spoken length of a text, in syllables (the name is historical: it used to count letters)."""
+    return max(1.0, sum(spoken_weight(tok) for tok in sentence.split()))
 
 
 def align_by_silence(sentences: list[str], pcm: bytes, rate: int) -> tuple[bytes, list[tuple[float, float]]]:
