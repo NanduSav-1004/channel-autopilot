@@ -90,3 +90,48 @@ def test_gathering_adds_nasa_candidates_only_for_space_topics(monkeypatch, tmp_p
     shots.gather_images(script, [[(0, 1)]], tmp_path, "topic", gen=gen, use_nasa=True)
     assert calls["nasa"] > 0
     assert json.dumps({"ok": True})
+
+
+def test_failed_jobs_do_not_count_and_a_failed_category_can_be_avoided(tmp_path):
+    conn = db.connect(tmp_path / "x.db")
+    for i in range(6):
+        j = db.add_job(conn, f"w{i}", "long", category="what_if")
+        conn.execute("UPDATE jobs SET status = 'failed' WHERE id = ?", (j,))
+    conn.commit()
+    assert topics.pick_category(conn, MIX) == "core"                     # six failures leave the shares where they were
+    assert topics.pick_category(conn, MIX, avoid={"core"}) != "core"
+
+
+def test_daily_chooses_another_topic_when_the_first_fails_for_good(tmp_path, monkeypatch):
+    import sys
+    import types
+
+    from autopilot import cli
+    from autopilot.config import Config
+
+    conn = db.connect(tmp_path / "x.db")
+    cfg = Config(niche="s", audience="a", formats={"long": {"per_day": 1, "min_source_chars": 10}}, dry_run=False,
+                 topics={"enabled": True, "mix": MIX})
+    monkeypatch.setattr(cli.db, "connect", lambda *a, **k: conn)
+    monkeypatch.setattr(cli, "load_config", lambda: cfg)
+    monkeypatch.setattr(cli, "load_env", lambda: None)
+    monkeypatch.setattr(cli, "Stages", lambda *a, **k: types.SimpleNamespace(handlers=dict))
+    seen = {"avoid": [], "runs": 0}
+
+    def fake_mix(c, niche, n, mix, avoid=None, **kw):
+        seen["avoid"].append(avoid)
+        cat = "what_if" if avoid is None else "core"
+        return [db.add_job(c, f"topic {len(seen['avoid'])}", "long", category=cat)]
+
+    def fake_run(c, handlers):
+        seen["runs"] += 1
+        status = "failed" if seen["runs"] == 1 else "done"             # the first topic fails its fact-check three times
+        c.execute("UPDATE jobs SET status = ? WHERE status = 'pending'", (status,))
+        c.commit()
+        return 1
+
+    monkeypatch.setattr(cli.topics, "discover_mix", fake_mix)
+    monkeypatch.setattr(cli, "run_pending", fake_run)
+    monkeypatch.setattr(sys, "argv", ["autopilot", "daily", "--live"])
+    cli.main()                                                          # no SystemExit: a video was finished
+    assert seen["runs"] == 2 and seen["avoid"] == [None, {"what_if"}]

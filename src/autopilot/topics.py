@@ -40,11 +40,14 @@ def _clean_title(title: str) -> str:
     return " ".join(str(title).replace("_", " ").split())
 
 
-def pick_category(conn: sqlite3.Connection, mix: dict[str, float], window: int = 8) -> str:
+def pick_category(conn: sqlite3.Connection, mix: dict[str, float], window: int = 8, avoid: set[str] | None = None) -> str:
     """The category furthest below its target share among the last `window` long videos (jobs made before categories existed
     count as core). With no mix configured every topic is core."""
     mix = {k: v for k, v in (mix or {}).items() if k in CATEGORIES and v > 0} or {"core": 1.0}
-    rows = conn.execute("SELECT category FROM jobs WHERE kind = 'long' ORDER BY id DESC LIMIT ?", (window,)).fetchall()
+    if avoid and len(set(mix) - avoid) >= 1:        # a category whose script just failed is skipped for the replacement topic
+        mix = {k: v for k, v in mix.items() if k not in avoid}
+    rows = conn.execute("SELECT category FROM jobs WHERE kind = 'long' AND status != 'failed' ORDER BY id DESC LIMIT ?",
+                        (window,)).fetchall()
     counts = {k: 0 for k in mix}
     for r in rows:
         counts[r["category"] if r["category"] in counts else "core" if "core" in counts else next(iter(counts))] += 1
@@ -77,11 +80,12 @@ def _candidates(out) -> list[dict]:
     return [c for c in lst if isinstance(c, dict)]
 
 
-def discover_mix(conn: sqlite3.Connection, niche: str, n: int, mix: dict[str, float], **kwargs) -> list[int]:
+def discover_mix(conn: sqlite3.Connection, niche: str, n: int, mix: dict[str, float], avoid: set[str] | None = None,
+                 **kwargs) -> list[int]:
     """Queue n topics, one slot at a time, each from the category the mix says is due next."""
     ids: list[int] = []
     for _ in range(n):
-        cat = pick_category(conn, mix)
+        cat = pick_category(conn, mix, avoid=avoid)
         print(f"[topics] next category: {cat}", flush=True)
         ids += discover(conn, niche, 1, category=cat, **kwargs)
     return ids

@@ -11,7 +11,9 @@ SERIES = {
     "myth_vs_reality": "Open with the common misconception, then dismantle it step by step.",
     "origin_story": "Tell the story of how it was discovered or invented, with the key turning point.",
     "scale_and_numbers": "Build the whole video around surprising numbers and comparisons.",
-    "what_if": "Pose a 'what if' question and reason through the consequences using real science.",
+    "what_if": "Pose a 'what if' question and walk through the consequences, but ONLY those the SOURCE itself describes "
+               "(its mechanisms, effects and numbers). Do not invent calculations, hypothetical distances or percentages, and "
+               "do not extrapolate beyond the SOURCE: if the SOURCE does not say it, leave it out.",
 }
 
 OUTLINE_PROMPT = """You are the scriptwriter for a faceless YouTube channel about {niche}.

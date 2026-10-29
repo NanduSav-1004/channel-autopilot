@@ -331,3 +331,21 @@ def test_thousands_separators_do_not_split_or_change_numbers():
     assert ml.numbers_in("44.7% in 2023") == ["44.7", "2023"] and ml.numbers_in("15 12 students") == ["15", "12"]
     assert ml.missing_numbers("over 3 000 km", "3,000 കിലോമീറ്ററിലധികം") == []
     assert ml.missing_numbers("over 3 000 km", "ദൂരം") == ["3000"]
+
+
+def test_the_last_round_for_a_short_may_leave_out_what_it_cannot_translate_exactly():
+    state = {"omitted": False}
+    prompts = []
+
+    def gen(prompt):
+        prompts.append(prompt)
+        if prompt.startswith("You check"):
+            return {"issues": [] if state["omitted"] else [{"severity": "major", "issue": "received became accepted"}]}
+        if prompt.startswith("A reviewer compared"):
+            return {"real": [True]}
+        if "LEAVE OUT" in prompt:
+            state["omitted"] = True
+        return {"title": "ശീർഷകം", "narration": "ഭാഗികമായ വിവർത്തനം."}
+
+    out = ml.translate_short({"title": "T", "narration": "He received it on May 11."}, 80, gen, log=lambda s: None)
+    assert out["narration"] == "ഭാഗികമായ വിവർത്തനം." and any("LEAVE OUT" in p for p in prompts)

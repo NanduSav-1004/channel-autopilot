@@ -40,6 +40,9 @@ def notify_uploaded(conn) -> None:
     notify.send("\n".join(lines))
 
 
+MAX_TOPIC_TRIES = 3        # a topic whose script keeps failing the fact-check is replaced, up to this many topics per run
+
+
 def ensure_progress(before: int, after: int) -> None:
     """A daily run that finishes no video must fail loudly: a green no-op would hide a dead channel."""
     if after <= before:
@@ -47,7 +50,7 @@ def ensure_progress(before: int, after: int) -> None:
         sys.exit(1)
 
 
-def discover_with_retries(conn, cfg, want: int, tries: int = 3, pause: float = 60.0) -> list[int]:
+def discover_with_retries(conn, cfg, want: int, tries: int = 3, pause: float = 60.0, avoid: set[str] | None = None) -> list[int]:
     """A brief outage of the model providers or Wikipedia must not cost the day's video: wait and try again."""
     import time
 
@@ -55,7 +58,7 @@ def discover_with_retries(conn, cfg, want: int, tries: int = 3, pause: float = 6
 
     for attempt in range(tries):
         try:
-            ids = topics.discover_mix(conn, cfg.niche, want, active_mix(cfg), forbidden=cfg.forbidden_topics,
+            ids = topics.discover_mix(conn, cfg.niche, want, active_mix(cfg), avoid=avoid, forbidden=cfg.forbidden_topics,
                                       min_source_chars=cfg.formats["long"]["min_source_chars"])
             if ids or attempt == tries - 1:
                 return ids
@@ -141,8 +144,18 @@ def main() -> None:
             ids = discover_with_retries(conn, cfg, want)
             print(f"queued {len(ids)} new topic(s)")
     if args.command in ("run", "daily"):
-        n = run_pending(conn, Stages(conn, cfg, privacy=args.privacy).handlers())
-        print(f"processed {n} job(s); dry_run={cfg.dry_run}")
+        tries = MAX_TOPIC_TRIES if args.command == "daily" else 1
+        for round_ in range(tries):
+            n = run_pending(conn, Stages(conn, cfg, privacy=args.privacy).handlers())
+            print(f"processed {n} job(s); dry_run={cfg.dry_run}")
+            if args.command != "daily" or done_count(conn) > done_before or round_ == tries - 1:
+                break
+            failed = [r["category"] or "core" for r in conn.execute(
+                "SELECT category FROM jobs WHERE kind = 'long' AND status = 'failed' AND date(created_at) = date('now')")]
+            if not failed:                    # nothing failed for good (an outage, say): a later run picks the same job up again
+                break
+            print(f"[daily] today's topic failed after all attempts ({', '.join(failed)}); choosing another topic", flush=True)
+            discover_with_retries(conn, cfg, 1, avoid=set(failed))
         if args.command == "daily":
             for row in conn.execute("SELECT id, stage, status, attempts, error FROM jobs WHERE status != 'done'"):
                 print(dict(row))

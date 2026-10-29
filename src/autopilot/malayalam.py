@@ -123,6 +123,14 @@ ENGLISH:
 MALAYALAM:
 {malayalam}"""
 
+OMIT_PROMPT = """
+
+The earlier translations still had these problems:
+{issues}
+Earlier translation: {previous}
+Translate once more, and this time LEAVE OUT every sentence or detail that you cannot translate exactly as the English says it. A
+shorter script with only exact statements is fine. Keep the hook first and a payoff sentence last."""
+
 META_PROMPT = """Translate this YouTube video's metadata into Malayalam for a Kerala audience.
 - title: natural and curiosity-driven, at most 70 characters, keep the main keyword (English terms may stay in English).
 - thumbnail_text: 2-4 punchy words for the thumbnail, Malayalam script.
@@ -210,17 +218,19 @@ def translate_short(short: dict, max_words: int, gen: Callable[[str], dict] = ll
     """A Short's Malayalam title and narration: translated to fit `max_words`, checked, repaired, or rejected."""
     prompt = SHORT_PROMPT.format(seconds=52, max_words=max_words, title=short["title"], narration=short["narration"])
     out = gen(prompt)
-    for attempt in range(REPAIR_ROUNDS + 1):
+    for attempt in range(REPAIR_ROUNDS + 2):
         narration, title = str(out["narration"]).strip(), str(out.get("title", short["title"])).strip()
         issues = check_short(short["narration"], narration, gen) if narration else ["the translation is empty"]
         if len(narration.split()) > max_words * 1.15:
             issues.append(f"too long: {len(narration.split())} words, the limit is {max_words}")
         if not issues:
             return {"title": title[:70], "narration": narration}
-        if attempt == REPAIR_ROUNDS:
+        if attempt == REPAIR_ROUNDS + 1:
             raise TranslationRejected(f"Short {short['title']!r}: " + "; ".join(issues[:3]))
         log(f"[ml] repairing the Short {short['title']!r}: {'; '.join(issues[:2])}")
-        out = gen(prompt + REPAIR_PROMPT.format(issues="\n".join(f"- {i}" for i in issues), previous=narration))
+        text = "\n".join(f"- {i}" for i in issues)
+        extra = OMIT_PROMPT if attempt == REPAIR_ROUNDS else REPAIR_PROMPT         # the last round may leave a detail out
+        out = gen(prompt + extra.format(issues=text, previous=narration))
     raise AssertionError("unreachable")
 
 
