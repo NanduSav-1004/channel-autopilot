@@ -849,6 +849,38 @@ def run_daily_edition(conn, cfg, privacy: str, live: bool, root: Path, retry: bo
     return f"malayalam edition: done ({vid or 'dry run'})"
 
 
+def redo_shorts(conn, now=None) -> list[str]:
+    """Today's Malayalam Shorts are to be made again (for example after a timing fix). Each old one is deleted from the Malayalam
+    channel and cleared from the job list so the next step rebuilds it, but ONLY while it is still private and scheduled: a Short that
+    is already public is never touched. Returns what was done, one line per Short."""
+    from datetime import datetime, timezone
+
+    from autopilot import schedule, upload
+
+    now = now or datetime.now(timezone.utc)
+    long_job = conn.execute("SELECT id FROM jobs WHERE kind = 'long' AND ml_video_id IS NOT NULL AND date(created_at) = date('now') "
+                            "ORDER BY id DESC LIMIT 1").fetchone()
+    if not long_job:
+        return ["redo: no Malayalam long video today"]
+    lines = []
+    rows = conn.execute("SELECT id, short_idx, ml_video_id FROM jobs WHERE parent_id = ? AND ml_video_id IS NOT NULL ORDER BY short_idx",
+                        (long_job["id"],)).fetchall()
+    yt = upload._client("ml")
+    for r in rows:
+        items = yt.videos().list(part="status", id=r["ml_video_id"]).execute().get("items", [])
+        st = items[0]["status"] if items else None
+        when = schedule.parse(st["publishAt"]) if st and st.get("publishAt") else None
+        if st is not None and not (st["privacyStatus"] == "private" and when and when > now):
+            lines.append(f"Short {r['short_idx'] + 1}: kept (already public or not scheduled)")
+            continue
+        if st is not None:
+            upload.delete_video(r["ml_video_id"], "ml")
+        conn.execute("UPDATE jobs SET ml_video_id = NULL, ml_publish_at = NULL, ml_status = NULL WHERE id = ?", (r["id"],))
+        conn.commit()
+        lines.append(f"Short {r['short_idx'] + 1}: old scheduled video deleted, will be rebuilt")
+    return lines
+
+
 def _only_shorts(conn, cfg, job, privacy: str, live: bool, build_only: bool, root: Path, ml_cfg: dict) -> str:
     """The Malayalam long video is up; make the Shorts that are still missing (a manual retry after a failure)."""
     src = next(iter(sorted(root.glob(f"{job['id']:04d}-*"))), None)

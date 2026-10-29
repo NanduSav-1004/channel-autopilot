@@ -3,6 +3,7 @@ import json
 import sqlite3
 import subprocess
 import sys
+import types
 import wave
 
 import numpy as np
@@ -364,3 +365,33 @@ def test_words_after_a_year_are_not_pulled_early():
     out = ml.words_in((0.0, 4.0), words)
     assert out[0]["e"] > 2.5                                       # the year takes most of the first two seconds
     assert out[1]["s"] == out[0]["e"] and out[2]["e"] == 4.0
+
+
+def test_redo_deletes_only_still_private_scheduled_shorts_and_clears_them(tmp_path, monkeypatch):
+    from datetime import datetime, timezone
+
+    from autopilot import db, upload
+
+    conn = db.connect(tmp_path / "x.db")
+    long_id = db.add_job(conn, "t", "long")
+    conn.execute("UPDATE jobs SET video_id = 'V', ml_video_id = 'MLONG' WHERE id = ?", (long_id,))
+    ids = []
+    for i, vid in enumerate(("PRIV", "PUB")):
+        s = db.add_job(conn, f"s{i}", "short", parent_id=long_id, short_idx=i)
+        conn.execute("UPDATE jobs SET video_id = ?, ml_video_id = ?, ml_status = 'done' WHERE id = ?", (f"E{i}", vid, s))
+        ids.append(s)
+    conn.commit()
+    status = {"PRIV": {"privacyStatus": "private", "publishAt": "2026-10-30T02:00:00Z"},
+              "PUB": {"privacyStatus": "public"}}
+
+    class Videos:
+        def list(self, part, id):
+            return types.SimpleNamespace(execute=lambda: {"items": [{"status": status[id]}]})
+
+    deleted = []
+    monkeypatch.setattr(upload, "_client", lambda profile="en": types.SimpleNamespace(videos=lambda: Videos()))
+    monkeypatch.setattr(upload, "delete_video", lambda vid, profile="en": deleted.append((vid, profile)))
+    lines = ml.redo_shorts(conn, now=datetime(2026, 10, 29, 12, 0, tzinfo=timezone.utc))
+    assert deleted == [("PRIV", "ml")] and "deleted" in lines[0] and "kept" in lines[1]
+    rows = {r["short_idx"]: r for r in conn.execute("SELECT * FROM jobs WHERE parent_id = ?", (long_id,))}
+    assert rows[0]["ml_video_id"] is None and rows[0]["ml_status"] is None and rows[1]["ml_video_id"] == "PUB"

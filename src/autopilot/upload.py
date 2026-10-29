@@ -40,3 +40,7 @@ def insert_video(
 
 def set_thumbnail(video_id: str, thumbnail: Path, profile: str = "en") -> None:
     _client(profile).thumbnails().set(videoId=video_id, media_body=MediaFileUpload(str(thumbnail))).execute()
+
+
+def delete_video(video_id: str, profile: str = "en") -> None:
+    _client(profile).videos().delete(id=video_id).execute()

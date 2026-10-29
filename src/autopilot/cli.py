@@ -102,6 +102,7 @@ def main() -> None:
     parser.add_argument("--src", help="ml: the finished English job folder to make a Malayalam edition of")
     parser.add_argument("--auto", action="store_true", help="ml: make and upload today's Malayalam edition (after `daily`)")
     parser.add_argument("--preview", type=int, metavar="N", help="topics: show the next N proposed topics without queueing any")
+    parser.add_argument("--redo-shorts", action="store_true", help="ml --auto: delete today's still-private Malayalam Shorts and rebuild them")
     parser.add_argument("--retry", action="store_true", help="ml --auto: also retry editions that failed earlier today")
     parser.add_argument("--voice", help="ml: Gemini voice name (default: rotates Charon, Achird, Sulafat)")
     args = parser.parse_args()
@@ -117,7 +118,12 @@ def main() -> None:
 
         if args.live:
             cfg.dry_run = False
-        print(malayalam.run_daily_edition(db.connect(), cfg, args.privacy, not cfg.dry_run, Path("output"), args.retry), flush=True)
+        conn = db.connect()
+        if args.redo_shorts:
+            for line in malayalam.redo_shorts(conn):
+                print(f"[ml] {line}", flush=True)
+        print(malayalam.run_daily_edition(conn, cfg, args.privacy, not cfg.dry_run, Path("output"), args.retry or args.redo_shorts),
+              flush=True)
         return
     if args.command == "ml":
         from pathlib import Path

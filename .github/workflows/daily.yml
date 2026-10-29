@@ -17,6 +17,10 @@ on:
         description: "Really upload to YouTube (otherwise dry run)"
         type: boolean
         default: false
+      redo_ml_shorts:
+        description: "Delete today's still-private Malayalam Shorts and make them again"
+        type: boolean
+        default: false
       privacy:
         description: "Privacy for uploaded videos"
         type: choice
@@ -108,6 +112,7 @@ jobs:
           [ "$LIVE" = "true" ] && ARGS="$ARGS --live"
           # a manual run retries a Malayalam edition that failed earlier today; the scheduled backups do not
           [ "${{ github.event_name }}" = "workflow_dispatch" ] && ARGS="$ARGS --retry"
+          [ "${{ inputs.redo_ml_shorts }}" = "true" ] && ARGS="$ARGS --redo-shorts"
           autopilot $ARGS 2>&1 | tee -a run.log
 
       - name: Keep the Malayalam edition for review (only when it was built but not uploaded)
