@@ -177,3 +177,19 @@ def test_render_handles_borrowed_media_shown_from_a_different_angle(tmp_path):
     out = tmp_path / "v.mp4"
     render_photo_video({"title": "T"}, timings, pools, plan, nar, out, tmp_path / "w")
     assert out.exists() and out.stat().st_size > 10_000
+
+
+def test_caption_events_never_overlap_even_when_a_word_is_very_short(tmp_path):
+    from autopilot.render import LONG_CAPTIONS, write_ass_words
+
+    words = [{"w": "aa", "s": 1.00, "e": 1.20}, {"w": "bb", "s": 1.20, "e": 1.21}, {"w": "cc", "s": 1.21, "e": 1.22}, {"w": "dd", "s": 1.30, "e": 1.60}]
+    timings = [{"heading": "h", "start": 0, "end": 3, "sentences": [{"text": "aa bb cc dd", "start": 1.0, "end": 1.6, "words": words}]}]
+    p = tmp_path / "c.ass"
+    write_ass_words(timings, p, LONG_CAPTIONS)
+
+    def secs(ts):
+        h, m, s = ts.split(":")
+        return int(h) * 3600 + int(m) * 60 + float(s)
+
+    spans = [(secs(ln.split(",")[1]), secs(ln.split(",")[2])) for ln in p.read_text().splitlines() if ln.startswith("Dialogue")]
+    assert all(b[0] >= a[1] - 1e-9 for a, b in itertools.pairwise(spans)) and all(e - s >= 0.039 for s, e in spans)

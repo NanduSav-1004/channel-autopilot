@@ -153,13 +153,13 @@ def frame_number(shot, size, t) -> Image.Image:
     k = ease((t - 0.35) / 1.9)
     value = fmt(it["value"] * k, it["value"])
     big = fit(fmt(it["value"], it["value"]), FONT_BLACK, int(min(w * 0.42, h * 0.34) if h < w else w * 0.34), int(w * 0.84))
-    pulse = 1 + 0.015 * np.sin(max(0, t - 2.4) * 4)
     cx, cy = w / 2, h * (0.5 if h < w else 0.33)
     glow = Image.new("RGBA", size, (0, 0, 0, 0))
     ImageDraw.Draw(glow).ellipse([cx - w * 0.26, cy - h * 0.17, cx + w * 0.26, cy + h * 0.17], fill=AMBER + (int(70 * k),))
     img = Image.alpha_composite(img.convert("RGBA"), glow.filter(ImageFilter.GaussianBlur(min(w, h) * 0.07))).convert("RGB")
     d = ImageDraw.Draw(img, "RGBA")
-    text(d, (cx, cy), value, int(big * pulse), AMBER, FONT_BLACK, "mm", ease((t - 0.2) / 0.3))
+    full_w = font(FONT_BLACK, big).getlength(fmt(it["value"], it["value"]))
+    text(d, (cx - full_w / 2, cy), value, big, AMBER, FONT_BLACK, "lm", ease((t - 0.2) / 0.3))     # left-anchored: digits do not jitter
     if it["unit"]:
         text(d, (cx, cy + big * 0.72), it["unit"], int(big * 0.3), WHITE, FONT_BOLD, "mm", ease((t - 1.2) / 0.5))
     if it["label"]:
@@ -177,7 +177,7 @@ def frame_bars(shot, size, t) -> Image.Image:
     top = h * (0.27 if h < w else 0.22)
     area = h * (0.56 if h < w else 0.36)
     row = area / len(items)
-    left, right = (w * 0.2 if h < w else w * 0.3), w * 0.92
+    left, right = (w * 0.2 if h < w else w * 0.3), w * 0.78                  # bars stop short of the edge: labels always fit outside
     vmax = max(i["value"] for i in items) or 1
     best = max(range(len(items)), key=lambda i: items[i]["value"])
     for n, it in enumerate(items):
@@ -192,9 +192,8 @@ def frame_bars(shot, size, t) -> Image.Image:
             col = AMBER if n == best else (96, 150, 235)
             rounded(d, (left, y, left + max(bar_h, full * k), y + bar_h), int(bar_h / 2), col + (255,))
         val = fmt(it["value"] * k, it["value"]) + (f" {it['unit']}" if it["unit"] else "")
-        text(d, (left + max(bar_h, full * k) + 18 if full * k < (right - left) * 0.8 else left + max(bar_h, full * k) - 22, y + bar_h / 2),
-             val, int(bar_h * 0.5), WHITE if full * k < (right - left) * 0.8 else NAVY, FONT_BLACK,
-             "lm" if full * k < (right - left) * 0.8 else "rm", ease((t - 0.7 - 0.35 * n) / 0.4))
+        text(d, (left + max(bar_h, full * k) + 18, y + bar_h / 2), val, int(bar_h * 0.5), AMBER if n == best else WHITE, FONT_BLACK,
+             "lm", ease((t - 0.7 - 0.35 * n) / 0.4))
     return img
 
 

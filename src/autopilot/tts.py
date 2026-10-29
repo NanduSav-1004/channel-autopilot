@@ -3,6 +3,7 @@ timings are exact."""
 import base64
 import difflib
 import io
+import itertools
 import json
 import os
 import random
@@ -370,6 +371,23 @@ def refine_word_times(script_words: list[dict], heard: list[dict], lo: float, hi
     return out
 
 
+def words_look_wrong(words: list[dict], start: float, end: float) -> bool:
+    """True when a sentence's word times are not believable: several words squeezed into a few hundredths of a second, a long hole
+    in the middle, or most of the sentence left empty. Whisper's timestamps drift on long audio, and words refined to the wrong place
+    were clamped into the last instants of the sentence (a burst of captions, then none for seconds)."""
+    if len(words) < 2:
+        return False
+    span = max(end - start, 0.1)
+    short = run = 0
+    for w in words:
+        run = run + 1 if w["e"] - w["s"] < 0.07 else 0
+        short = max(short, run)
+    gaps = max((b["s"] - a["e"] for a, b in itertools.pairwise(words)), default=0.0)
+    lead = words[0]["s"] - start
+    covered = sum(w["e"] - w["s"] for w in words)
+    return short >= 3 or gaps > 1.2 or lead > 1.0 or covered < 0.45 * span
+
+
 def add_word_times(out_wav: Path, timings: list[dict], whisper=None) -> None:
     """Give every sentence a `words` list with start/end times. Estimates first; then, one Whisper call per section,
     the real times. Whisper being unavailable just leaves the estimates."""
@@ -388,7 +406,11 @@ def add_word_times(out_wav: Path, timings: list[dict], whisper=None) -> None:
         flat = [w for sent in sec["sentences"] for w in sent["words"]]
         fixed = iter(refine_word_times(flat, heard, sec["sentences"][0]["start"], sec["sentences"][-1]["end"]))
         for sent in sec["sentences"]:
-            sent["words"] = clamp_words([next(fixed) for _ in sent["words"]], sent["start"], sent["end"])
+            words = clamp_words([next(fixed) for _ in sent["words"]], sent["start"], sent["end"])
+            if words_look_wrong(words, sent["start"], sent["end"]):           # keep the even spread over the exact sentence span
+                print(f"[tts] word times for {sent['text'][:40]!r} looked wrong; using an even spread", flush=True)
+                words = estimate_word_times(sent["text"], sent["start"], sent["end"])
+            sent["words"] = words
 
 
 def clamp_words(words: list[dict], lo: float, hi: float) -> list[dict]:

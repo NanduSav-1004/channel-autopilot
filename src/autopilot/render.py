@@ -115,7 +115,13 @@ def write_ass_words(timings: list[dict], path: Path, look: dict) -> None:
                     events.append([cur["s"], end, text])
     for ev, nxt in itertools.pairwise(events):  # a phrase lingers a moment, but never into the next one
         ev[1] = min(ev[1], nxt[0])
-    lines = [f"Dialogue: 0,{_ass_time(s)},{_ass_time(max(e, s + 0.04))},Cap,{text}" for s, e, text in events]
+    prev_end = 0.0                              # no two events may overlap, even by a frame: libass would stack the second one higher
+    for ev in events:
+        ev[0] = max(ev[0], prev_end)
+        ev[1] = max(ev[1], ev[0] + 0.04)
+        ev[0], ev[1] = round(ev[0], 2), round(ev[1], 2)       # ASS times have a resolution of 0.01 s: round once, here
+        prev_end = ev[1]
+    lines = [f"Dialogue: 0,{_ass_time(s)},{_ass_time(e)},Cap,{text}" for s, e, text in events]
     path.write_text(header + "\n".join(lines) + "\n", encoding="utf-8")
 
 

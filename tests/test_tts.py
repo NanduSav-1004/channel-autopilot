@@ -75,3 +75,38 @@ def test_fade_out_ends_in_silence_without_changing_the_length():
     out = tts.fade_out(pcm, 24000)
     a = np.frombuffer(out, dtype="<i2")
     assert len(out) == len(pcm) and abs(int(a[-1])) < 100 and np.abs(a[:12000]).max() > 7000
+
+
+def test_word_times_that_are_squeezed_or_far_from_their_sentence_are_rejected():
+    from autopilot import tts
+
+    ok = tts.estimate_word_times("one two three four five six", 10.0, 13.0)
+    assert not tts.words_look_wrong(ok, 10.0, 13.0)
+    squeezed = [{"w": "w", "s": 12.90 + i * 0.01, "e": 12.91 + i * 0.01} for i in range(6)]       # a burst at the very end
+    assert tts.words_look_wrong(squeezed, 10.0, 13.0)
+    late = [{"w": "w", "s": 14.0 + i * 0.4, "e": 14.3 + i * 0.4} for i in range(4)]                 # a long empty lead-in
+    assert tts.words_look_wrong(late, 10.0, 16.0)
+    hole = ok[:3] + [{**w, "s": w["s"] + 2.0, "e": w["e"] + 2.0} for w in ok[3:]]
+    assert tts.words_look_wrong(hole, 10.0, 16.0)
+    assert not tts.words_look_wrong(ok[:1], 10.0, 13.0)
+
+
+def test_a_broken_whisper_refinement_falls_back_to_an_even_spread(tmp_path):
+    import wave
+
+    import numpy as np
+
+    from autopilot import tts
+
+    wav = tmp_path / "n.wav"
+    with wave.open(str(wav), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(24000)
+        w.writeframes(np.zeros(24000 * 6, dtype="<i2").tobytes())
+    timings = [{"heading": "h", "start": 0.0, "end": 6.0,
+                "sentences": [{"text": "one two three four five six", "start": 0.0, "end": 6.0}]}]
+    late = [{"word": w, "start": 5.9 + i * 0.01, "end": 5.91 + i * 0.01} for i, w in enumerate(["one", "two", "three", "four", "five", "six"])]
+    tts.add_word_times(wav, timings, whisper=lambda b: late)           # Whisper "heard" every word in the last instants
+    words = timings[0]["sentences"][0]["words"]
+    assert not tts.words_look_wrong(words, 0.0, 6.0) and words[0]["s"] < 0.5 and words[-1]["e"] <= 6.0
