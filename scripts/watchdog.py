@@ -26,6 +26,26 @@ def malayalam_missing(db_path: str) -> str | None:
     return f"status: {row[2] or 'not started'}"
 
 
+def shorts_missing(db_path: str, per_day: int = 3) -> str | None:
+    """None if today's long video has `per_day` Shorts uploaded (English and Malayalam); else what is short."""
+    conn = sqlite3.connect(db_path)
+    row = conn.execute("SELECT id FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL AND date(created_at) = date('now') "
+                       "ORDER BY id DESC LIMIT 1").fetchone()
+    if row is None:
+        return None
+    en = conn.execute("SELECT COUNT(*) FROM jobs WHERE parent_id = ? AND kind = 'short' AND video_id IS NOT NULL", (row[0],)).fetchone()[0]
+    try:
+        ml = conn.execute("SELECT COUNT(*) FROM jobs WHERE parent_id = ? AND kind = 'short' AND ml_video_id IS NOT NULL", (row[0],)).fetchone()[0]
+    except sqlite3.OperationalError:
+        ml = per_day
+    problems = []
+    if en < per_day:
+        problems.append(f"English Shorts {en}/{per_day}")
+    if ml < per_day:
+        problems.append(f"Malayalam Shorts {ml}/{per_day}")
+    return ", ".join(problems) or None
+
+
 def uploaded_today(db_path: str) -> int:
     conn = sqlite3.connect(db_path)
     return conn.execute("SELECT COUNT(*) FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL "
@@ -48,6 +68,14 @@ def main() -> None:
         db.write_bytes(subprocess.run(["git", "-C", tmp, "show", "FETCH_HEAD:data/autopilot.db"], check=True, capture_output=True).stdout)
         n = uploaded_today(str(db))
         ml_problem = malayalam_missing(str(db)) if n else None
+        short_problem = shorts_missing(str(db)) if n else None
+    if n and short_problem and os.environ.get("TELEGRAM_BOT_TOKEN"):
+        msg = (f"Brightwork WATCHDOG ({now_ist()}): today's videos are up but the daily Shorts rule is not met ({short_problem}). "
+               "Run the workflow by hand (Run workflow, tick live, privacy public): it makes the missing Shorts. "
+               "https://github.com/NanduSav-1004/channel-autopilot/actions/workflows/daily.yml")
+        print(msg)
+        notify.send(msg)
+        sys.exit(1)
     if n and ml_problem and os.environ.get("TELEGRAM_BOT_TOKEN"):
         msg = (f"Brightwork WATCHDOG ({now_ist()}): today's English video is up but the MALAYALAM video is not ({ml_problem}). "
                "Run the workflow by hand (Run workflow, tick live, privacy public): it rebuilds the Malayalam edition. "

@@ -412,3 +412,36 @@ def test_captions_after_an_equation_wait_for_the_voice():
     equation = out[2]
     assert equation["e"] - equation["s"] > 1.5                        # the equation is on screen for a while, not flashed past
     assert out[3]["s"] == equation["e"]
+
+
+def test_a_short_that_cannot_be_made_faithful_whole_is_translated_one_sentence_at_a_time():
+    short = {"title": "Atoms", "narration": "Einstein received a paper on May 11. Atoms are real. Brownian motion proves it. "
+                                             "The paper had five parts. He was a clerk then. It changed physics forever."}
+
+    def gen(prompt):
+        if prompt.startswith("You check"):
+            bad = "received" in prompt and "accepted" in prompt                # one sentence keeps coming out wrong
+            return {"issues": [{"severity": "major", "issue": "received became accepted"}] if bad else []}
+        if prompt.startswith("A reviewer compared"):
+            return {"real": [True]}
+        if prompt.startswith("Translate this ONE sentence"):
+            sentence = prompt.rsplit("Sentence: ", 1)[1]
+            return {"text": "അംഗീകരിച്ചു" + " received accepted" if sentence.startswith("Einstein") else "വിവർത്തനം: " + sentence}
+        return {"title": "x", "narration": "bad"}
+
+    out = ml.translate_short_by_sentence(short, 80, gen, log=lambda s: None)
+    assert "accepted" not in out["narration"] and len(out["narration"].split(". ")) >= 4        # the bad sentence was left out
+
+
+def test_too_few_faithful_sentences_means_the_short_is_rejected():
+    import pytest
+
+    def gen(prompt):
+        if prompt.startswith("You check"):
+            return {"issues": [{"severity": "major", "issue": "wrong"}]}
+        if prompt.startswith("A reviewer compared"):
+            return {"real": [True]}
+        return {"text": "ഒന്ന്"}
+
+    with pytest.raises(ml.TranslationRejected):
+        ml.translate_short_by_sentence({"title": "T", "narration": "One two. Three four. Five six. Seven eight."}, 80, gen, log=lambda s: None)

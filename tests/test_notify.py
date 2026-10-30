@@ -57,3 +57,19 @@ def test_ist_formats_indian_time_and_utc():
     assert ist("2026-10-24T18:00:00Z") == "24 Oct 11:30 PM IST (18:00 UTC)"
     assert ist("2026-10-25T02:00:00Z") == "25 Oct 7:30 AM IST (02:00 UTC)"
     assert ist(None) == "immediately"
+
+
+def test_the_watchdog_counts_todays_shorts_in_both_languages(tmp_path):
+    sys.path.insert(0, "scripts")
+    import watchdog
+
+    c = sqlite3.connect(tmp_path / "a.db")
+    c.execute("CREATE TABLE jobs (id INTEGER PRIMARY KEY, kind TEXT, video_id TEXT, created_at TEXT, parent_id INTEGER, ml_video_id TEXT)")
+    c.execute("INSERT INTO jobs (kind, video_id, created_at) VALUES ('long', 'V', datetime('now'))")
+    for i in range(2):
+        c.execute("INSERT INTO jobs (kind, video_id, created_at, parent_id, ml_video_id) VALUES ('short', ?, datetime('now'), 1, ?)", (f"S{i}", f"M{i}"))
+    c.commit()
+    assert "English Shorts 2/3" in watchdog.shorts_missing(str(tmp_path / "a.db")) and "Malayalam Shorts 2/3" in watchdog.shorts_missing(str(tmp_path / "a.db"))
+    c.execute("INSERT INTO jobs (kind, video_id, created_at, parent_id, ml_video_id) VALUES ('short', 'S9', datetime('now'), 1, 'M9')")
+    c.commit()
+    assert watchdog.shorts_missing(str(tmp_path / "a.db")) is None

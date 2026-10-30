@@ -141,10 +141,17 @@ def main() -> None:
         return
     conn = db.connect()
     done_before = done_count(conn)
+    skip_discovery = False
     if args.command == "daily" and not cfg.dry_run and not args.force and already_done_today(conn, cfg):
-        print("today's video is already uploaded; nothing to do (use --force to make another)")
-        return
-    if args.command in ("topics", "daily"):
+        stages = Stages(conn, cfg, privacy=args.privacy)
+        added = stages.fill_missing_shorts()       # the daily rule is N Shorts: a run that finds fewer repairs the day
+        pending = db.pending_count(conn, "long") + db.pending_count(conn, "short")
+        if not added and not pending:
+            print("today's video is already uploaded; nothing to do (use --force to make another)")
+            return
+        print(f"[daily] today's video is up; finishing its Shorts ({added} queued, {pending} already pending)", flush=True)
+        skip_discovery = True
+    if args.command in ("topics", "daily") and not skip_discovery:
         want = cfg.formats["long"]["per_day"] - db.pending_count(conn, "long")
         if want > 0:
             ids = discover_with_retries(conn, cfg, want)

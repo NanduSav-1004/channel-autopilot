@@ -158,7 +158,7 @@ def repair_shorts(cands: list[dict], per: dict[int, list[str]], source: dict, ge
 
 
 def plan_shorts(
-    script: dict, source: dict, n: int, gen: Callable = llm.generate_json,
+    script: dict, source: dict, n: int, gen: Callable = llm.generate_json, exclude: set[int] | None = None,
 ) -> list[dict]:
     """Up to n fact-checked Shorts. Over-long drafts get one request to shorten; a Short with an
     unsupported sentence is dropped, not repaired: fewer Shorts is better than a wrong one."""
@@ -169,7 +169,7 @@ def plan_shorts(
         for i, s in enumerate(sections))
     out = gen(PLAN_PROMPT.format(title=script["title"], n=n * 2, target_min=TARGET_MIN, target_max=TARGET_MAX,
                                  sections=listing))  # ask for twice as many: the length and fact-check filters drop some
-    used: set[int] = set()
+    used: set[int] = set(exclude or ())          # sections that already have a Short are not offered again
     cands, too_long = _accept(out, len(sections), used)
     print(f"[shorts] model proposed {len(out.get('shorts', [])) if isinstance(out, dict) else 0}: "
           f"{len(cands)} usable, {len(too_long)} too long", flush=True)
@@ -271,3 +271,45 @@ def short_description(hook: str, parent_video_id: str | None, source_url: str | 
             room -= len(line) + 1
         text += header + "\n".join(kept)
     return text[:5000]
+
+
+def _plain_title(heading: str) -> str:
+    title = re.sub(r"^(Hook|Payoff|Foundations|Intro|Conclusion)\s*[:\u2013\u2014-]\s*", "", heading.strip(), flags=re.IGNORECASE)
+    return (title[:57].rsplit(" ", 1)[0] + "...") if len(title) > 60 else title
+
+
+def extractive_shorts(script: dict, n: int, exclude: set[int] | None = None) -> list[dict]:
+    """The last resort that makes "n Shorts a day" a rule: a Short made only of sentences taken VERBATIM from one section of the long
+    script. That script already passed the fact-check, so nothing new needs checking. The hook (first sentence) and payoff (last
+    sentence) are kept, with as many middle sentences as fit. Less punchy than a rewritten Short, but never wrong and never missing."""
+    out: list[dict] = []
+    for i, sec in enumerate(script.get("sections", [])):
+        if i in (exclude or set()):
+            continue
+        text = trim_to_limit(sec["narration"], TARGET_MAX)
+        if text and MIN_WORDS <= _words(text) <= MAX_WORDS:
+            out.append({"section_index": i, "title": _plain_title(sec["heading"]), "narration": text})
+    out.sort(key=lambda s: -_words(s["narration"]))      # the fuller sections make the better Shorts
+    return sorted(out[:n], key=lambda s: s["section_index"])
+
+
+def plan_shorts_strict(script: dict, source: dict, n: int, gen: Callable = llm.generate_json, log: Callable[[str], None] = print,
+                       have: list[dict] | None = None) -> list[dict]:
+    """Exactly n Shorts whenever the script has enough sections: first the normal planner, then a second planning round for what is
+    missing, then verbatim extracts from the long script. `have` = Shorts that already exist (their sections are not reused)."""
+    have = list(have or [])
+    got: list[dict] = []
+    for attempt in range(2):
+        need = n - len(have) - len(got)
+        if need <= 0:
+            break
+        try:
+            got += plan_shorts(script, source, need, gen, exclude={s["section_index"] for s in have + got})
+        except (llm.LLMError, KeyError, TypeError, ValueError) as exc:
+            log(f"[shorts] planning round {attempt + 1} failed ({type(exc).__name__}); trying again")
+    need = n - len(have) - len(got)
+    if need > 0:
+        extra = extractive_shorts(script, need, {s["section_index"] for s in have + got})
+        log(f"[shorts] only {len(got)} rewritten Short(s) passed; adding {len(extra)} made of the long script's own sentences")
+        got += extra
+    return got[:max(0, n - len(have))]

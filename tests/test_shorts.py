@@ -1,5 +1,6 @@
 import itertools
 import json
+import re
 import shutil
 import subprocess
 import wave
@@ -343,3 +344,65 @@ def test_a_short_that_keeps_failing_after_the_repair_rounds_is_dropped():
 
     res = shorts.plan_shorts(SCRIPT, SOURCE, 3, gen=gen)
     assert [s["section_index"] for s in res] == [0, 2]
+
+
+def _script(n_sections=7, sentences=14):
+    secs = []
+    for i in range(n_sections):
+        body = " ".join(f"Sentence {i}-{k} states a plain verified fact about topic {i}." for k in range(sentences))
+        secs.append({"heading": f"Hook: Part {i} of the story", "narration": body})
+    return {"title": "T", "sections": secs}
+
+
+def test_extractive_shorts_use_the_long_scripts_own_sentences_and_fit_the_limits():
+    script = _script()
+    out = shorts.extractive_shorts(script, 3)
+    assert len(out) == 3 and len({s["section_index"] for s in out}) == 3
+    for s in out:
+        assert shorts.MIN_WORDS <= len(s["narration"].split()) <= shorts.MAX_WORDS
+        src = script["sections"][s["section_index"]]["narration"]
+        assert all(sent in src for sent in re.split(r"(?<=[.!?])\s+", s["narration"]))       # verbatim: nothing new to fact-check
+        assert s["title"].startswith("Part ")                                                # "Hook:" is stripped from the heading
+    assert shorts.extractive_shorts(script, 3, exclude={0, 1, 2, 3, 4})[0]["section_index"] in (5, 6)
+
+
+def test_the_strict_planner_always_returns_the_daily_number_when_the_script_has_sections():
+    script = _script()
+    logs = []
+    # the model proposes nothing usable at all
+    out = shorts.plan_shorts_strict(script, SOURCE, 3, gen=lambda p: {"shorts": []}, log=logs.append)
+    assert len(out) == 3 and any("made of the long script" in line for line in logs)
+    # the model fails outright
+    from autopilot import llm
+
+    def boom(p):
+        raise llm.LLMError("down")
+
+    assert len(shorts.plan_shorts_strict(script, SOURCE, 3, gen=boom, log=logs.append)) == 3
+    # Shorts that already exist are respected: only the missing one is made, from a section not used yet
+    have = [{"section_index": 0, "title": "a", "narration": "x"}, {"section_index": 1, "title": "b", "narration": "y"}]
+    more = shorts.plan_shorts_strict(script, SOURCE, 3, gen=lambda p: {"shorts": []}, log=logs.append, have=have)
+    assert len(more) == 1 and more[0]["section_index"] not in (0, 1)
+
+
+def test_queue_shorts_tops_up_a_day_that_came_up_short(tmp_path, monkeypatch):
+    import json
+
+    from autopilot import db
+    from autopilot.config import Config
+    from autopilot.stages import Stages
+
+    conn = db.connect(tmp_path / "x.db")
+    cfg = Config(niche="s", audience="a", formats={"long": {}, "short": {"per_day": 3}}, dry_run=False)
+    long_id = db.add_job(conn, "topic", "long", "Source")
+    conn.execute("UPDATE jobs SET video_id = 'V' WHERE id = ?", (long_id,))
+    conn.commit()
+    st = Stages(conn, cfg, root=tmp_path)
+    d = st.dir(conn.execute("SELECT * FROM jobs WHERE id = ?", (long_id,)).fetchone())
+    (d / "script.json").write_text(json.dumps(_script()))
+    (d / "source.json").write_text(json.dumps(SOURCE))
+    monkeypatch.setattr(shorts, "plan_shorts", lambda *a, **k: [])          # the model gives nothing: the fallback must fill all three
+    assert st.fill_missing_shorts() == 3
+    rows = conn.execute("SELECT short_idx FROM jobs WHERE parent_id = ? ORDER BY short_idx", (long_id,)).fetchall()
+    assert [r[0] for r in rows] == [0, 1, 2] and len(json.loads((d / "shorts.json").read_text())) == 3
+    assert st.fill_missing_shorts() == 0                                      # nothing more to do the next time

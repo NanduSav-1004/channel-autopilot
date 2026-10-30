@@ -16,6 +16,7 @@ import numpy as np
 
 from autopilot import llm, tts
 from autopilot.config import mascot_style
+from autopilot.shots import estimate_timings as shots_estimate_timings
 
 TRANSLATE_MODELS = "gemini-3.5-flash,gemini-3.1-flash-lite"
 ML_VOICES = [{"engine": "gemini", "name": n} for n in ("Charon", "Achird", "Sulafat")]
@@ -131,6 +132,12 @@ Earlier translation: {previous}
 Translate once more, and this time LEAVE OUT every sentence or detail that you cannot translate exactly as the English says it. A
 shorter script with only exact statements is fine. Keep the hook first and a payoff sentence last."""
 
+SENTENCE_PROMPT = """Translate this ONE sentence from a science Short into natural SPOKEN Malayalam, in Malayalam script. Keep numbers, names and
+meaning exactly; keep common English technical terms as Malayalam speakers say them; add nothing.
+Return JSON {{"text": str}}.
+
+Sentence: {sentence}"""
+
 META_PROMPT = """Translate this YouTube video's metadata into Malayalam for a Kerala audience.
 - title: natural and curiosity-driven, at most 70 characters, keep the main keyword (English terms may stay in English).
 - thumbnail_text: 2-4 punchy words for the thumbnail, Malayalam script.
@@ -226,12 +233,43 @@ def translate_short(short: dict, max_words: int, gen: Callable[[str], dict] = ll
         if not issues:
             return {"title": title[:70], "narration": narration}
         if attempt == REPAIR_ROUNDS + 1:
-            raise TranslationRejected(f"Short {short['title']!r}: " + "; ".join(issues[:3]))
+            log(f"[ml] the Short {short['title']!r} still has problems ({'; '.join(issues[:2])}); translating it sentence by sentence")
+            return translate_short_by_sentence(short, max_words, gen, log)
         log(f"[ml] repairing the Short {short['title']!r}: {'; '.join(issues[:2])}")
         text = "\n".join(f"- {i}" for i in issues)
         extra = OMIT_PROMPT if attempt == REPAIR_ROUNDS else REPAIR_PROMPT         # the last round may leave a detail out
         out = gen(prompt + extra.format(issues=text, previous=narration))
     raise AssertionError("unreachable")
+
+
+def translate_short_by_sentence(short: dict, max_words: int, gen: Callable[[str], dict] = llm.generate_json,
+                                log: Callable[[str], None] = print) -> dict:
+    """The last resort that keeps "a Malayalam Short for every English Short" a rule: translate and check ONE sentence at a time (each is
+    small and easy to get exactly right) and leave out any sentence that cannot be made faithful in two tries. The Short is shorter but
+    never wrong. Raises TranslationRejected if fewer than four sentences survive."""
+    english = [s for s in re.split(r"(?<=[.!?])\s+", short["narration"].strip()) if s]
+    kept: list[str] = []
+    for sent in english:
+        for _ in range(2):
+            try:
+                text = str(gen(SENTENCE_PROMPT.format(sentence=sent)).get("text", "")).strip()
+            except (llm.LLMError, KeyError, TypeError, ValueError, AttributeError):
+                continue
+            if text and not check_short(sent, text, gen):
+                kept.append(text)
+                break
+        else:
+            log(f"[ml] left out one sentence of the Short {short['title']!r}: it could not be translated faithfully")
+    while len(" ".join(kept).split()) > max_words * 1.15 and len(kept) > 4:
+        kept.pop(len(kept) // 2)                    # too long: drop from the middle, keeping the hook and the payoff
+    if len(kept) < 4:
+        raise TranslationRejected(f"Short {short['title']!r}: only {len(kept)} sentence(s) could be translated faithfully")
+    title = str(short["title"])
+    try:
+        title = str(gen(SENTENCE_PROMPT.format(sentence=short["title"])).get("text", "")).strip() or title
+    except (llm.LLMError, KeyError, TypeError, ValueError, AttributeError):
+        pass
+    return {"title": title[:70], "narration": " ".join(kept)}
 
 
 def translate_section(sec: dict, gen: Callable[[str], dict], log: Callable[[str], None] = print) -> dict:
@@ -811,14 +849,7 @@ def shorts_pending(conn, retry: bool = False):
         f"AND COALESCE(s.ml_status, '') != 'built'{skip}) ORDER BY l.id DESC LIMIT 1").fetchone()
 
 
-def estimate_timings(script: dict) -> list[dict]:
-    """Rough section timings from the English narration length (only used to decide how much media to look for)."""
-    t, out = 0.0, []
-    for sec in script["sections"]:
-        d = max(20.0, len(sec["narration"].split()) * 0.5)
-        out.append({"heading": sec["heading"], "start": t, "end": t + d, "sentences": []})
-        t += d
-    return out
+estimate_timings = shots_estimate_timings
 
 
 def upload_edition(conn, job, out_dir: Path, src_dir: Path, hour_utc: int | None, privacy: str, live: bool) -> str | None:

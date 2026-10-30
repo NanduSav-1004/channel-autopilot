@@ -267,24 +267,44 @@ class Stages:
     # ---------- Shorts ----------
     def shorts(self, job) -> None:
         """Last stage of a long job: plan its Shorts and queue each as its own job."""
-        d = self.dir(job)
         n = self.cfg.formats.get("short", {}).get("per_day", 0)
-        if not n or self.conn.execute("SELECT 1 FROM jobs WHERE parent_id = ?", (job["id"],)).fetchone():
+        if not n:
             return
+        added = self.queue_shorts(job, n)
+        if added:
+            print(f"[job {job['id']}] queued {added} Short(s)", flush=True)
+
+    def queue_shorts(self, job, n: int) -> int:
+        """Make sure the long video has n Shorts queued: plan the missing ones (strictly: the planner never returns fewer than n while the
+        script has enough sections) and add their jobs. Returns how many jobs were added."""
+        d = self.dir(job)
+        existing = self.conn.execute("SELECT COUNT(*) FROM jobs WHERE parent_id = ?", (job["id"],)).fetchone()[0]
+        if existing >= n:
+            return 0
         if not (d / "script.json").exists() or not (d / "source.json").exists():
             print(f"[job {job['id']}] shorts skipped: the long video's files are gone", flush=True)
-            return
-        if (d / "shorts.json").exists():
-            plans = _read(d / "shorts.json")
-        else:
-            plans = shorts.plan_shorts(_read(d / "script.json"), _read(d / "source.json"), n)
-            if not plans:  # do not save an empty plan: it would block a later retry
-                print(f"[job {job['id']}] WARNING: no usable Shorts this time (see [shorts] lines above)", flush=True)
-                return
-            _write(d / "shorts.json", plans)
-        for i, plan in enumerate(plans):
-            db.add_job(self.conn, plan["title"], "short", job["source_title"], parent_id=job["id"], short_idx=i)
-        print(f"[job {job['id']}] queued {len(plans)} Short(s)", flush=True)
+            return 0
+        plans = _read(d / "shorts.json") if (d / "shorts.json").exists() else []
+        if len(plans) < n:
+            plans += shorts.plan_shorts_strict(_read(d / "script.json"), _read(d / "source.json"), n, have=plans)
+            if plans:                                    # an empty plan is not saved: it would block a later retry
+                _write(d / "shorts.json", plans)
+        if len(plans) < n:
+            print(f"[job {job['id']}] WARNING: only {len(plans)} of {n} Shorts could be planned", flush=True)
+        for i in range(existing, min(len(plans), n)):
+            db.add_job(self.conn, plans[i]["title"], "short", job["source_title"], parent_id=job["id"], short_idx=i)
+        return max(0, min(len(plans), n) - existing)
+
+    def fill_missing_shorts(self) -> int:
+        """Today's uploaded long videos that have fewer Shorts than the daily rule: queue the missing ones. Run at the start of every
+        daily run, including the backup runs, so a day that came up short is repaired by the next run."""
+        n = self.cfg.formats.get("short", {}).get("per_day", 0)
+        total = 0
+        for job in self.conn.execute("SELECT * FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL "
+                                     "AND date(created_at) = date('now') ORDER BY id").fetchall():
+            if n:
+                total += self.queue_shorts(job, n)
+        return total
 
     def _parent(self, job):
         return self.conn.execute("SELECT * FROM jobs WHERE id = ?", (job["parent_id"],)).fetchone()
@@ -316,8 +336,14 @@ class Stages:
             return
         s, timings = _read(d / "script.json"), _read(d / "timings.json")
         parent_dir = self.dir(self._parent(job))
-        if not (parent_dir / "items.json").exists():
-            raise StageError("the long video's media list is gone")
+        if not (parent_dir / "items.json").exists():            # a later run on a fresh machine: find media for the same script again
+            parent = self._parent(job)
+            items, credits = shots.recover_items(_read(parent_dir / "script.json"), parent["topic"], self.work / "assets",
+                                                 use_nasa=parent["category"] == "space")
+            _write(parent_dir / "items.json", [[{"kind": i["kind"], "path": str(i["path"])} for i in sec] for sec in items])
+            if not (parent_dir / "credits.json").exists():
+                _write(parent_dir / "credits.json", credits)
+            print(f"[job {job['id']}] media found again for this Short", flush=True)
         sections = _read(parent_dir / "items.json")
         pool = shots.short_media_pool(sections, s["section_index"])  # this section's media, then its neighbours'
         items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]

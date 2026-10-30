@@ -42,6 +42,16 @@ about 12:00 UTC, check the Actions tab and start it by hand (Run workflow, tick 
   Malayalam long video by `malayalam.short_offsets_hours` (default 10, 15 and 21 h: 7:30 AM, 12:30 PM, 6:30 PM IST). A Short that
   cannot be made to fit 58 s, or whose translation stays unfaithful, is skipped and you get a Telegram message.
 
+## The daily Shorts rule (strict)
+- **Three Shorts a day on each channel.** The Short planner asks the model for six drafts and fact-checks them (rewriting unsupported
+  sentences from the source); if fewer than three pass it plans again for the missing ones; and as a last resort it makes Shorts from
+  the long script's own sentences, verbatim (already fact-checked), so the count is always met while the script has enough sections.
+- **Every daily run repairs a short day**, including the backup runs: if today's long video has fewer than three Shorts queued it plans
+  the missing ones (finding media again if the run's media is gone) and processes them.
+- **Malayalam:** each English Short gets a Malayalam Short. A translation that stays unfaithful after the repair rounds is redone one
+  sentence at a time, leaving out any sentence that cannot be made exact.
+- The Watchdog (12:30 and 14:30 UTC) sends a Telegram alert if today's English or Malayalam Shorts are fewer than three.
+
 ## Phone alerts (Telegram)
 - Needs secrets `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` (local `.env`, then `python scripts/set_github_secrets.py`;
   `scripts/telegram_chat_id.py` finds the chat id after you message the bot). Without them alerts are silently skipped.

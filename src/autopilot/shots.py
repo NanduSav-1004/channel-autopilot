@@ -264,3 +264,19 @@ def fill_sparse_sections(sections: list[list[dict]], min_items: int = MIN_SECTIO
                     break
         out.append(pool)
     return out
+
+
+def estimate_timings(script: dict) -> list[dict]:
+    """Rough section timings from the narration length (only used to decide how much media to look for)."""
+    t, out = 0.0, []
+    for sec in script["sections"]:
+        d = max(20.0, len(sec["narration"].split()) * 0.5)
+        out.append({"heading": sec["heading"], "start": t, "end": t + d, "sentences": []})
+        t += d
+    return out
+
+
+def recover_items(script: dict, topic: str, cache: Path, use_nasa: bool = False, gen: Callable = llm.generate_json):
+    """Find media again for a finished video whose media is gone (a later run on a fresh machine). Returns (items, credits)."""
+    plan = plan_shots(estimate_timings(script))
+    return gather_images(script, plan, cache, topic, gen=gen, use_nasa=use_nasa)
