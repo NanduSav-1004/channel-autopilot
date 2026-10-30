@@ -166,3 +166,29 @@ def test_a_short_renders_with_a_data_shot_and_keeps_its_length(tmp_path):
                                     capture_output=True, text=True, check=True).stdout)
 
     assert abs(dur(plain) - dur(with_shot)) < 0.1
+
+
+def test_rule_based_shot_finds_the_first_figure_with_a_unit_without_any_model():
+    s = ds.rule_based_shot("Did you know Jupiter holds a thousand Earths? Its volume is 1,321 times that of Earth. It spins every ten hours.")
+    assert s["kind"] == "number" and s["items"][0]["value"] == 1321.0 and s["items"][0]["unit"] == "times" and s["items"][0]["label"] == "volume"
+    p = ds.rule_based_shot("Its atmosphere is 76% hydrogen and 24% helium by mass.")
+    assert p["items"][0]["value"] == 76.0 and p["items"][0]["unit"] == "%"
+    assert ds.rule_based_shot("It has the strongest field in the system. In 1911 it began.") is None      # no figure with a unit
+
+
+def test_when_the_model_is_out_of_quota_a_rule_based_shot_is_used_and_the_log_says_why():
+    from autopilot import llm
+
+    def down(prompt):
+        raise llm.LLMError("all LLM models are out of quota or busy")
+
+    narration = "Its volume is 1,321 times that of Earth."
+    secs = [{"heading": "Jupiter volume", "narration": narration,
+             "sentences": [{"text": narration, "start": 1.0, "end": 4.0, "words": _words(narration, 1.0)}]}]
+    logs = []
+    out = ds.shots_for(secs, (1080, 1920), __import__("pathlib").Path("/tmp/x"), gen=down, render=lambda s, z, o, seconds: o, log=logs.append)
+    assert len(out) == 1 and any("model unavailable" in line and "rule-based" in line for line in logs)
+    quiet = []
+    ds.shots_for([{**secs[0], "narration": "No figures here at all.", "sentences": secs[0]["sentences"]}], (1080, 1920),
+                 __import__("pathlib").Path("/tmp/x"), gen=lambda p: {"shots": []}, render=lambda *a, **k: None, log=quiet.append)
+    assert any("no shot for" in line for line in quiet)                    # silence is never the answer

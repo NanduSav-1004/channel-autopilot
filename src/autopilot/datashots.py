@@ -75,16 +75,60 @@ def validate(shot: dict, narration: str) -> dict | None:
     return {"kind": shot["kind"], "title": str(shot.get("title", ""))[:48], "items": items}
 
 
-def extract_shot(heading: str, narration: str, gen: Callable[[str], dict]) -> dict | None:
+STOP = {"is", "are", "was", "were", "has", "have", "had", "its", "it", "the", "a", "an", "about", "only", "just", "over", "at", "of", "to", "by",
+        "and", "in", "on", "that", "this", "with", "for", "from", "as", "roughly", "nearly", "almost", "around", "than", "up", "into"}
+FIGURE_UNITS = {"km", "kilometres", "kilometers", "m", "metres", "meters", "cm", "mm", "miles", "kg", "tonnes", "tons", "years", "year", "seconds",
+                "minutes", "hours", "days", "times", "percent", "%", "k", "kelvin", "°c", "°f", "degrees", "volts", "watts", "hz", "ghz", "mhz",
+                "khz", "billion", "million", "thousand", "trillion", "tb/s", "gb/s", "mb/s", "km/h", "m/s", "g/cm³", "grams", "atm", "bar"}
+_NUM_TOKEN = re.compile(r"^[\(\[“\"']*(\d[\d,]*(?:\.\d+)?)(%?)")
+
+
+def rule_based_shot(narration: str) -> dict | None:
+    """A plain "number" shot found without any model, for when the models are out of quota: the first figure that comes with a unit
+    ("1,321 times", "142,976 km", "76 %"). The label is the words just before it. Less clever than the model's pick, but it means a
+    busy day does not silently cost the video its graphic."""
+    for sentence in re.split(r"(?<=[.!?])\s+", narration.strip()):
+        words = sentence.split()
+        for i, w in enumerate(words):
+            m = _NUM_TOKEN.match(w)
+            if not m:
+                continue
+            digits = m.group(1).replace(",", "")
+            try:
+                value = float(digits)
+            except ValueError:
+                continue
+            unit = "%" if m.group(2) else ""
+            if not unit and i + 1 < len(words):
+                nxt = re.sub(r"[^\w%°/³]", "", words[i + 1]).lower()
+                if nxt in FIGURE_UNITS:
+                    unit = re.sub(r"[^\w%°/³]", "", words[i + 1])
+            if not unit or (len(digits) == 4 and not unit and 1000 <= value <= 2100):
+                continue
+            before = [re.sub(r"[^\w'’-]", "", x) for x in words[max(0, i - 4):i]]
+            label = " ".join(x.lower() for x in before if x and x.lower() not in STOP)[-24:].strip()
+            shot = {"kind": "number", "title": (label or "By the numbers").capitalize()[:48],
+                    "items": [{"label": label, "value": value, "unit": unit}]}
+            return validate(shot, narration)
+    return None
+
+
+def propose_shot(heading: str, narration: str, gen: Callable[[str], dict]) -> tuple[dict | None, str]:
+    """(shot or None, note about how it went). The model chooses; if the model is unavailable, a rule-based number shot is used instead."""
     try:
         out = gen(PROMPT.format(heading=heading, narration=narration))
-    except Exception:  # noqa: BLE001 - a data shot is an extra: any failure just means no shot
-        return None
+    except Exception as exc:  # noqa: BLE001 - quota or outage: fall back to the rule-based shot
+        shot = rule_based_shot(narration)
+        return shot, f"model unavailable ({type(exc).__name__}); " + ("used a rule-based number shot" if shot else "no figure with a unit found")
     for s in (out.get("shots") if isinstance(out, dict) else None) or []:
         ok = validate(s, narration)
         if ok:
-            return ok
-    return None
+            return ok, "chosen by the model"
+    return None, "the model found no figures worth drawing"
+
+
+def extract_shot(heading: str, narration: str, gen: Callable[[str], dict]) -> dict | None:
+    return propose_shot(heading, narration, gen)[0]
 
 
 # ---------- drawing ----------
@@ -328,9 +372,10 @@ def shots_for(sections: list[dict], size: tuple[int, int], work: Path, gen: Call
     out: list[dict] = []
     for i, sec in enumerate(sections):
         try:
-            shot = extract_shot(sec["heading"], sec["narration"], gen)
+            shot, note = propose_shot(sec["heading"], sec["narration"], gen)
             when = place_shot(shot, sec["sentences"]) if shot else None
             if not (shot and when):
+                log(f"[datashot] no shot for {sec['heading'][:40]!r}: " + (note if not shot else "could not find where the figure is spoken"))
                 continue
             if out and when["start"] - out[-1]["start"] < min_gap:
                 continue
@@ -338,6 +383,6 @@ def shots_for(sections: list[dict], size: tuple[int, int], work: Path, gen: Call
         except Exception as exc:  # noqa: BLE001
             log(f"[datashot] skipped one shot ({type(exc).__name__}: {exc})")
             continue
-        log(f"[datashot] {shot['kind']} '{shot['title']}' at {when['start']:.1f}s")
+        log(f"[datashot] {shot['kind']} '{shot['title']}' at {when['start']:.1f}s ({note})")
         out.append({**when, "clip": clip, "kind": shot["kind"]})
     return out
