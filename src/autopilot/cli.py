@@ -178,7 +178,8 @@ def main() -> None:
         if args.command == "daily":
             for row in conn.execute("SELECT id, stage, status, attempts, error FROM jobs WHERE status != 'done'"):
                 print(dict(row))
-            ensure_progress(done_before, done_count(conn))
+            if not skip_discovery:             # today's video was already up: this run only finished Shorts, so no new video is expected
+                ensure_progress(done_before, done_count(conn))
     if args.command == "retry":
         n = conn.execute(
             "UPDATE jobs SET status = 'pending', attempts = 0, error = NULL WHERE status = 'failed'"
