@@ -15,10 +15,11 @@ SCOPES = [
 CLIENT_SECRET = Path("client_secret.json")
 TOKEN_PATH = Path("secrets/token.json")
 TOKEN_PATH_ML = Path("secrets/token_ml.json")     # the Malayalam channel is a separate channel with its own login
+TOKEN_PATH_DATA = Path("secrets/token_data.json")  # and so is the data channel (Plotline Data)
 
 
 def token_path(profile: str = "en") -> Path:
-    return TOKEN_PATH_ML if profile == "ml" else TOKEN_PATH
+    return {"ml": TOKEN_PATH_ML, "data": TOKEN_PATH_DATA}.get(profile, TOKEN_PATH)
 
 
 def login_interactive(profile: str = "en") -> Credentials:
@@ -37,7 +38,7 @@ def configured(profile: str = "en") -> bool:
 
 
 def _refresh_env(profile: str) -> str:
-    return "YOUTUBE_REFRESH_TOKEN_ML" if profile == "ml" else "YOUTUBE_REFRESH_TOKEN"
+    return {"ml": "YOUTUBE_REFRESH_TOKEN_ML", "data": "YOUTUBE_REFRESH_TOKEN_DATA"}.get(profile, "YOUTUBE_REFRESH_TOKEN")
 
 
 def load_credentials(profile: str = "en") -> Credentials:
@@ -61,6 +62,6 @@ def load_credentials(profile: str = "en") -> Credentials:
 if __name__ == "__main__":
     import sys
 
-    prof = "ml" if "--ml" in sys.argv else "en"
+    prof = "ml" if "--ml" in sys.argv else "data" if "--data" in sys.argv else "en"
     login_interactive(prof)
     print(f"Saved refresh token to {token_path(prof)}")

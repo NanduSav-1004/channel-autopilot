@@ -11,6 +11,7 @@ dependencies = [
     "kokoro-onnx>=0.4",
     "numpy>=1.26",
     "Pillow>=10.0",
+    "playwright>=1.50",   # drives headless Chrome for the data channel's motion graphics
 ]
 
 [project.optional-dependencies]

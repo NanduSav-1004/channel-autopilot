@@ -1,0 +1,22 @@
+/* "Signal" theme for the data channel: deep night background, one loud accent (volt) and three supporting colours. */
+@font-face { font-family: "Space Grotesk"; src: url("fonts/SpaceGrotesk.ttf") format("truetype"); font-weight: 300 700; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter.ttf") format("truetype"); font-weight: 100 900; }
+
+:root {
+  --bg: #0b0d17;
+  --bg2: #151a2e;
+  --ink: #f5f3ee;
+  --muted: #8a8fa8;
+  --faint: #2a3048;
+  --volt: #d4ff3a;
+  --coral: #ff5c7a;
+  --cyan: #39d2ff;
+  --amber: #ffb547;
+}
+
+html, body { margin: 0; padding: 0; background: var(--bg); overflow: hidden; }
+svg { display: block; }
+svg { fill: var(--ink); }   /* a default only: a fill set on an element wins */
+text { font-family: "Space Grotesk", "Inter", sans-serif; }
+.body { font-family: "Inter", sans-serif; }
+.num { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; }
