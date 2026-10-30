@@ -15,7 +15,7 @@ SHOT_SECONDS = 6.0          # how much media to GATHER: about one distinct image
 CUT_SECONDS = 3.5           # how often a long video CUTS to a new shot
 SHORT_CUT_SECONDS = 2.6     # and a Short
 MAX_REUSE = 3               # an image or clip may appear this many times, each time showing a different part of it
-SHORT_MAX_REUSE = 3         # a Short is short enough to allow one more
+SHORT_MAX_REUSE = 2         # a Short repeats a picture at most once; with little media it cuts more slowly instead
 MAX_SHOTS_PER_SECTION = 40
 COMMONS_CANDIDATES = 10
 STOCK_CANDIDATES = 8
@@ -235,7 +235,7 @@ def gather_images(
     return per_section, credits
 
 
-def short_media_pool(sections: list[list[dict]], idx: int, want: int = 8) -> list[dict]:
+def short_media_pool(sections: list[list[dict]], idx: int, want: int = 12) -> list[dict]:
     """Media for a Short cut from section `idx`: that section's own, then its nearest neighbours' (same video, so on
     topic) until there is enough to cut quickly without repeating."""
     order = [idx] + [j for _, j in sorted((abs(j - idx), j) for j in range(len(sections)) if j != idx)]

@@ -90,11 +90,12 @@ def test_short_media_pool_starts_with_its_own_section_then_borrows_from_the_near
     assert short_media_pool([[], [], []], 1) == []                  # nothing anywhere: empty, the card fallback handles it
 
 
-def test_shorts_may_reuse_media_three_times_so_they_can_cut_fast():
+def test_shorts_repeat_a_picture_at_most_once_and_cut_slower_when_media_is_scarce():
     from autopilot.shots import SHORT_CUT_SECONDS, SHORT_MAX_REUSE, plan_cuts
 
-    plan = plan_cuts(_sections(50.0), [8], 24, SHORT_CUT_SECONDS, SHORT_MAX_REUSE)
-    assert len(plan[0]) == round(50 / SHORT_CUT_SECONDS)            # 8 items x 3 allows ~19 cuts: no cap hit
+    plan = plan_cuts(_sections(50.0), [12], 24, SHORT_CUT_SECONDS, SHORT_MAX_REUSE)
+    assert len(plan[0]) == round(50 / SHORT_CUT_SECONDS)            # 12 items x 2 allows 24 cuts: no cap hit
+    assert len(plan_cuts(_sections(50.0), [6], 24, SHORT_CUT_SECONDS, SHORT_MAX_REUSE)[0]) == 12   # 6 items: slower cuts, not more repeats
 
 
 def test_best_first_ranks_by_score_and_prefers_earlier_candidates_on_ties():
