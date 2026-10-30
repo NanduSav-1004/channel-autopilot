@@ -124,8 +124,11 @@
   }
 
   function heading(g, text, t, start = 0.1) {
-    const ws = words(g, text, 140, 150, 58, W - 280, { anchor: "start", weight: 700 });
-    const bar = g.append("rect").attr("x", 140).attr("y", 186).attr("height", 6).attr("rx", 3).attr("fill", C.volt);
+    const x0 = W < 1300 ? 90 : 140;
+    const ws = words(g, text, x0, 150, W < 1300 ? 52 : 58, W - 2 * x0, { anchor: "start", weight: 700 });
+    const top = 150 - ((ws.lines - 1) * ws.lh) / 2;                  // words() centres lines on y; keep the first line at 150
+    ws.list.forEach((w) => { w.y += 150 - top; });
+    const bar = g.append("rect").attr("x", x0).attr("y", 150 + (ws.lines - 1) * ws.lh + 36).attr("height", 6).attr("rx", 3).attr("fill", C.volt);
     return (t) => { revealWords(ws, t, start, 0.04, 30); bar.attr("width", 120 * E.out(prog(t, start + 0.3, 0.6))); };
   }
 
@@ -156,7 +159,7 @@
   };
 
   SCENES.counter = (g, s) => {
-    const cx = W / 2, cy = H / 2 + 30, R = 390;
+    const cx = W / 2, cy = H / 2 + 30, R = Math.min(390, W * 0.34);
     const ring = g.append("circle").attr("cx", cx).attr("cy", cy).attr("r", R).attr("fill", "none").attr("stroke", C.faint).attr("stroke-width", 14);
     const arc = g.append("path").attr("transform", `translate(${cx},${cy})`).attr("fill", C.volt).attr("filter", "url(#glow)");
     const arcGen = d3.arc().innerRadius(R - 7).outerRadius(R + 7).cornerRadius(7).startAngle(0);
@@ -176,7 +179,7 @@
       num.text(fmt(lerp(s.from ?? 0, s.value, p), s)).attr("opacity", prog(t, 0.2, 0.3))
         .attr("transform", `translate(${cx},${cy}) scale(${0.85 + 0.15 * E.back(prog(t, 0.2, 0.7))}) translate(${-cx},${-cy})`);
       sub.attr("opacity", prog(t, 1.6, 0.6));
-      if (badge) { const b = E.back(prog(t, 2.1, 0.5)); badge.g.attr("transform", `translate(${cx + R * 0.72 + badge.w / 2},${cy - R * 0.72}) scale(${b}) rotate(${-8 * b})`); }
+      if (badge) { const b = E.back(prog(t, 2.1, 0.5)); badge.g.attr("transform", W < 1300 ? `translate(${cx},${cy + R + 90}) scale(${b}) rotate(${-4 * b})` : `translate(${cx + R * 0.72 + badge.w / 2},${cy - R * 0.72}) scale(${b}) rotate(${-8 * b})`); }
       const burst = prog(t, 2.0, 1.0);
       sparks.forEach((sp, i) => {
         const a = (i / sparks.length) * 2 * Math.PI, d = R + 30 + 160 * E.out(burst);
@@ -189,7 +192,8 @@
   SCENES.line = (g, s) => {
     const head = heading(g, s.title);
     const pts = s.series.map(([d, v]) => [new Date(d), v]);
-    const m = { l: 200, r: 260, t: 270, b: 150 };
+    const narrow = W < 1300;
+    const m = narrow ? { l: 150, r: 70, t: 270, b: 130 } : { l: 200, r: 260, t: 270, b: 150 };
     const x = d3.scaleTime().domain(d3.extent(pts, (p) => p[0])).range([m.l, W - m.r]);
     const y = d3.scaleLinear().domain([0, d3.max(pts, (p) => p[1]) * 1.12]).nice().range([H - m.b, m.t]);
     const axis = g.append("g");
@@ -247,7 +251,7 @@
     const head = heading(g, s.title);
     const items = s.items.slice(0, 10), top = 260, rowH = (H - top - 130) / items.length;
     const lo = Math.min(0, d3.min(items, (d) => d.value)), hi = Math.max(0, d3.max(items, (d) => d.value));
-    const X0 = 620, X1 = W - 260;
+    const X0 = W < 1300 ? 470 : 620, X1 = W < 1300 ? W - 150 : W - 260;
     const x = d3.scaleLinear().domain([lo, hi]).range([X0, X1]);
     const fit = (txt, size, maxW) => {                      // shrink a long label until it fits its column
       const el = g.append("text").attr("font-size", size).attr("font-weight", 600).text(txt);
@@ -289,7 +293,9 @@
     const feats = topojson.feature(topo, topo.objects.states).features.filter((f) => FIPS[f.id]);
     const vals = Object.values(s.values);
     const color = d3.scaleSequential().domain(d3.extent(vals)).interpolator(d3.interpolateRgbBasis(["#1d2a6b", "#2b6cff", C.cyan, C.volt]));
-    const k = 1.05, ox = (W - 975 * k) / 2 - 120, oy = 250;
+    const narrow = W < 1300;
+    const k = narrow ? (W - 80) / 975 : 1.05, ox = narrow ? 40 : (W - 975 * k) / 2 - 120, oy = narrow ? 300 : 250;
+    const cardX = narrow ? 120 : W - 330, cardY = narrow ? oy + 610 * k + 120 : 330;
     const path = d3.geoPath();
     const mapG = g.append("g").attr("transform", `translate(${ox},${oy}) scale(${k})`);
     const xs = feats.map((f) => path.centroid(f)[0]); const [x0, x1] = d3.extent(xs);
@@ -298,7 +304,7 @@
     const hi = shapes.find((sh) => sh.st === s.highlight);
     const hiOutline = hi ? mapG.append("path").attr("d", path(hi.f)).attr("fill", "none").attr("stroke", C.ink).attr("stroke-width", 4)
       .attr("filter", "url(#glow)") : null;
-    const lg = g.append("g").attr("transform", `translate(${W - 420},${H - 360})`);
+    const lg = g.append("g").attr("transform", narrow ? `translate(${W - 400},${oy + 610 * k + 60})` : `translate(${W - 420},${H - 360})`);
     const gid = "lg" + Math.random().toString(36).slice(2);
     const lgd = svg.select("defs").append("linearGradient").attr("id", gid);
     ["#1d2a6b", "#2b6cff", C.cyan, C.volt].forEach((c, i) => lgd.append("stop").attr("offset", `${(i / 3) * 100}%`).attr("stop-color", c));
@@ -311,9 +317,9 @@
       const [hx, hy] = path.centroid(hi.f);
       call = g.append("g");
       const px = ox + hx * k, py = oy + hy * k;
-      call.append("line").attr("x1", px).attr("y1", py).attr("x2", W - 330).attr("y2", 330).attr("stroke", C.ink).attr("stroke-width", 2);
+      call.append("line").attr("x1", px).attr("y1", py).attr("x2", cardX).attr("y2", cardY).attr("stroke", C.ink).attr("stroke-width", 2);
       call.append("circle").attr("cx", px).attr("cy", py).attr("r", 8).attr("fill", C.ink);
-      const card = call.append("g").attr("transform", `translate(${W - 330},330)`);
+      const card = call.append("g").attr("transform", `translate(${cardX},${cardY})`);
       card.append("rect").attr("x", -10).attr("y", -70).attr("width", 300).attr("height", 150).attr("rx", 18).attr("fill", C.bg2).attr("stroke", C.volt);
       card.append("text").attr("x", 20).attr("y", -20).attr("font-size", 30).attr("font-weight", 600).text(s.highlightName || s.highlight);
       card.append("text").attr("class", "num").attr("x", 20).attr("y", 50).attr("font-size", 56).attr("fill", C.volt).text(fmt(s.values[s.highlight], s));
@@ -360,12 +366,14 @@
   window.load = async (spec, topo) => {
     if (topo) window.__topo = topo;
     await Promise.all(["500 40px Inter", "700 40px Inter", "500 40px 'Space Grotesk'", "700 40px 'Space Grotesk'"].map((f) => document.fonts.load(f)));
-    W = spec.width || 1920; H = spec.height || 1080;
-    svg = d3.select("#stage").attr("width", W).attr("height", H).attr("viewBox", `0 0 ${W} ${H}`);
+    const [CW, CH] = spec.canvas || [spec.width || 1920, spec.height || 1080];   // the whole picture
+    svg = d3.select("#stage").attr("width", CW).attr("height", CH).attr("viewBox", `0 0 ${CW} ${CH}`);
     svg.selectAll("*").remove();
+    W = CW; H = CH;
     defs();
-    const bg = background(svg);
-    const cam = svg.append("g"), body = cam.append("g");
+    const bg = background(svg);                                                  // the background fills the whole picture
+    W = spec.width || CW; H = spec.height || CH;                                 // the scene lays itself out in its own area
+    const cam = svg.append("g").attr("transform", `translate(0,${spec.offset || 0})`).append("g"), body = cam.append("g");
     const upd = SCENES[spec.type](body, spec);
     const dur = spec.duration;
     scene = (t) => {

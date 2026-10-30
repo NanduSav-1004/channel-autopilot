@@ -55,3 +55,24 @@ def download_video(item: dict, cache: Path) -> Path:
 def credit_line(item: dict) -> str:
     return f'Stock video "{item["title"][:60]}" by {item["artist"]} (Pixabay) {item["page"]}'
 
+
+
+PHOTO_API = "https://pixabay.com/api/"
+
+
+def search_photos(query: str, limit: int = 8, min_width: int = 1600) -> list[dict]:
+    """Pixabay photos (same licence as the videos: commercial use, no attribution needed). AI-generated images are skipped."""
+    key = os.environ.get("PIXABAY_API_KEY")
+    if not key:
+        return []
+    params = {"key": key, "q": query, "image_type": "photo", "orientation": "horizontal", "per_page": 30, "safesearch": "true",
+              "min_width": min_width}
+    req = urllib.request.Request(PHOTO_API + "?" + urllib.parse.urlencode(params), headers=UA)
+    hits = json.load(urllib.request.urlopen(req, timeout=30)).get("hits", [])
+    return [{"kind": "photo", "id": h["id"], "url": h["largeImageURL"], "thumb": h["webformatURL"], "title": h.get("tags", ""),
+             "page": h.get("pageURL", ""), "artist": h.get("user", "unknown"), "license": "Pixabay Content License"}
+            for h in hits if not h.get("isAiGenerated")][:limit]
+
+
+def download_photo(item: dict, cache: Path) -> Path:
+    return _fetch(item["url"], cache / f"pixphoto_{item['id']}.jpg")

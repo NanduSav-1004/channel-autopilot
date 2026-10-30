@@ -63,3 +63,24 @@ def test_an_index_is_shown_as_percent_change_and_cannot_be_compared():
     assert line["series"][0][1] == 0 and line["suffix"] == "%"
     assert any("bad visual" in p for p in plotline.check_script(
         {"scenes": [{"narration": "x", "visual": {"type": "compare", "series": "X", "from": "2000"}}]}, b))
+
+
+def test_daily_run_skips_a_finished_day(tmp_path, monkeypatch):
+    import json
+    from datetime import datetime, timezone
+
+    from autopilot import plotline_daily
+
+    monkeypatch.setattr(plotline_daily, "STATE", tmp_path)
+    day = {"title": "T", "video_id": "abc", "shorts": [{"video_id": f"s{i}"} for i in range(plotline_daily.SHORTS_PER_DAY)]}
+    (tmp_path / "state.json").write_text(json.dumps({"days": {"2026-11-01": day}}))
+    msg = plotline_daily.run(live=True, privacy="public", now=datetime(2026, 11, 1, 5, tzinfo=timezone.utc))
+    assert "nothing to do" in msg
+
+
+def test_description_lists_sources_and_disclosure():
+    from autopilot import plotline_daily
+
+    b = _bundle()
+    text = plotline_daily.description({"description": "About eggs."}, b, long_id="xyz")
+    assert "About eggs." in text and "youtu.be/xyz" in text and "- FRED" in text and "synthetic voice" in text

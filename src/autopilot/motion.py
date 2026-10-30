@@ -46,7 +46,7 @@ def _encode(out: Path, w: int, h: int, fps: int) -> subprocess.Popen:
 
 
 def _render_frames(page, spec: dict, first: int, last: int, out: Path, fps: int) -> None:
-    w, h = spec.get("width", 1920), spec.get("height", 1080)
+    w, h = spec.get("canvas") or (spec.get("width", 1920), spec.get("height", 1080))
     page.evaluate("([s, t]) => window.load(s, t)", [spec, _topo() if spec["type"] == "map" else None])
     ff = _encode(out, w, h, fps)
     try:
@@ -147,7 +147,7 @@ class Browser:
         return self
 
     def page(self, spec: dict):
-        size = (spec.get("width", 1920), spec.get("height", 1080))
+        size = tuple(spec.get("canvas") or (spec.get("width", 1920), spec.get("height", 1080)))
         if size not in self._pages:
             p = self._b.new_page(viewport={"width": size[0], "height": size[1]}, device_scale_factor=1)
             p.goto((STAGE / "stage.html").as_uri())

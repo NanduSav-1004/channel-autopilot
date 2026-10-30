@@ -1,0 +1,119 @@
+name: Plotline Data
+
+on:
+  schedule:
+    # Early tries so GitHub's late starts still finish before the 19:00 UTC go-live; a run skips itself when the day is done.
+    - cron: "23 3 * * *"
+    - cron: "47 7 * * *"
+    - cron: "13 11 * * *"
+  workflow_dispatch:
+    inputs:
+      live:
+        description: "Really upload to YouTube (otherwise only make the files)"
+        type: boolean
+        default: false
+      privacy:
+        description: "Privacy for uploaded videos"
+        type: choice
+        options: [private, unlisted, public]
+        default: private
+
+concurrency:
+  group: plotline
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # to update the `state-plotline` branch
+  actions: write    # keepalive
+
+jobs:
+  make-video:
+    # Manual runs always work. Scheduled runs only once the repo variable PLOTLINE_ENABLED is "true".
+    if: github.event_name == 'workflow_dispatch' || vars.PLOTLINE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GEMINI_API_KEY_DATA: ${{ secrets.GEMINI_API_KEY_DATA }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+      YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+      YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+      YOUTUBE_REFRESH_TOKEN_DATA: ${{ secrets.YOUTUBE_REFRESH_TOKEN_DATA }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: System packages
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-lato fonts-dejavu-core ffmpeg
+
+      - run: pip install -e .
+
+      - name: Cache voice models
+        id: voice
+        uses: actions/cache@v4
+        with:
+          path: models
+          key: voices-v2-piper-lessac-kokoro-1.0
+
+      - name: Download voice models
+        if: steps.voice.outputs.cache-hit != 'true'
+        run: |
+          python -m piper.download_voices en_US-lessac-medium --download-dir models
+          B=https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0
+          curl -sL --fail -o models/kokoro-v1.0.int8.onnx $B/kokoro-v1.0.int8.onnx
+          curl -sL --fail -o models/voices-v1.0.bin $B/voices-v1.0.bin
+
+      - name: Restore Plotline state
+        run: scripts/plotline_state.sh pull
+
+      - name: Make today's Plotline video and Shorts
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            LIVE="${{ inputs.live }}"; PRIVACY="${{ inputs.privacy }}"
+          else
+            LIVE="true"; PRIVACY="${{ vars.UPLOAD_PRIVACY || 'public' }}"
+          fi
+          ARGS="--privacy $PRIVACY"
+          [ "$LIVE" = "true" ] && ARGS="$ARGS --live"
+          set -o pipefail
+          python -m autopilot.plotline_daily $ARGS 2>&1 | tee plotline_run.log
+
+      - name: Keep the files of a run that did not upload (for review)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plotline-${{ github.run_id }}
+          path: |
+            output/plotline/*/final.mp4
+            output/plotline/*/thumbnail.jpg
+            output/plotline/*/short*/final.mp4
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: Save Plotline state
+        if: always()
+        run: scripts/plotline_state.sh push
+
+      - name: Alert if the run failed
+        if: failure()
+        run: |
+          python3 - <<'PY' || true
+          import os, sys
+          sys.path.insert(0, "src")
+          from autopilot import notify
+          notify.send("Plotline Data: the daily workflow FAILED. https://github.com/" + os.environ["GITHUB_REPOSITORY"] + "/actions/runs/" + os.environ["GITHUB_RUN_ID"])
+          PY
+
+      - name: Keepalive
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api --method PUT "repos/${GITHUB_REPOSITORY}/actions/workflows/plotline.yml/enable" || echo "keepalive call failed (non-fatal)"

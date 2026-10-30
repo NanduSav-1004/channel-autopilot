@@ -207,13 +207,14 @@ def allowed_numbers(bundle: dict) -> set[float]:
     return ok
 
 
-def check_script(script: dict, bundle: dict) -> list[str]:
+def check_script(script: dict, bundle: dict, min_words: int | None = None) -> list[str]:
     problems = []
     ok = allowed_numbers(bundle)
     scenes = script.get("scenes") or []
     words = sum(len(s.get("narration", "").split()) for s in scenes)
-    if words < TARGET_WORDS[0] * 0.9:
-        problems.append(f"too short: {words} words; ADD about {TARGET_WORDS[0] - words + 60} words as NEW scenes (more context on causes, "
+    need = TARGET_WORDS[0] if min_words is None else min_words
+    if words < need * 0.9:
+        problems.append(f"too short: {words} words; ADD about {need - words + 60} words as NEW scenes (more context on causes, "
                         "what it means for a household, comparisons between the datasets, a recap before the ending)")
     seen: dict[float, list[int]] = {}
     for i, sc in enumerate(scenes, 1):
@@ -525,51 +526,207 @@ def render_cached(specs: list[dict], folder: Path) -> list[Path]:
 
 
 # ---- thumbnail ----------------------------------------------------------------------------------------------------------
+# A real YouTube thumbnail: a bold photo of the subject, the striking number huge in lime, a red label, a few words in
+# heavy white type, and the data's own line rising across the picture.
 THUMB = """<!doctype html><html><head><meta charset="utf-8"><style>
 @font-face {{ font-family: "Space Grotesk"; src: url("{stage}/fonts/SpaceGrotesk.ttf"); font-weight: 300 700; }}
-html, body {{ margin: 0; background: #0b0d17; }}
+@font-face {{ font-family: "Inter"; src: url("{stage}/fonts/Inter.ttf"); font-weight: 100 900; }}
+html, body {{ margin: 0; width: 1280px; height: 720px; overflow: hidden; background: #0b0d17; }}
+.photo {{ position: absolute; inset: 0 0 0 330px; background: url("{photo}") center/cover; filter: saturate(1.45) contrast(1.15) brightness(1.02) sepia(.12); }}
+.shade {{ position: absolute; inset: 0; background: linear-gradient(90deg, #0b0d17 0%, #0b0d17 30%, rgba(11,13,23,.82) 44%, rgba(11,13,23,.15) 70%, rgba(11,13,23,0) 100%),
+          linear-gradient(0deg, rgba(11,13,23,.85) 0%, rgba(11,13,23,0) 38%); }}
+.glow {{ position: absolute; left: -120px; top: -160px; width: 760px; height: 760px; background: radial-gradient(circle, rgba(57,210,255,.28), transparent 65%); }}
+svg {{ position: absolute; inset: 0; }}
+.label {{ position: absolute; left: 58px; top: 52px; background: #ff3b5c; color: #fff; font: 700 44px "Space Grotesk"; letter-spacing: 1px;
+          padding: 6px 22px 10px; border-radius: 14px; transform: rotate(-4deg); box-shadow: 0 10px 30px rgba(255,59,92,.45); }}
+.num {{ position: absolute; left: 44px; top: 118px; font: 700 {nsize}px/1 "Space Grotesk"; color: #d4ff3a; letter-spacing: -6px;
+        -webkit-text-stroke: 12px #0b0d17; paint-order: stroke fill; transform: rotate(-3deg);
+        text-shadow: 0 0 40px rgba(212,255,58,.55), 0 14px 0 #0b0d17; }}
+.words {{ position: absolute; left: 58px; top: {wtop}px; width: 640px; font: 700 {wsize}px/1.02 "Space Grotesk"; color: #fff; text-transform: uppercase;
+          -webkit-text-stroke: 10px #0b0d17; paint-order: stroke fill; text-shadow: 0 8px 24px rgba(0,0,0,.6); }}
+.arrow {{ font: 700 0.42em/1 "Inter"; color: {acolor}; -webkit-text-stroke: 7px #0b0d17; paint-order: stroke fill; letter-spacing: 0;
+          vertical-align: 0.95em; margin-left: 14px; text-shadow: 0 0 30px {acolor}; }}
 </style></head><body>
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720">
-<defs>
- <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9" result="b"/>
-  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
- <radialGradient id="a" cx="20%" cy="25%" r="70%"><stop offset="0" stop-color="#39d2ff" stop-opacity=".35"/><stop offset="1" stop-color="#39d2ff" stop-opacity="0"/></radialGradient>
- <radialGradient id="c" cx="90%" cy="90%" r="60%"><stop offset="0" stop-color="#ff5c7a" stop-opacity=".35"/><stop offset="1" stop-color="#ff5c7a" stop-opacity="0"/></radialGradient>
- <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4ff3a" stop-opacity=".35"/><stop offset="1" stop-color="#d4ff3a" stop-opacity="0"/></linearGradient>
-</defs>
-<rect width="1280" height="720" fill="#0b0d17"/><rect width="1280" height="720" fill="url(#a)"/><rect width="1280" height="720" fill="url(#c)"/>
-<path d="{area}" fill="url(#fill)"/>
-<path d="{line}" fill="none" stroke="#d4ff3a" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow)"/>
-<circle cx="{px}" cy="{py}" r="20" fill="#f5f3ee" filter="url(#glow)"/>
-<text x="70" y="250" font-family="Space Grotesk" font-weight="700" font-size="{nsize}" fill="#d4ff3a" letter-spacing="-4" filter="url(#glow)">{number}</text>
-<text x="76" y="352" font-family="Space Grotesk" font-weight="700" font-size="84" fill="#f5f3ee" letter-spacing="-1">{words}</text>
-<rect x="76" y="388" width="140" height="12" rx="6" fill="#ff5c7a"/>
-</svg></body></html>"""
+<div class="photo"></div><div class="shade"></div><div class="glow"></div>
+<svg width="1280" height="720"><defs>
+ <filter id="g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4ff3a" stop-opacity=".40"/><stop offset="1" stop-color="#d4ff3a" stop-opacity="0"/></linearGradient></defs>
+ <path d="{area}" fill="url(#f)"/>
+ <path d="{line}" fill="none" stroke="#0b0d17" stroke-width="26" stroke-linejoin="round" stroke-linecap="round" opacity=".7"/>
+ <path d="{line}" fill="none" stroke="#d4ff3a" stroke-width="13" stroke-linejoin="round" stroke-linecap="round" filter="url(#g)"/>
+ <circle cx="{px}" cy="{py}" r="34" fill="none" stroke="#d4ff3a" stroke-width="6" opacity=".7"/>
+ <circle cx="{px}" cy="{py}" r="20" fill="#fff" filter="url(#g)"/>
+</svg>
+<div class="label">{label}</div><div class="num">{number}<span class="arrow">{arrow}</span></div><div class="words">{words}</div>
+</body></html>"""
+
+THUMB_PROMPT = """For a YouTube thumbnail of the data video "{title}" (striking number: {number}), return JSON {{"label": str (2 words, ALL
+CAPS, e.g. "RECORD HIGH", "ALL-TIME LOW", "UP 133%"; must be true for the number), "words": str (2 to 4 punchy words, e.g. "WHY EGGS EXPLODED"),
+"photo": str (a 1 to 3 word stock-photo search for a concrete, recognisable object, e.g. "egg carton", "gas pump", "house keys"),
+"direction": "up" or "down" (did the number rise or fall)}}"""
 
 
-def make_thumbnail(script: dict, bundle: dict, out: Path) -> Path:
-    """The striking number in lime, a few words, and the main series as a glowing line rising behind them."""
+def thumb_photo(query: str, cache: Path, gen=None) -> Path | None:
+    """The most fitting Pixabay photo for `query`: a vision model picks from the top results (keyword search alone returns
+    Easter eggs for "eggs"); the first result is the fallback."""
+    from autopilot import stock
+
+    try:
+        hits = stock.search_photos(query)[:6]
+    except (OSError, ValueError):
+        return None
+    if not hits:
+        return None
+    pick = 0
+    try:
+        thumbs = [stock._fetch(h["thumb"], cache / f"pixthumb_{h['id']}.jpg").read_bytes() for h in hits]
+        ans = (gen or llm.generate_json)(f"These {len(thumbs)} photos are candidates for a YouTube thumbnail about \"{query}\". Which one shows "
+                                         f"{query} most plainly and boldly, with warm, rich colour (real, ordinary, well lit, close up, nothing seasonal or decorative, not grey or washed out)? Return JSON "
+                                         "{\"index\": number from 0}", images=thumbs)
+        pick = max(0, min(len(hits) - 1, int(ans.get("index", 0))))
+    except (llm.LLMError, OSError, ValueError, TypeError):
+        pass
+    return stock.download_photo(hits[pick], cache)
+
+
+def make_thumbnail(script: dict, bundle: dict, out: Path, gen=None) -> Path:
     from html import escape
 
-    th = script.get("thumbnail") or {}
-    number, words = str(th.get("number") or ""), str(th.get("words") or script["title"])[:28]
+    gen = gen or llm.generate_json
+    th = dict(script.get("thumbnail") or {})
+    number = str(th.get("number") or "")
+    if not all(th.get(k) for k in ("label", "photo", "direction")):
+        try:
+            th |= {k: v for k, v in gen(THUMB_PROMPT.format(title=script["title"], number=number)).items() if v}
+        except llm.LLMError:
+            pass
     s = next(iter(bundle["series"].values()), None)
     pts = [v for _, v in datasets.window(s["points"], bundle["start"])] if s else [1, 2, 1.5, 3, 2.5, 4]
-    step = max(1, len(pts) // 120)
+    step = max(1, len(pts) // 90)
     pts = pts[::step] + [pts[-1]]
     lo, hi = min(pts), max(pts)
-    xy = [(560 + 680 * i / (len(pts) - 1), 650 - 430 * ((v - lo) / ((hi - lo) or 1))) for i, v in enumerate(pts)]
+    xy = [(470 + 760 * i / (len(pts) - 1), 690 - 330 * ((v - lo) / ((hi - lo) or 1))) for i, v in enumerate(pts)]
     line = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in xy)
     area = line + f" L{xy[-1][0]:.1f},720 L{xy[0][0]:.1f},720 Z"
-    html = THUMB.format(stage=motion.STAGE.as_uri(), area=area, line=line, px=xy[-1][0], py=xy[-1][1], number=escape(number),
-                        nsize=200 if len(number) <= 6 else 160, words=escape(words.upper()))
+    photo = thumb_photo(str(th.get("photo") or ""), out.parent / "photos", gen) if th.get("photo") else None
+    words = str(th.get("words") or script["title"]).upper()
+    up = str(th.get("direction", "up")).lower() != "down"
+    nsize = 250 if len(number) <= 5 else 210 if len(number) <= 7 else 170
+    html = THUMB.format(stage=motion.STAGE.as_uri(), photo=photo.resolve().as_uri() if photo else "", area=area, line=line, px=xy[-1][0],
+                        py=xy[-1][1], number=escape(number), nsize=nsize, label=escape(str(th.get("label") or "THE DATA").upper()),
+                        words=escape(words), wsize=86 if len(words) <= 16 else 72, wtop=118 + nsize + 30,
+                        arrow="▲" if up else "▼", acolor="#ff3b5c" if up else "#39d2ff")
     tmp = out.with_suffix(".html")
     tmp.write_text(html)
     with motion.Browser() as b:
         page = b._b.new_page(viewport={"width": 1280, "height": 720})
         page.goto(tmp.as_uri())
         page.evaluate("document.fonts.ready")
-        page.wait_for_timeout(200)
+        page.wait_for_timeout(300)
         page.screenshot(path=str(out), type="jpeg", quality=92)
     tmp.unlink()
     return out
+
+
+# ---- Shorts -------------------------------------------------------------------------------------------------------------
+SHORT_FRAME = {"canvas": [1080, 1920], "width": 1080, "height": 1350, "offset": 200}   # chart area; captions sit below it
+SHORT_CAPTIONS = {"res": (1080, 1920), "font": 74, "margin_v": 150, "group": 3, "upper": True, "outline": 6, "fontname": "Lato"}
+SHORT_WORDS = (70, 110)
+
+SHORTS_PROMPT = """From this Plotline Data video, "{title}", write {n} YouTube Shorts (vertical, 30 to 45 seconds each) for US and UK
+viewers. Each Short tells ONE surprising number from the video in a self-contained way: a hook in the first sentence (a question or
+a shocking number), 2 to 3 quick beats, and a last line pointing to the full video ("The full story is on the channel.").
+Each Short uses a different number and a different angle.
+
+FACTS (the ONLY numbers you may say; never invent a number):
+{facts}
+
+The full video's narration, for reference:
+{story}
+
+Each Short: {wmin} to {wmax} words, 4 to 6 scenes of 1 to 2 short sentences, each scene with one chart that SHOWS the number it says.
+Write numbers as digits ($6.23, 4.5%, 2020). No politics, no financial advice.
+
+{visuals}
+
+Data ids you may use: {ids}
+
+Return JSON {{"shorts": [{{"title": str (max 60 chars, punchy, no hashtags), "scenes": [{{"narration": str, "visual": {{...}}}}]}}]}}"""
+
+
+def write_shorts(script: dict, bundle: dict, n: int = 3, gen=None, log=print) -> list[dict]:
+    gen = gen or llm.generate_json
+    ids = list(bundle["series"]) + (["state data"] if bundle["states"] else []) + (["country data"] if bundle["owid"] else [])
+    facts = "\n".join(bundle["facts"])
+    story = " ".join(s["narration"] for s in script["scenes"])[:6000]
+    out = gen(SHORTS_PROMPT.format(title=script["title"], n=n, facts=facts, story=story, wmin=SHORT_WORDS[0], wmax=SHORT_WORDS[1],
+                                   visuals=VISUALS, ids=", ".join(ids)))
+    shorts = []
+    for sh in (out.get("shorts") or [])[:n]:
+        sh["scenes"] = [s for s in sh.get("scenes") or [] if s.get("narration") and isinstance(s.get("visual"), dict)]
+        if not sh["scenes"]:
+            continue
+        sh["scenes"][0]["visual"] = {"type": "title", "text": sh.get("title") or script["title"], "highlight": []}
+        try:
+            sh = _fix_short(sh, plan_title=script["title"], bundle=bundle, facts=facts, ids=ids, gen=gen, log=log)
+        except ValueError as exc:
+            log(f"[plotline] a Short was dropped: {exc}")
+            continue
+        shorts.append(sh)
+    return shorts
+
+
+def _fix_short(sh: dict, plan_title: str, bundle: dict, facts: str, ids: list[str], gen, log, tries: int = 3) -> dict:
+    for attempt in range(tries + 1):
+        problems = [p for p in check_script(sh, bundle, min_words=SHORT_WORDS[0]) if not p.startswith("too short")]
+        if not problems:
+            return sh
+        if attempt == tries:
+            break
+        log(f"[plotline] Short '{sh.get('title')}' check {attempt + 1}: {problems[:3]}")
+        for pr in problems:
+            if m := re.match(r"scene (\d+): (.*)", pr):
+                k = int(m.group(1)) - 1
+                new = gen(FIX_PROMPT.format(title=plan_title, before=json.dumps(sh["scenes"][k - 1]) if k else "(none)",
+                                            scene=json.dumps(sh["scenes"][k]), after=json.dumps(sh["scenes"][k + 1]) if k + 1 < len(sh["scenes"]) else "(none)",
+                                            problems=m.group(2), facts=facts, visuals=VISUALS, ids=", ".join(ids)))
+                if new.get("narration") and isinstance(new.get("visual"), dict):
+                    sh["scenes"][k] = {"narration": new["narration"], "visual": new["visual"]}
+    raise ValueError(f"still has problems: {problems[:3]}")
+
+
+def make_short(short: dict, bundle: dict, out_dir: Path, log=print) -> Path:
+    """A vertical Short: charts in the upper area, word-by-word captions below, voice and music."""
+    from autopilot import music, render, tts
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    narration, timings_path = out_dir / "narration.wav", out_dir / "timings.json"
+    if not timings_path.exists():
+        timings = tts.synthesize_script({"sections": [{"heading": f"scene {i + 1}", "narration": s["narration"]}
+                                                      for i, s in enumerate(short["scenes"])]}, narration, tts.build_engine(VOICE))
+        timings_path.write_text(json.dumps(timings))
+    timings = json.loads(timings_path.read_text())
+    total = timings[-1]["end"] + 1.0
+    specs = []
+    for i, sc in enumerate(short["scenes"]):
+        start = 0.0 if i == 0 else timings[i]["start"]
+        end = timings[i + 1]["start"] if i + 1 < len(timings) else total
+        spec = compile_visual(sc["visual"], bundle, end - start)
+        if spec["type"] == "map":                           # a map is too small in a vertical frame: show the ranking instead
+            spec = compile_visual({"type": "states_bars", "order": "top", "n": 8}, bundle, end - start)
+        specs.append({**spec, **SHORT_FRAME})
+    files = render_cached(specs, out_dir.parent / "scenes")
+    listing = out_dir / "scenes.txt"
+    listing.write_text("".join(f"file '{p.resolve()}'\n" for p in files))
+    charts = out_dir / "charts.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", str(charts)], check=True)
+    ass = out_dir / "captions.ass"
+    render.write_ass_words(timings, ass, SHORT_CAPTIONS)
+    beat = music.generate_beat(total + 2, out_dir / "music.wav", seed=len(short.get("title", "")), style="pulse")
+    mixed = out_dir / "mix.wav"
+    log(f"[mix] Short audio: {render.mix_audio(narration, beat, mixed)}")
+    final = out_dir / "final.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(charts), "-i", str(mixed), "-filter_complex", f"[0:v]ass={ass}[v];[1:a]apad[a]",
+                    "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p", "-c:a", "aac",
+                    "-b:a", "160k", "-t", f"{min(total, 59.5):.3f}", str(final)], check=True)
+    return final
