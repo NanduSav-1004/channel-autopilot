@@ -1,0 +1,105 @@
+# Data the Plotline channel may use. Every series here was checked against its source (FRED or Our World in Data) on
+# 2026-10-30. The topic planner can ONLY pick from this list, so a video can never cite a series that does not exist.
+# unit: what one value means. scale: multiply the raw value by this to get the unit (FRED often reports thousands/millions).
+# fmt: how numbers are shown and spoken (prefix, suffix, decimals, compact = 12.3 million style).
+
+fred:
+  # --- what things cost (BLS average prices, U.S. city average, monthly) ---
+  APU0000708111: {name: "Price of a dozen eggs", theme: food, unit: "US dollars per dozen", fmt: {prefix: "$", decimals: 2}}
+  APU0000703112: {name: "Price of ground beef", theme: food, unit: "US dollars per pound", fmt: {prefix: "$", decimals: 2}}
+  APU0000702111: {name: "Price of white bread", theme: food, unit: "US dollars per pound", fmt: {prefix: "$", decimals: 2}}
+  APU0000709112: {name: "Price of whole milk", theme: food, unit: "US dollars per gallon", fmt: {prefix: "$", decimals: 2}}
+  APU0000717311: {name: "Price of ground coffee", theme: food, unit: "US dollars per pound", fmt: {prefix: "$", decimals: 2}}
+  APU0000711211: {name: "Price of bananas", theme: food, unit: "US dollars per pound", fmt: {prefix: "$", decimals: 2}}
+  APU0000FF1101: {name: "Price of boneless chicken breast", theme: food, unit: "US dollars per pound", fmt: {prefix: "$", decimals: 2}}
+  APU0000706111: {name: "Price of a whole chicken", theme: food, unit: "US dollars per pound", fmt: {prefix: "$", decimals: 2}}
+  APU0000710212: {name: "Price of cheddar cheese", theme: food, unit: "US dollars per pound", fmt: {prefix: "$", decimals: 2}}
+  APU0000704111: {name: "Price of sliced bacon", theme: food, unit: "US dollars per pound", fmt: {prefix: "$", decimals: 2}}
+  APU0000712311: {name: "Price of tomatoes", theme: food, unit: "US dollars per pound", fmt: {prefix: "$", decimals: 2}}
+  APU0000701312: {name: "Price of white rice", theme: food, unit: "US dollars per pound", fmt: {prefix: "$", decimals: 2}}
+  APU0000711311: {name: "Price of navel oranges", theme: food, unit: "US dollars per pound", fmt: {prefix: "$", decimals: 2}}
+  APU0000715211: {name: "Price of white sugar", theme: food, unit: "US dollars per pound", fmt: {prefix: "$", decimals: 2}}
+  APU0000720311: {name: "Price of table wine", theme: food, unit: "US dollars per liter", fmt: {prefix: "$", decimals: 2}}
+  APU000072610: {name: "Price of electricity", theme: energy, unit: "US dollars per kilowatt-hour", fmt: {prefix: "$", decimals: 3}}
+  APU000074714: {name: "Price of regular gasoline", theme: energy, unit: "US dollars per gallon", fmt: {prefix: "$", decimals: 2}}
+  GASREGW: {name: "Regular gas price (weekly)", theme: energy, unit: "US dollars per gallon", fmt: {prefix: "$", decimals: 2}}
+  DCOILWTICO: {name: "Crude oil price (WTI)", theme: energy, unit: "US dollars per barrel", fmt: {prefix: "$", decimals: 0}}
+
+  # --- price indexes (best told as percent changes) ---
+  CPIAUCSL: {name: "Consumer prices (all items)", theme: inflation, unit: "index, 1982-84 = 100", index: true, fmt: {decimals: 1}}
+  CPILFESL: {name: "Core consumer prices (no food or energy)", theme: inflation, unit: "index, 1982-84 = 100", index: true, fmt: {decimals: 1}}
+  CUSR0000SAF11: {name: "Grocery prices (food at home)", theme: inflation, unit: "index, 1982-84 = 100", index: true, fmt: {decimals: 1}}
+  CUSR0000SEFV: {name: "Restaurant prices (food away from home)", theme: inflation, unit: "index, 1982-84 = 100", index: true, fmt: {decimals: 1}}
+  CUSR0000SEHA: {name: "Rent prices", theme: housing, unit: "index, 1982-84 = 100", index: true, fmt: {decimals: 1}}
+  CUSR0000SETA02: {name: "Used car prices", theme: cars, unit: "index, 1982-84 = 100", index: true, fmt: {decimals: 1}}
+  CUSR0000SETA01: {name: "New car prices", theme: cars, unit: "index, 1982-84 = 100", index: true, fmt: {decimals: 1}}
+  CUSR0000SEHF01: {name: "Electricity prices (index)", theme: energy, unit: "index, 1982-84 = 100", index: true, fmt: {decimals: 1}}
+  CUSR0000SEMD: {name: "Hospital service prices", theme: health, unit: "index, 1982-84 = 100", index: true, fmt: {decimals: 1}}
+  CUSR0000SERA: {name: "TV, video and audio prices", theme: tech, unit: "index, 1982-84 = 100", index: true, fmt: {decimals: 1}}
+  CUSR0000SAH21: {name: "Household energy prices", theme: energy, unit: "index, 1982-84 = 100", index: true, fmt: {decimals: 1}}
+
+  # --- housing ---
+  MSPUS: {name: "Median price of a new house", theme: housing, unit: "US dollars", fmt: {prefix: "$", decimals: 0}}
+  MORTGAGE30US: {name: "30-year mortgage rate", theme: housing, unit: "percent", fmt: {suffix: "%", decimals: 2}}
+  HOUST: {name: "New homes started per year", theme: housing, unit: "homes per year (annual rate)", scale: 1000, fmt: {decimals: 2, compact: true}}
+  CSUSHPINSA: {name: "US home prices (Case-Shiller)", theme: housing, unit: "index, January 2000 = 100", index: true, fmt: {decimals: 1}}
+  RRVRUSQ156N: {name: "Rental vacancy rate", theme: housing, unit: "percent", fmt: {suffix: "%", decimals: 1}}
+
+  # --- work and pay ---
+  UNRATE: {name: "US unemployment rate", theme: jobs, unit: "percent", fmt: {suffix: "%", decimals: 1}}
+  PAYEMS: {name: "Total US jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
+  MANEMP: {name: "Manufacturing jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
+  USLAH: {name: "Leisure and hospitality jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
+  USCONS: {name: "Construction jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
+  USTRADE: {name: "Retail jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
+  USEHS: {name: "Private education and health jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
+  USGOVT: {name: "Government jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
+  USMINE: {name: "Mining and logging jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 2, compact: true}}
+  USINFO: {name: "Information-sector jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 2, compact: true}}
+  CIVPART: {name: "Labor force participation rate", theme: jobs, unit: "percent", fmt: {suffix: "%", decimals: 1}}
+  JTSQUR: {name: "Quit rate (workers quitting each month)", theme: jobs, unit: "percent", fmt: {suffix: "%", decimals: 1}}
+  AHETPI: {name: "Average hourly pay (non-managers)", theme: pay, unit: "US dollars per hour", fmt: {prefix: "$", decimals: 2}}
+  FEDMINNFRWG: {name: "Federal minimum wage", theme: pay, unit: "US dollars per hour", fmt: {prefix: "$", decimals: 2}}
+  MEHOINUSA672N: {name: "Median household income (inflation-adjusted)", theme: pay, unit: "inflation-adjusted US dollars", fmt: {prefix: "$", decimals: 0}}
+
+  # --- money and debt ---
+  PSAVERT: {name: "Personal saving rate", theme: money, unit: "percent of income", fmt: {suffix: "%", decimals: 1}}
+  TDSP: {name: "Household debt payments (share of income)", theme: money, unit: "percent of disposable income", fmt: {suffix: "%", decimals: 1}}
+  CCLACBW027SBOG: {name: "Credit card balances at US banks", theme: money, unit: "US dollars", scale: 1.0e9, fmt: {prefix: "$", decimals: 0, compact: true}}
+  GFDEBTN: {name: "US federal debt", theme: money, unit: "US dollars", scale: 1.0e6, fmt: {prefix: "$", decimals: 1, compact: true}}
+  FEDFUNDS: {name: "Federal Reserve interest rate", theme: money, unit: "percent", fmt: {suffix: "%", decimals: 2}}
+  DGS10: {name: "10-year Treasury yield", theme: money, unit: "percent", fmt: {suffix: "%", decimals: 2}}
+
+  # --- shopping and life ---
+  TOTALSA: {name: "New vehicles sold per year", theme: cars, unit: "vehicles per year (annual rate)", scale: 1.0e6, fmt: {decimals: 1, compact: true}}
+  RSAFS: {name: "Monthly retail and restaurant sales", theme: shopping, unit: "US dollars per month", scale: 1.0e6, fmt: {prefix: "$", decimals: 0, compact: true}}
+  RSNSR: {name: "Monthly online and other non-store sales", theme: shopping, unit: "US dollars per month", scale: 1.0e6, fmt: {prefix: "$", decimals: 0, compact: true}}
+  ECOMPCTSA: {name: "Online shopping share of retail sales", theme: shopping, unit: "percent", fmt: {suffix: "%", decimals: 1}}
+  POPTHM: {name: "US population", theme: people, unit: "people", scale: 1000, fmt: {decimals: 1, compact: true}}
+  SPDYNLE00INUSA: {name: "US life expectancy at birth", theme: people, unit: "years", fmt: {decimals: 1, suffix: " years"}}
+  SPDYNTFRTINUSA: {name: "US births per woman", theme: people, unit: "births per woman", fmt: {decimals: 2}}
+  SPPOPGROWUSA: {name: "US population growth rate", theme: people, unit: "percent per year", fmt: {suffix: "%", decimals: 2}}
+
+  # --- United Kingdom ---
+  LRHUTTTTGBM156S: {name: "UK unemployment rate", theme: uk, unit: "percent", fmt: {suffix: "%", decimals: 1}}
+  QGBN628BIS: {name: "UK house prices", theme: uk, unit: "index, 2010 = 100", index: true, fmt: {decimals: 1}}
+
+# One series per US state; {ST} is the two-letter code.
+states:
+  unemployment: {pattern: "{ST}UR", name: "Unemployment rate", theme: jobs, unit: "percent", fmt: {suffix: "%", decimals: 1}}
+  population: {pattern: "{ST}POP", name: "Population", theme: people, unit: "people", scale: 1000, fmt: {decimals: 1, compact: true}}
+  income: {pattern: "MEHOINUS{ST}A646N", name: "Median household income", theme: pay, unit: "US dollars", fmt: {prefix: "$", decimals: 0}}
+
+# Our World in Data charts (CC BY 4.0): one value per country per year.
+owid:
+  life-expectancy: {name: "Life expectancy", theme: people, unit: "years", fmt: {decimals: 1, suffix: " years"}}
+  co-emissions-per-capita: {name: "CO2 emissions per person", theme: planet, unit: "tonnes per person per year", fmt: {decimals: 1, suffix: " t"}}
+  gdp-per-capita-worldbank: {name: "GDP per person (adjusted for prices)", theme: money, unit: "international dollars", fmt: {prefix: "$", decimals: 0}}
+  children-per-woman-un: {name: "Births per woman", theme: people, unit: "births per woman", fmt: {decimals: 2}}
+  share-of-population-urban: {name: "Share of people living in cities", theme: people, unit: "percent", fmt: {suffix: "%", decimals: 1}}
+  annual-working-hours-per-worker: {name: "Hours worked per worker per year", theme: jobs, unit: "hours per year", fmt: {decimals: 0}}
+  average-height-of-men: {name: "Average height of men", theme: people, unit: "centimeters", fmt: {decimals: 1, suffix: " cm"}}
+  obesity-prevalence-adults-who-gho: {name: "Share of adults with obesity", theme: health, unit: "percent", fmt: {suffix: "%", decimals: 1}}
+  daily-per-capita-caloric-supply: {name: "Calories available per person per day", theme: food, unit: "kilocalories per day", fmt: {decimals: 0}}
+  meat-supply-per-person: {name: "Meat supply per person", theme: food, unit: "kilograms per year", fmt: {decimals: 1, suffix: " kg"}}
+  share-electricity-renewables: {name: "Share of electricity from renewables", theme: planet, unit: "percent", fmt: {suffix: "%", decimals: 1}}

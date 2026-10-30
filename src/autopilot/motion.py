@@ -26,8 +26,17 @@ def _topo() -> dict:
     return {"states": json.loads((STAGE / "vendor" / "states-albers-10m.json").read_text())}
 
 
+CHROME_MB = 900        # rough memory one rendering Chrome needs at 1080p
+
+
 def workers() -> int:
-    return max(1, min(6, (os.cpu_count() or 2) - 1))
+    """Parallel Chromes: one per spare CPU core, but never more than the free memory can hold."""
+    try:
+        info = Path("/proc/meminfo").read_text().splitlines()
+        avail = int(next(ln for ln in info if ln.startswith("MemAvailable")).split()[1]) // 1024
+    except (OSError, StopIteration, ValueError):
+        avail = 4096
+    return max(1, min(6, (os.cpu_count() or 2) - 1, (avail - 1024) // CHROME_MB))
 
 
 def _encode(out: Path, w: int, h: int, fps: int) -> subprocess.Popen:
@@ -75,6 +84,53 @@ def render_scene(spec: dict, out: Path, fps: int = FPS, jobs: int | None = None)
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(Path(tmp) / "list.txt"),
                         "-c", "copy", str(out)], check=True)
     return out
+
+
+_worker_browser = None
+
+
+def _init_worker() -> None:
+    """Each worker process keeps one Chrome for all its chunks; it is closed when the pool shuts down."""
+    from multiprocessing import util
+
+    global _worker_browser
+    _worker_browser = Browser().__enter__()
+    util.Finalize(None, _worker_browser.__exit__, args=(None, None, None), exitpriority=10)
+
+
+def _work(args) -> str:
+    spec, first, last, out, fps = args
+    _render_frames(_worker_browser.page(spec), spec, first, last, Path(out), fps)
+    return out
+
+
+def render_many(specs: list[dict], out_dir: Path, fps: int = FPS, jobs: int | None = None, chunk_seconds: float = 4.0) -> list[Path]:
+    """Render many scenes with a pool of long-lived Chromes: every scene is cut into chunks of a few seconds, all chunks are
+    shared out across the workers, and each scene's chunks are joined in order. Returns one file per scene."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    tasks, per_scene = [], []
+    for i, spec in enumerate(specs):
+        frames = max(1, round(spec["duration"] * fps))
+        step = max(1, round(chunk_seconds * fps))
+        parts = []
+        for k, first in enumerate(range(0, frames, step)):
+            path = out_dir / f"s{i:03d}_{k:03d}.mp4"
+            parts.append(path)
+            tasks.append((spec, first, min(frames, first + step), str(path), fps))
+        per_scene.append(parts)
+    tasks.sort(key=lambda a: -(a[2] - a[1]))       # longest chunks first keeps every worker busy to the end
+    with ProcessPoolExecutor(jobs or workers(), mp_context=multiprocessing.get_context("fork"), initializer=_init_worker) as ex:
+        list(ex.map(_work, tasks))
+    outs = []
+    for i, parts in enumerate(per_scene):
+        listing = out_dir / f"s{i:03d}.txt"
+        listing.write_text("".join(f"file '{p.resolve()}'\n" for p in parts))
+        out = out_dir / f"scene{i:03d}.mp4"
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", str(out)], check=True)
+        for p in parts:
+            p.unlink()
+        outs.append(out)
+    return outs
 
 
 class Browser:

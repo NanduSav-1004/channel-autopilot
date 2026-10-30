@@ -24,9 +24,11 @@
 
   function fmt(v, s) {
     const d = s.decimals ?? 0;
-    const n = Math.abs(v) >= 1e6 && s.compact ? (v / 1e6).toFixed(1) + "M"
-      : v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
-    return (s.prefix || "") + n + (s.suffix || "");
+    let n = null;
+    if (s.compact) for (const [size, w] of [[1e12, "T"], [1e9, "B"], [1e6, "M"]]) if (Math.abs(v) >= size) { n = (v / size).toFixed(Math.max(d, 1)) + w; break; }
+    if (n === null) n = Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+    else n = n.replace("-", "");
+    return (v < 0 ? "-" : "") + (s.prefix || "") + n + (s.suffix || "");
   }
 
   // ---- stage ----------------------------------------------------------------------------------------------------------
@@ -241,30 +243,42 @@
   };
 
   SCENES.bars = (g, s) => {
+    // Ranked bars. With negative values the bars grow left or right from a zero line (falls in coral).
     const head = heading(g, s.title);
     const items = s.items.slice(0, 10), top = 260, rowH = (H - top - 130) / items.length;
-    const x = d3.scaleLinear().domain([0, d3.max(items, (d) => d.value)]).range([0, W - 760]);
+    const lo = Math.min(0, d3.min(items, (d) => d.value)), hi = Math.max(0, d3.max(items, (d) => d.value));
+    const X0 = 620, X1 = W - 260;
+    const x = d3.scaleLinear().domain([lo, hi]).range([X0, X1]);
+    const fit = (txt, size, maxW) => {                      // shrink a long label until it fits its column
+      const el = g.append("text").attr("font-size", size).attr("font-weight", 600).text(txt);
+      while (el.node().getComputedTextLength() > maxW && size > 20) el.attr("font-size", --size);
+      el.remove(); return size;
+    };
+    const zero = lo < 0 ? g.append("line").attr("x1", x(0)).attr("x2", x(0)).attr("y1", top - 10).attr("y2", top + rowH * items.length)
+      .attr("stroke", C.muted).attr("stroke-width", 2) : null;
     const rows = items.map((d, i) => {
       const r = g.append("g").attr("transform", `translate(0,${top + i * rowH})`);
-      const hot = s.highlight === i;
+      const hot = s.highlight === i, neg = d.value < 0;
       r.append("text").attr("class", "num").attr("x", 170).attr("y", rowH * 0.62).attr("font-size", 30).attr("fill", hot ? C.volt : C.muted)
         .attr("text-anchor", "end").text(i + 1);
-      r.append("text").attr("x", 200).attr("y", rowH * 0.62).attr("font-size", 34).attr("font-weight", 600).text(d.label);
-      r.append("rect").attr("x", 530).attr("y", rowH * 0.18).attr("height", rowH * 0.64).attr("rx", rowH * 0.18).attr("fill", C.faint).attr("opacity", 0.45)
-        .attr("width", x(x.domain()[1]));
-      const bar = r.append("rect").attr("x", 530).attr("y", rowH * 0.18).attr("height", rowH * 0.64).attr("rx", rowH * 0.18)
-        .attr("fill", hot ? "url(#hot)" : "url(#bar)").attr("filter", hot ? "url(#glow)" : null);
-      const val = r.append("text").attr("class", "num").attr("y", rowH * 0.64).attr("font-size", 32);
-      return { r, bar, val, d, i };
+      r.append("text").attr("x", 200).attr("y", rowH * 0.62).attr("font-size", fit(d.label, 34, X0 - 240)).attr("font-weight", 600).text(d.label);
+      r.append("rect").attr("x", X0).attr("y", rowH * 0.18).attr("height", rowH * 0.64).attr("rx", rowH * 0.18).attr("fill", C.faint)
+        .attr("opacity", 0.35).attr("width", X1 - X0);
+      const bar = r.append("rect").attr("y", rowH * 0.18).attr("height", rowH * 0.64).attr("rx", rowH * 0.18)
+        .attr("fill", neg ? C.coral : hot ? "url(#hot)" : "url(#bar)").attr("filter", hot ? "url(#glow)" : null);
+      const val = r.append("text").attr("class", "num").attr("y", rowH * 0.64).attr("font-size", 32).attr("text-anchor", neg ? "end" : "start");
+      return { r, bar, val, d, i, neg };
     });
     const src = source(g, s.source);
     return (t) => {
       head(t); src(t);
-      rows.forEach(({ r, bar, val, d, i }) => {
+      if (zero) zero.attr("opacity", prog(t, 0.3, 0.4));
+      rows.forEach(({ r, bar, val, d, i, neg }) => {
         const a = prog(t, 0.4 + i * 0.12, 0.4), p = E.expo(prog(t, 0.5 + i * 0.12, 1.4));
         r.attr("opacity", a).attr("transform", `translate(${(1 - E.out(a)) * -60},${top + i * rowH})`);
-        bar.attr("width", Math.max(1, x(d.value) * p));
-        val.attr("x", 530 + x(d.value) * p + 20).text(fmt(d.value * p, s));
+        const end = x(d.value * p), z = x(0);
+        bar.attr("x", Math.min(z, end)).attr("width", Math.max(1, Math.abs(end - z)));
+        val.attr("x", neg ? Math.min(z, end) - 16 : Math.max(z, end) + 16).text(fmt(d.value * p, s));
       });
     };
   };

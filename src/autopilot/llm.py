@@ -36,6 +36,8 @@ class LLMUnavailable(LLMError, TransientError):
     """Every model is out of quota or overloaded. Retry on a later run."""
 
 
+_busy_until: dict[str, float] = {}
+BUSY_SKIP = 600     # seconds
 _unavailable: set[str] = set()  # per process: models already known to be exhausted
 
 
@@ -149,7 +151,8 @@ def generate_json(
     if not images and not model:
         attempts += [("groq", m) for m in _groq_models()]
     if gemini_key:
-        attempts += [("gemini", m) for m in _gemini_models(model)]
+        gem = [("gemini", m) for m in _gemini_models(model)]
+        attempts = gem + attempts if os.environ.get("LLM_PREFER") == "gemini" else attempts + gem  # a channel with its own key may go first
     parts = [{"text": prompt}] + [
         {"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(b).decode()}}
         for b in images or []
@@ -159,7 +162,7 @@ def generate_json(
         "generationConfig": {"responseMimeType": "application/json", "temperature": 0.9},
     }).encode()
     for provider, m in attempts:
-        if f"{provider}:{m}" in _unavailable:
+        if f"{provider}:{m}" in _unavailable or _busy_until.get(f"{provider}:{m}", 0) > time.time():
             continue
         try:
             if provider == "groq":
@@ -169,5 +172,6 @@ def generate_json(
             _unavailable.add(f"{provider}:{m}")
             print(f"[llm] {provider}:{m} unavailable: {exc}", flush=True)
         except ModelBusy as exc:
+            _busy_until[f"{provider}:{m}"] = time.time() + BUSY_SKIP   # do not wait on an overloaded model again straight away
             print(f"[llm] {provider}:{m} busy, trying next: {exc}", flush=True)
     raise LLMUnavailable("all LLM models are out of quota or busy")
