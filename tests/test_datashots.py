@@ -106,8 +106,9 @@ def test_shots_for_places_a_shot_per_section_spaces_them_and_survives_failures()
 
     logs = []
     out = ds.shots_for(secs, (1280, 720), __import__("pathlib").Path("/tmp/x"), gen=gen, render=fake_render, log=logs.append)
-    assert [s["kind"] for s in out] == ["number"] and rendered == [("Speed of light", (1280, 720))]
-    assert out[0]["start"] < 4.0 and out[0]["seconds"] == 6.0
+    # A's shot is kept, B's is too close to it, and C (the model is down) gets a rule-based "77 K" number shot instead of nothing
+    assert [s["kind"] for s in out] == ["number", "number"] and rendered[0] == ("Speed of light", (1280, 720))
+    assert out[0]["start"] < 4.0 and out[0]["seconds"] == 6.0 and out[1]["start"] > 30.0
 
 
 def test_shots_for_never_raises_when_rendering_fails(tmp_path):
