@@ -295,6 +295,40 @@ class Stages:
             db.add_job(self.conn, plans[i]["title"], "short", job["source_title"], parent_id=job["id"], short_idx=i)
         return max(0, min(len(plans), n) - existing)
 
+    def redo_english_shorts(self, indexes: list[int], now=None) -> list[str]:
+        """Make today's English Shorts at these positions (0 = first) again, for example after a fix. Each old video is deleted from the
+        channel and its job is reset, but ONLY while it is still private and scheduled; a Short that is already public is never touched."""
+        from datetime import datetime, timezone
+
+        from autopilot import upload
+
+        now = now or datetime.now(timezone.utc)
+        job = self.conn.execute("SELECT id FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL "
+                                "ORDER BY id DESC LIMIT 1").fetchone()
+        if not job:
+            return ["redo: no uploaded long video"]
+        lines = []
+        yt = upload._client("en")
+        for r in self.conn.execute("SELECT * FROM jobs WHERE parent_id = ? AND kind = 'short' ORDER BY short_idx",
+                                   (job["id"],)).fetchall():
+            if r["short_idx"] not in indexes:
+                continue
+            if r["video_id"]:
+                items = yt.videos().list(part="status", id=r["video_id"]).execute().get("items", [])
+                st = items[0]["status"] if items else None
+                when = schedule.parse(st["publishAt"]) if st and st.get("publishAt") else None
+                if st is not None and not (st["privacyStatus"] == "private" and when and when > now):
+                    lines.append(f"Short {r['short_idx'] + 1}: kept (already public or not scheduled)")
+                    continue
+                if st is not None:
+                    upload.delete_video(r["video_id"], "en")
+            (self.dir(r) / "final.mp4").unlink(missing_ok=True)  # render again, so the new graphics are in it
+            self.conn.execute("UPDATE jobs SET video_id = NULL, thumbnail_set = 0, stage = 'short_render', status = 'pending', attempts = 0, "
+                              "error = NULL WHERE id = ?", (r["id"],))
+            self.conn.commit()
+            lines.append(f"Short {r['short_idx'] + 1}: old scheduled video deleted, will be made again")
+        return lines
+
     def fill_missing_shorts(self) -> int:
         """Today's uploaded long videos that have fewer Shorts than the daily rule: queue the missing ones. Run at the start of every
         daily run, including the backup runs, so a day that came up short is repaired by the next run."""

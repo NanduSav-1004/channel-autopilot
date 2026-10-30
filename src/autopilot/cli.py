@@ -102,6 +102,8 @@ def main() -> None:
     parser.add_argument("--src", help="ml: the finished English job folder to make a Malayalam edition of")
     parser.add_argument("--auto", action="store_true", help="ml: make and upload today's Malayalam edition (after `daily`)")
     parser.add_argument("--preview", type=int, metavar="N", help="topics: show the next N proposed topics without queueing any")
+    parser.add_argument("--redo-en-shorts", default="", help="daily: remake today's English Shorts at these positions (e.g. 0,1): deletes the "
+                                                           "old ones while still private and scheduled")
     parser.add_argument("--redo-shorts", action="store_true", help="ml --auto: delete today's still-private Malayalam Shorts and rebuild them")
     parser.add_argument("--retry", action="store_true", help="ml --auto: also retry editions that failed earlier today")
     parser.add_argument("--voice", help="ml: Gemini voice name (default: rotates Charon, Achird, Sulafat)")
@@ -142,6 +144,10 @@ def main() -> None:
     conn = db.connect()
     done_before = done_count(conn)
     skip_discovery = False
+    if args.command == "daily" and args.redo_en_shorts.strip():
+        wanted = [int(x) for x in args.redo_en_shorts.replace(" ", "").split(",") if x != ""]
+        for line in Stages(conn, cfg, privacy=args.privacy).redo_english_shorts(wanted):
+            print(f"[daily] {line}", flush=True)
     if args.command == "daily" and not cfg.dry_run and not args.force and already_done_today(conn, cfg):
         stages = Stages(conn, cfg, privacy=args.privacy)
         added = stages.fill_missing_shorts()       # the daily rule is N Shorts: a run that finds fewer repairs the day
