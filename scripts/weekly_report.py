@@ -31,7 +31,7 @@ def main() -> None:
     env.load_env(ROOT / ".env")
     end = date.today() - timedelta(days=2)           # the newest two days are still incomplete in Analytics
     out = {"end": str(end)}
-    for prof, name in CHANNELS.items():
+    for prof in CHANNELS:
         creds = load_credentials(prof)
         yt, an = build("youtube", "v3", credentials=creds), build("youtubeAnalytics", "v2", credentials=creds)
         ch = yt.channels().list(part="snippet,statistics", mine=True).execute()["items"][0]
