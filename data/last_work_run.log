@@ -1,0 +1,274 @@
+[topics] next category: space
+[topics] LLM proposed 5 candidate(s); need 1
+[topics] queued [space] 'The Voyager missions and their Golden Record' (search demand 1.00; source: 'Voyager program', 20000 chars)
+queued 1 new topic(s)
+[job 37] script ...
+[llm] groq:openai/gpt-oss-120b busy, trying next: openai/gpt-oss-120b rejected the request (HTTP 400): {"error":{"message":"Failed to generate JSON. Please adjust your prompt. See 'failed_generation' for more details.","type":"invalid_request_error","code":"json_
+[llm] groq:qwen/qwen3.8-27b busy, trying next: qwen/qwen3.8-27b HTTP 429
+[job 37] style: avg 10.8 words/sentence, longest 23, 1% over 22 words, hook 9 words, 'you' x9 per 1000 words
+[job 37] script done in 199s
+[job 37] qa ...
+[job 37] repairing sections [5] (4 unsupported claim(s))
+[llm] groq:openai/gpt-oss-20b busy, trying next: openai/gpt-oss-20b rejected the request (HTTP 400): {"error":{"message":"Failed to generate JSON. Please adjust your prompt. See 'failed_generation' for more details.","type":"invalid_request_error","code":"json_
+[llm] gemini:gemini-3.5-flash busy, trying next: gemini-3.5-flash HTTP 503
+[job 37] repairing sections [0, 5, 6] (4 unsupported claim(s))
+[llm] groq:openai/gpt-oss-120b busy, trying next: openai/gpt-oss-120b rejected the request (HTTP 413): {"error":{"message":"Request too large for model `openai/gpt-oss-120b` in organization `org_01m5d6azk1ec1t52m1m8kfhm4r` service tier `on_demand` on tokens per m
+[job 37] qa FAILED: QA rejected script: unsupported claim: Servicing probes in interstellar space is extremely difficult.; unsupported claim: Voyager 1 entered interstellar space on 25 August 2012, moving at 17 km/s relative to the Sun.
+[job 37] script ...
+[llm] gemini:gemini-3.6-flash busy, trying next: gemini-3.6-flash HTTP 503
+[job 37] style: avg 6.2 words/sentence, longest 24, 0% over 22 words, hook 11 words, 'you' x25 per 1000 words
+[job 37] script done in 317s
+[job 37] qa ...
+[job 37] repairing sections [0, 6] (2 unsupported claim(s))
+[job 37] repairing sections [0] (1 unsupported claim(s))
+[job 37] qa FAILED: QA rejected script: unsupported claim: The technology used was constrained by 1970s budgets.; unsupported claim: The Grand Tour aimed to explore Jupiter, Saturn, Uranus, and Neptune.; unsupported claim: The alignment allowed a single spacecraft to visit multiple outer planets.
+[job 37] script ...
+[job 37] style: avg 12.5 words/sentence, longest 29, 8% over 22 words, hook 12 words, 'you' x12 per 1000 words
+[job 37] script done in 201s
+[job 37] qa ...
+[job 37] repairing sections [0, 1, 2, 6] (5 unsupported claim(s))
+[job 37] rewriting title/description (4 unsupported statement(s))
+[job 37] repairing sections [0, 3, 5] (5 unsupported claim(s))
+[job 37] qa FAILED: QA rejected script: unsupported claim: Voyager 1 is the only human‑made object to have passed into interstellar space.; unsupported claim: The heliosheath was found to contain giant magnetic bubbles, which are still observed after crossing the heliopause.; unsupported claim: Data after crossing showed a change in magnetic field direction consistent with the interstellar magnetic field.
+processed 1 job(s); dry_run=False
+[daily] today's topic failed after all attempts (space); choosing another topic
+[topics] next category: what_if
+[topics] LLM proposed 5 candidate(s); need 1
+[topics] no search-demand signal (autocomplete unreachable or nothing matched): model order
+[topics] rejected 'Solar luminosity': article too thin (2254 < 6000 chars)
+[topics] rejected 'Geomagnetism': search returned a different article ("Earth's magnetic field")
+[topics] queued [what_if] 'What if all the oceans evaporated instantly?' (search demand 0.00; source: 'Hydrosphere', 8103 chars)
+[job 38] script ...
+[job 38] style: avg 12.3 words/sentence, longest 41, 4% over 22 words, hook 8 words, 'you' x23 per 1000 words
+[job 38] script done in 171s
+[job 38] qa ...
+[job 38] rewriting title/description (3 unsupported statement(s))
+[job 38] repairing sections [1, 2, 3, 4, 5] (8 unsupported claim(s))
+[llm] groq:openai/gpt-oss-120b unavailable: openai/gpt-oss-120b daily quota exhausted
+[llm] groq:qwen/qwen3.8-27b busy, trying next: qwen/qwen3.8-27b HTTP 429
+[job 38] qa done in 248s
+[job 38] voice ...
+[job 38] closing line: Thanks for journeying with us through this oceanless world—hit the subscribe button to keep exploring Earth’s hidden wonders next time.
+[tts] voice for this video: gemini:Sadachbia
+[0;93m2026-10-31 09:05:07.046057866 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+[tts] Gemini spoke 0 extra word(s) before the script; cutting the first 0.3s
+[tts] Gemini spoke 0 extra word(s) before the script; cutting the first 0.3s
+[tts] gemini model gemini-3.1-flash-tts-preview could not speak the whole narration (all Gemini TTS models failed (gemini-3.1-flash-tts-preview KeyError)); trying the next model
+[tts] cut 0.47s of noise from the end of a section
+[tts] Gemini spoke 13 extra word(s) before the script; cutting the first 6.2s
+[tts] cut 0.41s of noise from the end of a section
+[tts] Gemini spoke 13 extra word(s) before the script; cutting the first 6.6s
+[tts] cut 0.37s of noise from the end of a section
+[tts] Gemini spoke 13 extra word(s) before the script; cutting the first 6.2s
+[tts] cut 0.39s of noise from the end of a section
+[tts] Gemini spoke 13 extra word(s) before the script; cutting the first 6.4s
+[tts] cut 0.41s of noise from the end of a section
+[tts] Gemini spoke 13 extra word(s) before the script; cutting the first 6.0s
+[tts] cut 1.59s of noise from the end of a section
+[tts] Gemini spoke 13 extra word(s) before the script; cutting the first 6.2s
+[tts] cut 0.33s of noise from the end of a section
+[tts] Gemini spoke 13 extra word(s) before the script; cutting the first 6.2s
+[tts] whole narration spoken by Gemini model gemini-3.8-flash-tts
+[tts] word times for 'How many square kilometres is that, exac' looked wrong; using an even spread
+[tts] word times for 'It’s an area larger than the entire land' looked wrong; using an even spread
+[tts] word times for 'So when you look at a map, most of the b' looked wrong; using an even spread
+[tts] word times for 'The numbers don’t lie: 1.386\u202fbillion km³' looked wrong; using an even spread
+[tts] word times for 'Most of that tiny slice is locked away a' looked wrong; using an even spread
+[tts] word times for 'Only a sliver, about 0.3\u202f% of fresh wate' looked wrong; using an even spread
+[tts] word times for 'The total mass of the hydrosphere is abo' looked wrong; using an even spread
+[tts] word times for 'How much water does that actually leave ' looked wrong; using an even spread
+[tts] word times for 'You’d be left with the equivalent of a f' looked wrong; using an even spread
+[tts] word times for 'That’s a huge cloud of moisture, even if' looked wrong; using an even spread
+[tts] word times for 'You might think the air would empty out,' looked wrong; using an even spread
+[tts] word times for 'The hydrosphere is a closed system, so t' looked wrong; using an even spread
+[tts] word times for 'What does that mean for you right now?' looked wrong; using an even spread
+[tts] word times for 'It means the sky is still holding a thin' looked wrong; using an even spread
+[tts] word times for 'You can still feel humidity on your skin' looked wrong; using an even spread
+[tts] word times for 'The source tells us water is neither cre' looked wrong; using an even spread
+[tts] word times for 'So even with the oceans gone, the atmosp' looked wrong; using an even spread
+[tts] word times for 'Why does it matter that the vapor stays?' looked wrong; using an even spread
+[tts] word times for 'Because the water cycle depends on that ' looked wrong; using an even spread
+[tts] word times for 'You might ask: without oceans, where doe' looked wrong; using an even spread
+[tts] word times for 'The answer is simple – it stays in the a' looked wrong; using an even spread
+[tts] word times for 'The source notes there is no evidence th' looked wrong; using an even spread
+[tts] word times for 'Can you picture the scale?' looked wrong; using an even spread
+[tts] word times for 'Without any ocean surface, that rain has' looked wrong; using an even spread
+[tts] word times for 'Your local showers would still come from' looked wrong; using an even spread
+[tts] word times for 'Why does this matter for you?' looked wrong; using an even spread
+[tts] word times for 'The runoff numbers tell the story.' looked wrong; using an even spread
+[tts] word times for 'With no ocean precipitation, the balance' looked wrong; using an even spread
+[tts] word times for 'So the water cycle collapses from a two‑' looked wrong; using an even spread
+[tts] word times for 'That’s the breakdown you need to picture' looked wrong; using an even spread
+[tts] word times for 'Where does the water go?' looked wrong; using an even spread
+[tts] word times for 'Think about that.' looked wrong; using an even spread
+[tts] word times for 'You are holding almost nothing.' looked wrong; using an even spread
+[tts] word times for 'It is a tiny fraction.' looked wrong; using an even spread
+[tts] word times for 'A speck on a scale.' looked wrong; using an even spread
+[tts] word times for 'Does this change how you feel about the ' looked wrong; using an even spread
+[tts] word times for 'Actually, no.' looked wrong; using an even spread
+[tts] word times for 'Because the percentage is so small, the ' looked wrong; using an even spread
+[tts] word times for 'You might think removing that water chan' looked wrong; using an even spread
+[tts] word times for 'It does not.' looked wrong; using an even spread
+[tts] word times for 'The source tells us the mass is minuscul' looked wrong; using an even spread
+[tts] word times for 'Your gravity stays the same.' looked wrong; using an even spread
+[tts] word times for 'The pull on your feet is identical.' looked wrong; using an even spread
+[tts] word times for 'The planet does not get lighter in any m' looked wrong; using an even spread
+[tts] word times for 'You are still stuck in the same gravitat' looked wrong; using an even spread
+[tts] word times for 'The weight is gone, but the physics rema' looked wrong; using an even spread
+[tts] word times for 'This is a key point.' looked wrong; using an even spread
+[tts] word times for 'It regulates life.' looked wrong; using an even spread
+[tts] word times for 'But its mass is negligible to the planet' looked wrong; using an even spread
+[tts] word times for 'But there is one more factor.' looked wrong; using an even spread
+[tts] word times for 'The surface area.' looked wrong; using an even spread
+[tts] word times for 'The mass is stable.' looked wrong; using an even spread
+[tts] word times for 'It is no longer liquid.' looked wrong; using an even spread
+[tts] word times for 'It is gone.' looked wrong; using an even spread
+[tts] word times for 'Or it is elsewhere.' looked wrong; using an even spread
+[tts] word times for 'The source says the hydrosphere is intri' looked wrong; using an even spread
+[tts] word times for 'It is complex.' looked wrong; using an even spread
+[tts] word times for 'It is interdependent.' looked wrong; using an even spread
+[tts] word times for 'It is stable.' looked wrong; using an even spread
+[tts] word times for 'But now it is not.' looked wrong; using an even spread
+[tts] word times for 'The stability is broken.' looked wrong; using an even spread
+[tts] word times for 'The mass is constant.' looked wrong; using an even spread
+[tts] word times for 'The gravity is constant.' looked wrong; using an even spread
+[tts] word times for 'The water is gone.' looked wrong; using an even spread
+[tts] word times for 'This is the immediate physical reality.' looked wrong; using an even spread
+[tts] word times for 'The planet is the same weight.' looked wrong; using an even spread
+[tts] word times for 'But it is a different place.' looked wrong; using an even spread
+[tts] word times for 'And that is where the real trouble begin' looked wrong; using an even spread
+[tts] word times for 'The next piece of the puzzle is the atmo' looked wrong; using an even spread
+[tts] word times for 'The air is still there.' looked wrong; using an even spread
+[tts] word times for 'But it is dry.' looked wrong; using an even spread
+[tts] word times for 'How dry?' looked wrong; using an even spread
+[tts] word times for 'We need to see.' looked wrong; using an even spread
+[tts] word times for 'The vapor is still there.' looked wrong; using an even spread
+[tts] word times for 'But it is not cycling.' looked wrong; using an even spread
+[tts] word times for 'It is stagnant.' looked wrong; using an even spread
+[tts] word times for 'And that is a problem.' looked wrong; using an even spread
+[tts] word times for 'But let’s stay with the mass.' looked wrong; using an even spread
+[tts] word times for 'The mass is key.' looked wrong; using an even spread
+[tts] word times for 'It is small.' looked wrong; using an even spread
+[tts] word times for 'It is zero point zero two three percent.' looked wrong; using an even spread
+[tts] word times for 'That is the number.' looked wrong; using an even spread
+[tts] word times for 'Hold onto it.' looked wrong; using an even spread
+[tts] word times for 'It is still here.' looked wrong; using an even spread
+[tts] word times for 'The anchor remains.' looked wrong; using an even spread
+[tts] word times for 'And that is what keeps us down.' looked wrong; using an even spread
+[tts] word times for 'Is it the same?' looked wrong; using an even spread
+[tts] word times for 'Physically, yes.' looked wrong; using an even spread
+[tts] word times for 'But environmentally?' looked wrong; using an even spread
+[tts] word times for 'The mass is a red herring for the main e' looked wrong; using an even spread
+[tts] word times for 'The main event is the water.' looked wrong; using an even spread
+[tts] word times for 'And the water is gone.' looked wrong; using an even spread
+[tts] word times for 'The mass is the same.' looked wrong; using an even spread
+[tts] word times for 'The gravity is the same.' looked wrong; using an even spread
+[tts] word times for 'The world is different.' looked wrong; using an even spread
+[tts] word times for 'This is the paradox.' looked wrong; using an even spread
+[tts] word times for 'The weight is constant.' looked wrong; using an even spread
+[tts] word times for 'The environment is volatile.' looked wrong; using an even spread
+[tts] word times for 'And that is the setup.' looked wrong; using an even spread
+[tts] word times for 'The next part is about the air.' looked wrong; using an even spread
+[tts] word times for 'The air is still there.' looked wrong; using an even spread
+[tts] word times for 'But it is not the same air.' looked wrong; using an even spread
+[tts] word times for 'The humidity is gone.' looked wrong; using an even spread
+[tts] word times for 'The clouds are gone.' looked wrong; using an even spread
+[tts] word times for 'The rain is gone.' looked wrong; using an even spread
+[tts] word times for 'But the air is still there.' looked wrong; using an even spread
+[tts] word times for 'And that air is about to change.' looked wrong; using an even spread
+[tts] word times for 'But that is for later.' looked wrong; using an even spread
+[tts] word times for 'For now, remember the mass.' looked wrong; using an even spread
+[tts] word times for 'It is small.' looked wrong; using an even spread
+[tts] word times for 'It is tiny.' looked wrong; using an even spread
+[tts] word times for 'It is zero point zero two three percent.' looked wrong; using an even spread
+[tts] word times for 'That is the fact.' looked wrong; using an even spread
+[tts] word times for 'That is the science.' looked wrong; using an even spread
+[tts] word times for 'That is the truth.' looked wrong; using an even spread
+[tts] word times for 'And it is enough.' looked wrong; using an even spread
+[tts] word times for "It is enough to know the gravity didn't " looked wrong; using an even spread
+[tts] word times for 'It is enough to know the planet is still' looked wrong; using an even spread
+[tts] word times for 'It is enough to know the water is gone.' looked wrong; using an even spread
+[tts] word times for 'The mass is the baseline.' looked wrong; using an even spread
+[tts] word times for 'The rest is the story.' looked wrong; using an even spread
+[tts] word times for 'And the story is just beginning.' looked wrong; using an even spread
+[tts] word times for 'The next chapter is the atmosphere.' looked wrong; using an even spread
+[tts] word times for 'And the atmosphere is going to be a prob' looked wrong; using an even spread
+[tts] word times for 'A big problem.' looked wrong; using an even spread
+[tts] word times for 'But we will get there.' looked wrong; using an even spread
+[tts] word times for 'For now, sit with the number.' looked wrong; using an even spread
+[tts] word times for 'Zero point zero two three percent.' looked wrong; using an even spread
+[tts] word times for 'The water is gone.' looked wrong; using an even spread
+[tts] word times for 'The rest, 2.5%, is fresh.' looked wrong; using an even spread
+[tts] word times for 'Of the fresh, only 0.3% lives in lakes, ' looked wrong; using an even spread
+[tts] word times for 'About 503\u202f000\u202fkm³ evaporates from the se' looked wrong; using an even spread
+[tts] word times for 'The vapor rains back as snow or rain, fi' looked wrong; using an even spread
+[tts] word times for 'If the oceans disappeared, that evaporat' looked wrong; using an even spread
+[tts] word times for 'No ocean‑driven moisture, no replenishme' looked wrong; using an even spread
+[tts] word times for 'So the oceans are the engine that keeps ' looked wrong; using an even spread
+[job 38] voice done in 411s
+[job 38] visuals ...
+[llm] gemini:gemini-3.5-flash unavailable: gemini-3.5-flash daily quota exhausted
+[llm] gemini:gemini-3.6-flash unavailable: gemini-3.6-flash daily quota exhausted
+[job 38] visuals: 36 images and 42 videos; 7/7 sections have media
+[job 38] visuals done in 200s
+[job 38] render ...
+[mix] audio: music ducked
+[job 38] render done in 373s
+[job 38] upload ...
+[job 38] scheduled to go public at 2026-10-31T18:00:00Z
+[job 38] upload done in 26s
+[job 38] shorts ...
+[shorts] model proposed 4: 0 usable, 4 too long
+[shorts] after asking to shorten: 0 usable, 4 still too long
+[shorts] after trimming in code: 4 usable
+[llm] groq:qwen/qwen3.8-27b busy, trying next: qwen/qwen3.8-27b HTTP 429
+[job 38] queued 3 Short(s)
+[job 38] shorts done in 198s
+[job 39] short_script ...
+[job 39] short_script done in 0s
+[job 39] short_voice ...
+[tts] whole narration spoken by Gemini model gemini-3.1-flash-tts-preview
+[tts] word times for 'That includes every river, lake, glacier' looked wrong; using an even spread
+[tts] word times for 'Saltwater makes up 97.5 percent of that ' looked wrong; using an even spread
+[tts] word times for 'Fresh water is just 2.5 percent.' looked wrong; using an even spread
+[tts] word times for 'Oceans cover about 71 percent of Earth’s' looked wrong; using an even spread
+[tts] word times for 'When you look at a map, most blue is oce' looked wrong; using an even spread
+[tts] word times for 'The numbers show 1.386 billion cubic kil' looked wrong; using an even spread
+[job 39] short_voice done in 19s
+[job 39] short_render ...
+[datashot] bars 'Water Composition' at 14.6s (chosen by the model)
+[mix] audio: music ducked
+[job 39] short_render done in 44s
+[job 39] short_upload ...
+[job 39] short_upload done in 3s
+[job 40] short_script ...
+[job 40] short_script done in 0s
+[job 40] short_voice ...
+[tts] whole narration spoken by Gemini model gemini-3.1-flash-tts-preview
+[job 40] short_voice done in 19s
+[job 40] short_render ...
+[datashot] bars 'Water Distribution' at 5.7s (chosen by the model)
+[mix] audio: music ducked
+[job 40] short_render done in 48s
+[job 40] short_upload ...
+[job 40] short_upload done in 4s
+[job 41] short_script ...
+[job 41] short_script done in 0s
+[job 41] short_voice ...
+[tts] whole narration spoken by Gemini model gemini-3.1-flash-tts-preview
+[tts] word times for 'That is a huge cloud of moisture, even w' looked wrong; using an even spread
+[tts] word times for 'But water does not disappear.' looked wrong; using an even spread
+[tts] word times for 'It only moves.' looked wrong; using an even spread
+[job 41] short_voice done in 18s
+[job 41] short_render ...
+[datashot] no shot for 'Is the air still wet?': the model found no figures worth drawing
+[mix] audio: music ducked
+[job 41] short_render done in 40s
+[job 41] short_upload ...
+[job 41] short_upload done in 3s
+processed 4 job(s); dry_run=False
+{'id': 28, 'stage': 'new', 'status': 'failed', 'attempts': 3, 'error': 'qa: QA rejected script: unsupported claim: If it were only 189,000 kilometers away, its apparent size would double.; unsupported claim: If the Moon were at half its current distance, it would still be outside the Roche limit.; unsupported claim: The Moon could have solidified when orbiting at half its current distance, yet it remains intact today.'}
+{'id': 37, 'stage': 'new', 'status': 'failed', 'attempts': 3, 'error': 'qa: QA rejected script: unsupported claim: Voyager\u202f1 is the only human‑made object to have passed into interstellar space.; unsupported claim: The heliosheath was found to contain giant magnetic bubbles, which are still observed after crossing the heliopause.; unsupported claim: Data after crossing showed a change in magnetic field direction consistent with the interstellar magnetic field.'}
+[llm] gemini:gemini-3.5-flash unavailable: gemini-3.5-flash daily quota exhausted
+[llm] gemini:gemini-3.1-flash-lite busy, trying next: gemini-3.1-flash-lite HTTP 503
+malayalam edition FAILED: LLMUnavailable: all LLM models are out of quota or busy
