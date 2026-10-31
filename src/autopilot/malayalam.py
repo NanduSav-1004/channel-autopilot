@@ -18,7 +18,7 @@ from autopilot import closing, llm, tts
 from autopilot.config import cta_on, mascot_style
 from autopilot.shots import estimate_timings as shots_estimate_timings
 
-TRANSLATE_MODELS = "gemini-3.5-flash,gemini-3.1-flash-lite"
+TRANSLATE_MODELS = "gemini-3.5-flash,gemini-3.1-flash-lite,gemini-3.5-flash-lite"   # the last one is a fallback: both others were unavailable at once on 31 Oct
 ML_VOICES = [{"engine": "gemini", "name": n} for n in ("Charon", "Achird", "Sulafat")]
 FONT_ML_BOLD = "/usr/share/fonts/truetype/noto/NotoSansMalayalam-Bold.ttf"
 ML_CAPTIONS = {"res": (1280, 720), "font": 46, "margin_v": 50, "group": 6, "upper": False, "outline": 5,
@@ -773,7 +773,7 @@ def run_daily_shorts(conn, cfg, long_job, src: Path, voice: dict, privacy: str, 
     from autopilot import notify, schedule, shorts, upload
 
     ml_cfg = cfg.malayalam or {}
-    skip = "" if retry else " AND COALESCE(ml_status, '') NOT LIKE 'failed%'"
+    skip = "" if retry else _SKIP_FAILED.format(col="ml_status")
     rows = conn.execute("SELECT * FROM jobs WHERE kind = 'short' AND parent_id = ? AND video_id IS NOT NULL "
                         f"AND ml_video_id IS NULL AND COALESCE(ml_status, '') != 'built'{skip} ORDER BY short_idx",
                         (long_job["id"],)).fetchall()
@@ -831,10 +831,15 @@ def ist_text(ts: str | None) -> str:
 
 
 # ---------- the daily Malayalam edition: build it, upload it to the Malayalam channel, remember it ----------
+# A failed edition is skipped by the backup runs, so a real fault cannot repeat five times a day. The exception: "the models were out of quota
+# or busy" (LLMUnavailable) says nothing about the edition itself, so the next run of the day tries again.
+_SKIP_FAILED = " AND (COALESCE({col}, '') NOT LIKE 'failed%' OR {col} LIKE 'failed: LLMUnavailable%')"
+
+
 def edition_due(conn, retry: bool = False):
     """The newest English long video that is uploaded and has no Malayalam edition yet. An edition that failed is retried
-    only when asked (a manual run), so five backup runs a day cannot repeat a failure five times."""
-    skip = "" if retry else " AND COALESCE(ml_status, '') NOT LIKE 'failed%'"
+    only when asked (a manual run) or when it failed because the models were unavailable."""
+    skip = "" if retry else _SKIP_FAILED.format(col="ml_status")
     return conn.execute(
         "SELECT * FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL AND ml_video_id IS NULL "
         f"AND date(created_at) = date('now') AND COALESCE(ml_status, '') != 'built'{skip} ORDER BY id DESC LIMIT 1").fetchone()
@@ -842,7 +847,7 @@ def edition_due(conn, retry: bool = False):
 
 def shorts_pending(conn, retry: bool = False):
     """Today's long video whose Malayalam edition is up but whose Malayalam Shorts are not all made."""
-    skip = "" if retry else " AND COALESCE(s.ml_status, '') NOT LIKE 'failed%'"
+    skip = "" if retry else _SKIP_FAILED.format(col="s.ml_status")
     return conn.execute(
         "SELECT l.* FROM jobs l WHERE l.kind = 'long' AND l.ml_video_id IS NOT NULL AND date(l.created_at) = date('now') "
         "AND EXISTS (SELECT 1 FROM jobs s WHERE s.parent_id = l.id AND s.video_id IS NOT NULL AND s.ml_video_id IS NULL "

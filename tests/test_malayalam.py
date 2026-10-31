@@ -445,3 +445,15 @@ def test_too_few_faithful_sentences_means_the_short_is_rejected():
 
     with pytest.raises(ml.TranslationRejected):
         ml.translate_short_by_sentence({"title": "T", "narration": "One two. Three four. Five six. Seven eight."}, 80, gen, log=lambda s: None)
+
+
+def test_a_failed_edition_is_retried_by_backup_runs_only_when_the_models_were_unavailable():
+    from autopilot import db, malayalam
+
+    conn = db.connect(":memory:")
+    conn.execute("INSERT INTO jobs (id, topic, kind, video_id, stage, status, ml_status) VALUES (1, 't', 'long', 'v', 'shorts', 'done', 'failed: LLMUnavailable')")
+    conn.commit()
+    assert malayalam.edition_due(conn)["id"] == 1                              # quota or busy: tried again by the next run
+    conn.execute("UPDATE jobs SET ml_status = 'failed: ValueError' WHERE id = 1")
+    assert malayalam.edition_due(conn) is None                                 # a real fault: not repeated by every backup run
+    assert malayalam.edition_due(conn, retry=True)["id"] == 1                  # but a manual run still retries it
