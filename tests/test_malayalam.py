@@ -457,3 +457,34 @@ def test_a_failed_edition_is_retried_by_backup_runs_only_when_the_models_were_un
     conn.execute("UPDATE jobs SET ml_status = 'failed: ValueError' WHERE id = 1")
     assert malayalam.edition_due(conn) is None                                 # a real fault: not repeated by every backup run
     assert malayalam.edition_due(conn, retry=True)["id"] == 1                  # but a manual run still retries it
+
+
+def test_a_section_the_reviewer_keeps_rejecting_is_translated_sentence_by_sentence():
+    from autopilot import malayalam as ml
+
+    sec = {"heading": "Vapor", "narration": "Water vapor stays. It weighs two hundred trillion tonnes. The air gets heavy. Rain returns later. Seas would refill."}
+
+    def gen(prompt):
+        if "Translate this narration" in prompt:                                  # the whole section: always one sentence the reviewer rejects
+            return {"heading": "h", "narration": "മലയാളം. ഇരുനൂറു ലക്ഷം കോടി ടൺ. ഇനിയും."}
+        if "ONE sentence" in prompt:
+            return {"text": "ഇരുനൂറു ലക്ഷം കോടി ടൺ." if "two hundred trillion" in prompt else "വാക്യം."}
+        if "You check a Malayalam" in prompt:                                    # the reviewer: wrongly rejects the trillion sentence
+            return {"issues": [{"severity": "major", "issue": "the number is wrong"}]} if "ഇരുനൂറു ലക്ഷം കോടി" in prompt else {"issues": []}
+        if "A reviewer compared" in prompt:
+            return {"real": [True]}
+        return {}
+
+    out = ml.translate_section(sec, gen, log=lambda m: None)
+    assert "ഇരുനൂറു" not in out["narration"] and out["narration"].count("വാക്യം.") == 4          # the one rejected sentence left out, the rest kept
+    import pytest
+    with pytest.raises(ml.TranslationRejected):                                   # but a section that mostly fails still rejects the edition
+        ml.translate_section_by_sentence(sec, lambda p: {"text": "x"} if "ONE sentence" in p else {"issues": [{"severity": "major", "issue": "bad"}], "real": [True]}, log=lambda m: None)
+
+
+def test_the_reviewer_is_told_the_indian_numbering_system():
+    from autopilot import malayalam as ml
+
+    for prompt in (ml.CHECK_PROMPT, ml.SHORT_CHECK_PROMPT, ml.VERIFY_PROMPT):
+        assert "ലക്ഷം കോടി" in prompt and "TRILLION" in prompt
+    assert "Western scale words" in ml.SECTION_PROMPT and "Western scale words" in ml.SENTENCE_PROMPT

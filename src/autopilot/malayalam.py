@@ -56,6 +56,8 @@ SECTION_PROMPT = """Translate this narration for a YouTube science explainer int
 Rules: conversational and clear like a good presenter, not literal word-for-word and not stiff textbook language; short sentences
 (each ends with . ? or !); keep common English technical terms (for example Mpemba effect, freezer, thermodynamics) the way Malayalam
 speakers say them; keep every number, date and name accurate; add nothing that is not in the English and leave nothing out.
+Numbers: keep digits as digits, and keep Western scale words (million, billion, trillion) in Malayalam script (മില്യൺ, ബില്യൺ, ട്രില്യൺ);
+never convert them to lakh or crore.
 Return JSON {{"heading": str, "narration": str}}.
 
 Heading: {heading}
@@ -80,6 +82,10 @@ meaning that is reversed or distorted; an important sentence of the English that
 Return JSON {{"issues": [{{"severity": "major" or "minor", "issue": str}}]}} (an empty list when the translation is faithful).
 Describe each issue in English.
 
+Numbers in Malayalam may use the Indian system: ആയിരം = 1,000; ലക്ഷം (lakh) = 100,000; കോടി (crore) = 10,000,000; ലക്ഷം കോടി = 1,000,000,000,000
+(one TRILLION); ശതകോടി = 1,000,000,000 (one billion); ദശലക്ഷം = 1,000,000. Before calling a number wrong, CALCULATE both values in plain digits,
+step by step. Two numbers written differently but equal in value are NOT an error.
+
 ENGLISH:
 {english}
 
@@ -91,6 +97,10 @@ Reviewers sometimes make mistakes or misread the meaning. For each reported prob
 decide whether it is a REAL substantive error (the Malayalam really says something different from the English) or a
 false alarm (the Malayalam matches the English, or the difference is only style).
 Return JSON {{"real": [true or false for each problem, in order]}}.
+
+Numbers in Malayalam may use the Indian system: ആയിരം = 1,000; ലക്ഷം (lakh) = 100,000; കോടി (crore) = 10,000,000; ലക്ഷം കോടി = 1,000,000,000,000
+(one TRILLION); ശതകോടി = 1,000,000,000 (one billion); ദശലക്ഷം = 1,000,000. Before calling a number wrong, CALCULATE both values in plain digits,
+step by step. Two numbers written differently but equal in value are NOT an error.
 
 ENGLISH:
 {english}
@@ -104,7 +114,7 @@ REPORTED PROBLEMS:
 SHORT_PROMPT = """Translate this YouTube Short script (a science explainer, spoken in under {seconds} seconds) into natural SPOKEN Malayalam
 for a Kerala audience, in Malayalam script.
 Rules: conversational and punchy, short sentences (each ends with . ? or !); keep common English technical terms the way Malayalam
-speakers say them; keep every number, date and name accurate and add nothing that is not in the English. Malayalam words are long,
+speakers say them; keep every number, date and name accurate and add nothing that is not in the English. Numbers: keep digits as digits, and keep Western scale words (million, billion, trillion) in Malayalam script (മില്യൺ, ബില്യൺ, ട്രില്യൺ); never convert them to lakh or crore. Malayalam words are long,
 so the WHOLE narration must be at most {max_words} Malayalam words: keep the hook first and the payoff last, and if it does not
 fit, leave out the least important detail (never change a fact or a number).
 Title: at most 60 characters, curiosity-driven and honest, Malayalam script (English terms may stay in English).
@@ -117,6 +127,10 @@ SHORT_CHECK_PROMPT = """You check a Malayalam Short script against its English o
 details and simplify. It must not CHANGE or ADD facts.
 """ + SEVERITY + """
 Return JSON {{"issues": [{{"severity": "major" or "minor", "issue": str}}]}} (an empty list when faithful). Describe each in English.
+
+Numbers in Malayalam may use the Indian system: ആയിരം = 1,000; ലക്ഷം (lakh) = 100,000; കോടി (crore) = 10,000,000; ലക്ഷം കോടി = 1,000,000,000,000
+(one TRILLION); ശതകോടി = 1,000,000,000 (one billion); ദശലക്ഷം = 1,000,000. Before calling a number wrong, CALCULATE both values in plain digits,
+step by step. Two numbers written differently but equal in value are NOT an error.
 
 ENGLISH:
 {english}
@@ -134,6 +148,8 @@ shorter script with only exact statements is fine. Keep the hook first and a pay
 
 SENTENCE_PROMPT = """Translate this ONE sentence from a science Short into natural SPOKEN Malayalam, in Malayalam script. Keep numbers, names and
 meaning exactly; keep common English technical terms as Malayalam speakers say them; add nothing.
+Numbers: keep digits as digits, and keep Western scale words (million, billion, trillion) in Malayalam script (മില്യൺ, ബില്യൺ, ട്രില്യൺ);
+never convert them to lakh or crore.
 Return JSON {{"text": str}}.
 
 Sentence: {sentence}"""
@@ -282,10 +298,38 @@ def translate_section(sec: dict, gen: Callable[[str], dict], log: Callable[[str]
         if not issues:
             return {"heading": str(out.get("heading", sec["heading"])).strip(), "narration": narration}
         if attempt == REPAIR_ROUNDS:
-            raise TranslationRejected(f"{sec['heading']!r}: " + "; ".join(issues[:3]))
+            log(f"[ml] {sec['heading']!r} still has problems ({'; '.join(issues[:2])}); translating it sentence by sentence")
+            return translate_section_by_sentence(sec, gen, log)
         log(f"[ml] repairing the translation of {sec['heading']!r}: {'; '.join(issues[:2])}")
         out = gen(prompt + REPAIR_PROMPT.format(issues="\n".join(f"- {i}" for i in issues), previous=narration))
     raise AssertionError("unreachable")
+
+
+def translate_section_by_sentence(sec: dict, gen: Callable[[str], dict], log: Callable[[str], None] = print, keep_share: float = 0.6) -> dict:
+    """The last resort for a section (the same idea as for a Short): translate and check ONE sentence at a time, leave out any sentence that
+    cannot be made faithful in two tries. One reviewer false alarm then costs a sentence, not the whole Malayalam edition. Raises
+    TranslationRejected only if fewer than `keep_share` of the sentences survive."""
+    english = [s for s in re.split(r"(?<=[.!?])\s+", sec["narration"].strip()) if s]
+    kept: list[str] = []
+    for sent in english:
+        for _ in range(2):
+            try:
+                text = str(gen(SENTENCE_PROMPT.format(sentence=sent)).get("text", "")).strip()
+            except (llm.LLMError, KeyError, TypeError, ValueError, AttributeError):
+                continue
+            if text and not check_short(sent, text, gen):
+                kept.append(text)
+                break
+        else:
+            log(f"[ml] left out one sentence of {sec['heading']!r}: it could not be translated faithfully")
+    if len(kept) < keep_share * max(1, len(english)):
+        raise TranslationRejected(f"{sec['heading']!r}: only {len(kept)} of {len(english)} sentences could be translated faithfully")
+    heading = sec["heading"]
+    try:
+        heading = str(gen(SENTENCE_PROMPT.format(sentence=heading)).get("text", "")).strip() or heading
+    except (llm.LLMError, KeyError, TypeError, ValueError, AttributeError):
+        pass
+    return {"heading": heading, "narration": " ".join(kept)}
 
 
 def translate_script(script: dict, gen: Callable[[str], dict] = llm.generate_json) -> dict:
