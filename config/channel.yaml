@@ -48,6 +48,6 @@ cta:                             # calls to action (switched ON 2026-10-31 after
   short_tag: true                # for the last ~2.5 s of a Short, a tag on screen: "full video on the channel" (no spoken ask)
 render:
   mascot: shorts                 # a talking character in the corner: false | shorts | all (approved for Shorts only, 2026-10-27)
-  data_shots: shorts             # animated number, bar, timeline and line-chart shots at the moment the figures are spoken: false | shorts | all
+  data_shots: all               # animated number, bar, timeline and line-chart shots at the moment the figures are spoken: false | shorts | all
   mascot_style: bulb             # bulb ("Beam", chosen) | atom ("Orbit")
 dry_run: true   # no public upload until the upload spike passes and this is set to false
