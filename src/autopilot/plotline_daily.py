@@ -6,6 +6,7 @@ uploaded video ids. Run: python -m autopilot.plotline_daily [--live] [--privacy 
 """
 import argparse
 import json
+import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -57,10 +58,33 @@ def description(script: dict, bundle: dict, long_id: str | None = None) -> str:
     return "\n\n".join(p for p in parts if p)[:4900]
 
 
+def retry_thumbnails(state: dict, live: bool) -> None:
+    """Set the thumbnail of any recent uploaded video that has none yet (YouTube refuses custom thumbnails until the channel is
+    phone-verified; once it is, the next run catches up). The thumbnails are kept with the state for this."""
+    if not live:
+        return
+    from autopilot import upload
+
+    changed = False
+    for day, e in sorted(state["days"].items())[-7:]:
+        thumb = day_dir(day) / "thumbnail.jpg"
+        if e.get("video_id") and not e.get("thumbnail_set") and thumb.exists():
+            try:
+                upload.set_thumbnail(e["video_id"], thumb, profile="data")
+                e["thumbnail_set"], changed = True, True
+                log(f"[plotline] thumbnail set for {day} ({e['video_id']})")
+            except Exception as exc:  # noqa: BLE001 - never a reason to stop the day's work
+                log(f"[plotline] thumbnail for {day} still refused: {str(exc)[:120]}")
+                break                    # the same refusal would repeat for every day
+    if changed:
+        save_state(state)
+
+
 def run(live: bool, privacy: str, now: datetime | None = None) -> str:
     now = now or datetime.now(timezone.utc)
     day = now.strftime("%Y-%m-%d")
     state = load_state()
+    retry_thumbnails(state, live)
     entry = state["days"].setdefault(day, {})
     shorts_done = [s for s in entry.get("shorts", []) if s.get("video_id")]
     if entry.get("video_id") and len(shorts_done) >= SHORTS_PER_DAY:
@@ -88,6 +112,7 @@ def run(live: bool, privacy: str, now: datetime | None = None) -> str:
         if not entry.get("video_id"):
             video = plotline.make_video(script, bundle, work, log=log)
             thumb = plotline.make_thumbnail(script, bundle, work / "thumbnail.jpg")
+            shutil.copy(thumb, d / "thumbnail.jpg")          # kept with the state, so a refused upload can be retried later
             if live:
                 from autopilot import upload
 

@@ -169,3 +169,27 @@ def test_the_same_chart_may_not_appear_more_than_twice():
     other = {"narration": "Eggs cost a lot.", "visual": {"type": "line", "series": "X", "start": "2010"}}
     problems = plotline.check_script({"scenes": [same, other, same, same]}, b, min_words=0)
     assert any("scene 4: the same chart" in p for p in problems) and not any("scene 3: the same chart" in p for p in problems)
+
+
+def test_a_refused_thumbnail_is_retried_on_a_later_run(tmp_path, monkeypatch):
+    import json
+
+    from autopilot import plotline_daily, upload
+
+    monkeypatch.setattr(plotline_daily, "STATE", tmp_path)
+    (tmp_path / "2026-11-01").mkdir()
+    (tmp_path / "2026-11-01" / "thumbnail.jpg").write_bytes(b"jpg")
+    state = {"days": {"2026-11-01": {"video_id": "abc"}}}
+    calls = []
+
+    def refuse(video_id, path, profile="en"):
+        calls.append(video_id)
+        raise OSError("forbidden")
+
+    monkeypatch.setattr(upload, "set_thumbnail", refuse)
+    plotline_daily.retry_thumbnails(state, live=True)
+    assert calls == ["abc"] and not state["days"]["2026-11-01"].get("thumbnail_set")
+    monkeypatch.setattr(upload, "set_thumbnail", lambda video_id, path, profile="en": calls.append("ok"))
+    plotline_daily.retry_thumbnails(state, live=True)
+    assert state["days"]["2026-11-01"]["thumbnail_set"] is True
+    assert json.loads((tmp_path / "state.json").read_text())["days"]["2026-11-01"]["thumbnail_set"]
