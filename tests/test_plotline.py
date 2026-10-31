@@ -240,7 +240,7 @@ def test_scatter_and_stacked_compile_and_need_their_data():
     with pytest.raises(ValueError):
         plotline.compile_visual({"type": "scatter"}, b, 6.0)            # no second dataset in this video
     pts = [(f"{y}-{m:02d}-01", 100.0 + y - 2000 + m) for y in range(2000, 2026) for m in range(1, 13)]
-    mk = lambda i, n: {"id": i, "name": n, "unit": "jobs", "source": "FRED", "theme": "jobs", "fmt": {"decimals": 1, "compact": True}, "additive": True, "points": pts}  # noqa: E731
+    mk = lambda i, n: {"id": i, "name": n, "unit": "jobs", "source": "FRED", "theme": "jobs", "fmt": {"decimals": 1, "compact": True}, "additive": True, "points": pts}
     b["series"] |= {"A": mk("A", "A jobs"), "B": mk("B", "B jobs"), "C": mk("C", "C jobs")}
     spec = plotline.compile_visual({"type": "stacked", "series": ["A", "B", "C"], "as": "share"}, b, 6.0)
     assert spec["type"] == "stacked" and len(spec["layers"]) == 3 and spec["mode"] == "share"
