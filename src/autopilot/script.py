@@ -20,8 +20,9 @@ OUTLINE_PROMPT = """You are the scriptwriter for a faceless YouTube channel abou
 Plan a video about: "{topic}". Style: {style}
 Use ONLY facts supported by the SOURCE below. Never plan medical, financial or legal advice.
 
-Plan exactly {n} sections. Section 1 is the hook: it opens with a startling fact or a real question the video
-answers. The title is concrete and curiosity-driven (numbers and superlatives only if the SOURCE supports them).
+Plan exactly {n} sections. Section 1 is the COLD OPEN: its key_points are the headline answer the video will deliver (a teaser)
+and ONE vivid picture or comparison, with no statistics; the numbers belong in sections 2 onward. The title keeps the topic's own
+words (the topic is "{topic}") and is concrete and curiosity-driven (numbers and superlatives only if the SOURCE supports them).
 The last section is the payoff. Every section has 3-5 concrete key_points taken from the SOURCE
 (facts, numbers, names, mechanisms), and a short visual_query (2-4 words) for image search.
 
@@ -45,6 +46,52 @@ STYLE_RULES = """VOICE AND PACE (this is spoken aloud on YouTube; holding attent
 HOOK_RULE = ("- The FIRST sentence is the hook: AT MOST 12 words; a startling fact, a counter-intuitive claim or a direct "
              "question that grabs attention within 3 seconds. No throat-clearing.")
 
+COLD_OPEN_RULE = """- THIS IS THE COLD OPEN, the part that decides whether the viewer stays past the first minute.
+  Sentence 1 is the hook. Sentences 2-3 TEASE THE ANSWER this video delivers, in plain words (the most surprising thing the SOURCE says), and
+  promise it will be explained. Then paint ONE vivid picture or comparison. Use AT MOST ONE number in the first 150 words: no lists of sizes,
+  dates or statistics (they come later in the video)."""
+
+COLD_WORDS, COLD_MAX_NUMBERS = 150, 2
+NUM_RE = re.compile(r"\d[\d,\.]*")
+
+
+def opening_numbers(text: str, words: int = COLD_WORDS) -> int:
+    """How many numbers the first `words` words contain."""
+    return len(NUM_RE.findall(" ".join(text.split()[:words])))
+
+
+def cold_open_ok(text: str) -> bool:
+    return opening_numbers(text) <= COLD_MAX_NUMBERS
+
+
+COLD_PROMPT = """Rewrite the OPENING of a YouTube explainer titled "{title}" so viewers stay past the first minute.
+{rule}
+Keep at least {min_words} words, and use ONLY facts from the SOURCE (it is fine to drop numbers; they appear in later sections).
+Short, punchy spoken sentences.
+
+Return JSON: {{"narration": str, "claims": [str]}}  // claims: each factual claim you now make, one per item
+
+DRAFT:
+{draft}
+
+SOURCE ({source_title}):
+{source_text}
+"""
+
+RECAP_RE = re.compile(
+    r"^\s*(?:you(?:'ve|’ve| have)?\s+(?:just\s+)?(?:heard|seen|saw|learned|learnt|discovered|read)\b|(?:so\s+)?now that you\b|so far\b|as we(?:'ve|’ve| have)?\s+"
+    r"(?:just\s+)?(?:seen|heard|learned|discussed|covered)\b|in the (?:last|previous) section\b|before we move on\b|last time\b)", re.IGNORECASE)
+
+
+def strip_recap(text: str) -> str:
+    """Cut up to two opening sentences that only recap the previous section (the prompt forbids them, models still pad with them)."""
+    sents = _sentences(text)
+    cut = 0
+    while cut < 2 and len(sents) - cut > 3 and RECAP_RE.match(sents[cut]):
+        cut += 1
+    return " ".join(sents[cut:]) if cut else text
+
+
 SECTION_PROMPT = """You are writing one section of a narrated YouTube explainer titled "{title}".
 Style: {style}
 All sections, in order: {headings}
@@ -60,6 +107,8 @@ Rules:
 - Every sentence must be directly supported by the SOURCE. Do not add general conclusions, predictions or claims
   about significance that the SOURCE does not state; end by restating what the SOURCE established.
 - Do not mention "section" or "chapter". Do not say like/subscribe. No medical, financial or legal advice.
+- NEVER open by recapping the previous section ("You just heard...", "You've seen...", "Now that you know...", "So far..."). Start with something
+  new: a question, a scene or the next fact.
 
 Return JSON: {{"narration": str, "claims": [str]}}  // claims: each factual claim you made, one per item
 
@@ -67,7 +116,7 @@ SOURCE ({source_title}):
 {source_text}
 """
 
-SECTIONS = 7
+SECTIONS = 6
 EXCERPT_CHARS = 6000  # of the ~20,000-character article; the fact-check still reads all of it
 
 
@@ -150,9 +199,9 @@ def _write_section(
         heading=sec["heading"], points="; ".join(sec.get("key_points", [])), words=per,
         max_words=round(per * 1.3), source_title=source["title"],
         source_text=relevant_excerpt(source["text"], sec["heading"] + " " + " ".join(sec.get("key_points", []))),
-        previous=(f"The previous section ended with: \"{prev}\" Continue naturally from it.\n" if prev
+        previous=(f"The previous section ended with: \"{prev}\" Continue from it, without recapping it.\n" if prev
                   else "This is the opening of the video.\n"),
-        voice=STYLE_RULES, hook=(HOOK_RULE if i == 0 else ""),
+        voice=STYLE_RULES, hook=(HOOK_RULE + "\n" + COLD_OPEN_RULE if i == 0 else ""),
         ending=("End with a satisfying payoff that answers the opening question." if i == n - 1
                 else "End with a mini open-loop that makes the viewer want the next section."),
     )
@@ -173,6 +222,15 @@ def _write_section(
         better = fixed.get("narration", "").strip()
         if better and style_stats(better)["avg"] < before["avg"] and _words(better) >= _words(narration) * 0.8:
             narration, claims = better, fixed.get("claims") or claims
+    if narration and i == 0 and not cold_open_ok(narration):  # the opening must not be a numbers dump: rewrite it once
+        fixed = gen(COLD_PROMPT.format(
+            title=script["title"], rule=COLD_OPEN_RULE, min_words=round(_words(narration) * 0.8), draft=narration,
+            source_title=source["title"], source_text=relevant_excerpt(source["text"], narration)))
+        better = fixed.get("narration", "").strip()
+        if better and cold_open_ok(better) and _words(better) >= _words(narration) * 0.7:
+            narration, claims = better, fixed.get("claims") or claims
+    if narration and i > 0:
+        narration = strip_recap(narration)
     return {"heading": sec["heading"], "key_points": sec.get("key_points", []),
             "visual_query": sec.get("visual_query", ""), "narration": narration, "claims": claims}
 
@@ -278,3 +336,50 @@ def shorten_title(script: dict, gen: Callable[[str], dict] = llm.generate_json) 
         new = ""
     script["title"] = new if 10 <= len(new) <= TITLE_MAX else trim_title(title)
     return True
+
+
+STOP = {"what", "happens", "happen", "would", "could", "does", "when", "with", "from", "that", "this", "your", "about", "into", "have", "were",
+        "will", "they", "than", "then", "them", "over", "just", "only", "like", "there", "their", "which", "while", "where", "whose", "most",
+        "much", "many", "some", "really", "actually"}
+
+
+def _stems(text: str) -> set[str]:
+    return {w[:5] for w in re.findall(r"[a-z]{4,}", text.lower()) if w not in STOP}
+
+
+def title_fits_topic(title: str, topic: str) -> bool:
+    """Does the title still carry the topic's own words (a "what if Jupiter collided with Earth" video must say collided)?"""
+    want = _stems(topic)
+    return not want or len(want & _stems(title)) / len(want) >= 0.75
+
+
+FIT_PROMPT = """A YouTube video was planned on the topic "{topic}". Its current title is "{title}", which has lost the topic's own words.
+The video's sections: {headings}
+Its opening: "{opening}"
+Its ending: "{ending}"
+
+1. answers_topic: does this script really answer the topic (if the topic is a question, THAT question)?
+2. title: at most 70 characters, curiosity-driven, keeping the topic's key words (and its question if it is a question) AND promising
+   only what the script delivers. If answers_topic is false, write the most honest title that still names the subject, without the question.
+
+Return JSON: {{"answers_topic": bool, "title": str}}"""
+
+
+def fit_title(script: dict, topic: str, gen: Callable[[str], dict] = llm.generate_json) -> str | None:
+    """Make the title carry the topic's words when the script delivers on them. Returns a note if it changed the title or found that the
+    script does not answer its topic (None when nothing needed doing)."""
+    if title_fits_topic(script["title"], topic):
+        return None
+    secs = script.get("sections") or []
+    try:
+        out = gen(FIT_PROMPT.format(topic=topic, title=script["title"], headings=" | ".join(s["heading"] for s in secs),
+                                    opening=" ".join(secs[0]["narration"].split()[:60]) if secs else "",
+                                    ending=" ".join(secs[-1]["narration"].split()[-60:]) if secs else ""))
+    except (llm.LLMError, KeyError, TypeError, ValueError, AttributeError):
+        return None
+    new = str(out.get("title", "")).strip().strip('"')
+    answers = bool(out.get("answers_topic"))
+    if 10 <= len(new) <= TITLE_MAX and new != script["title"]:
+        old, script["title"] = script["title"], new
+        return f"title {old!r} -> {new!r}" + ("" if answers else " (the script does NOT answer the topic)")
+    return None if answers else "the script does NOT answer the topic"

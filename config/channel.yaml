@@ -2,10 +2,11 @@ niche: evergreen science and technology explainers
 audience: English, US/UK
 formats:
   long:
-    target_minutes: [8, 12]
-    target_words: 1500   # ~10 min at the Piper voice's pace
-    min_words: 1150      # QA floor; below ~8 min there are no mid-roll ads
-    min_sections: 6
+    target_minutes: [5, 8]   # shorter on purpose (2026-10-31): the weekly report showed viewers leave in the first minute and padding hurts;
+                             # below 8 min there are no mid-roll ads, but the Partner Program is far off and retention comes first
+    target_words: 1000   # ~6 min at the voice's pace
+    min_words: 750       # QA floor
+    min_sections: 5
     publish_hour_utc: 18   # go live at 14:00 ET / 19:00 UK (only when uploads are public)
     min_media_sections: 0.7   # at least this share of sections must have real images/footage, else retry
     min_source_chars: 6000   # thin Wikipedia articles cannot ground a 10-minute script

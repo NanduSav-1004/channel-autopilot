@@ -26,7 +26,10 @@ from autopilot.config import Config, cta_on, data_shots_on, mascot_style
 from autopilot.errors import RestartJob, TransientError
 from autopilot.render import render_photo_video, render_short
 from autopilot.script import (
+    COLD_WORDS,
+    fit_title,
     generate_script,
+    opening_numbers,
     repair_metadata,
     repair_sections,
     shorten_title,
@@ -136,6 +139,8 @@ class Stages:
             job["topic"], src, self.cfg.niche, series=topics.series_for(job["category"]),
             words=self.cfg.formats["long"]["target_words"], feedback=feedback)
         _write(d / "script.json", script)
+        if script.get("sections"):
+            print(f"[job {job['id']}] opening: {opening_numbers(script['sections'][0]['narration'])} number(s) in the first {COLD_WORDS} words", flush=True)
         st = style_stats(" ".join(s["narration"] for s in script.get("sections", [])))
         print(f"[job {job['id']}] style: avg {st['avg']:.1f} words/sentence, longest {st['longest']}, "
               f"{100 * st['long_share']:.0f}% over 22 words, hook {st['hook']} words, "
@@ -168,6 +173,10 @@ class Stages:
             _write(d / "script.json", script)
             issues = check(script)
         if not issues:
+            note = fit_title(script, job["topic"])
+            if note:
+                _write(d / "script.json", script)
+                print(f"[job {job['id']}] {note}", flush=True)
             old = script["title"]
             if shorten_title(script):
                 _write(d / "script.json", script)
