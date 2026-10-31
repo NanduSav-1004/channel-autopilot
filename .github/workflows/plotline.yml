@@ -2,9 +2,10 @@ name: Plotline Data
 
 on:
   schedule:
-    # Early tries so GitHub's late starts still finish before the 19:00 UTC go-live; a run skips itself when the day is done.
-    - cron: "23 3 * * *"
+    # After the free model quotas reset (07:00 UTC), and early enough that GitHub's late starts still finish before the 19:00 UTC
+    # go-live. A run skips itself when the day is done and continues an unfinished day where the last run stopped.
     - cron: "47 7 * * *"
+    - cron: "23 9 * * *"
     - cron: "13 11 * * *"
   workflow_dispatch:
     inputs:
@@ -109,7 +110,9 @@ jobs:
           import os, sys
           sys.path.insert(0, "src")
           from autopilot import notify
-          notify.send("Plotline Data: the daily workflow FAILED. https://github.com/" + os.environ["GITHUB_REPOSITORY"] + "/actions/runs/" + os.environ["GITHUB_RUN_ID"])
+          lines = [l.strip() for l in open("plotline_run.log", errors="replace").read().splitlines() if l.strip()] if os.path.exists("plotline_run.log") else []
+          why = next((l for l in reversed(lines) if "Error" in l), lines[-1] if lines else "no log")
+          notify.send("Plotline Data: the daily workflow FAILED: " + why[:300] + "\nhttps://github.com/" + os.environ["GITHUB_REPOSITORY"] + "/actions/runs/" + os.environ["GITHUB_RUN_ID"])
           PY
 
       - name: Keepalive

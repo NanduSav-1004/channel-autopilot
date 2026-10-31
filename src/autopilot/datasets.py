@@ -125,6 +125,11 @@ def fmt(value: float, f: dict) -> str:
     return f"{f.get('prefix', '')}{value:,.{d}f}{f.get('suffix', '')}"
 
 
+def when(s: dict, d: str) -> str:
+    """A date as the video says it: "March 2025" for monthly data, "2023" for yearly data (Our World in Data)."""
+    return d[:4] if s.get("yearly") else month_name(d)
+
+
 def month_name(d: str) -> str:
     return date.fromisoformat(d).strftime("%B %Y") if len(d) >= 10 else d
 
@@ -163,29 +168,30 @@ def facts(s: dict, start: str | None = None) -> list[str]:
     """Plain-English facts about one series that a script may quote (and nothing else)."""
     pts = window(s["points"], start)
     f, name = s["fmt"], s["name"]
+    w = lambda d: when(s, d)
     first, last = pts[0], pts[-1]
     hi, lo = max(pts, key=lambda p: p[1]), min(pts, key=lambda p: p[1])
-    out = [f"{name} [{s['unit']}], data from {month_name(first[0])} to {month_name(last[0])} (source: {s['source']})"]
+    out = [f"{name} [{s['unit']}], data from {w(first[0])} to {w(last[0])} (source: {s['source']})"]
     if not s.get("index"):
-        out += [f"Latest value ({month_name(last[0])}): {fmt(last[1], f)}",
-                f"Value in {month_name(first[0])}: {fmt(first[1], f)}",
-                f"Highest: {fmt(hi[1], f)} in {month_name(hi[0])}", f"Lowest: {fmt(lo[1], f)} in {month_name(lo[0])}"]
+        out += [f"Latest value ({w(last[0])}): {fmt(last[1], f)}",
+                f"Value in {w(first[0])}: {fmt(first[1], f)}",
+                f"Highest: {fmt(hi[1], f)} in {w(hi[0])}", f"Lowest: {fmt(lo[1], f)} in {w(lo[0])}"]
     else:
         out.append("This is an index: quote only its percent changes, never its raw values")
-    out += [f"Change from {month_name(first[0])} to {month_name(last[0])}: {pct(first[1], last[1]):+.0f}%",
-            f"Change from the high in {month_name(hi[0])} to {month_name(last[0])}: {pct(hi[1], last[1]):+.0f}%"]
+    out += [f"Change from {w(first[0])} to {w(last[0])}: {pct(first[1], last[1]):+.0f}%",
+            f"Change from the high in {w(hi[0])} to {w(last[0])}: {pct(hi[1], last[1]):+.0f}%"]
     if last[1] and first[1] and last[1] / first[1] >= 1.8:
-        out.append(f"{month_name(last[0])} value is {last[1] / first[1]:.1f} times the {month_name(first[0])} value")
+        out.append(f"{w(last[0])} value is {last[1] / first[1]:.1f} times the {w(first[0])} value")
     for d, v in spikes(pts):
-        if d != hi[0]:
-            out.append(f"An earlier spike: {fmt(v, f) if not s.get('index') else ''} in {month_name(d)}".replace(":  in", " in")
+        if d != hi[0] and pct(at(pts, str(int(d[:4]) - 1) + d[4:])[1], v) >= 8:       # a spike is a real jump, not noise
+            out.append(f"An earlier spike: {fmt(v, f) if not s.get('index') else ''} in {w(d)}".replace(":  in", " in")
                        + f" ({pct(at(pts, str(int(d[:4]) - 1) + d[4:])[1], v):+.0f}% in the year before it)")
     year_ago = at(pts, f"{int(last[0][:4]) - 1}{last[0][4:]}")
     if year_ago != last:
-        out.append(f"Change over the last year ({month_name(year_ago[0])} to {month_name(last[0])}): {pct(year_ago[1], last[1]):+.1f}%")
+        out.append(f"Change over the last year ({w(year_ago[0])} to {w(last[0])}): {pct(year_ago[1], last[1]):+.1f}%")
     for y in range(int(first[0][:4]) + 5 - int(first[0][:4]) % 5, int(last[0][:4]), 5):   # milestone years: 1990, 1995, ...
         p = at(pts, str(y))
         if p[0][:4] == str(y):
-            out.append(f"{month_name(p[0])}: " + (f"{fmt(p[1], f)}; " if not s.get("index") else "")
-                       + f"change from then to {month_name(last[0])}: {pct(p[1], last[1]):+.0f}%")
+            out.append(f"{w(p[0])}: " + (f"{fmt(p[1], f)}; " if not s.get("index") else "")
+                       + f"change from then to {w(last[0])}: {pct(p[1], last[1]):+.0f}%")
     return out

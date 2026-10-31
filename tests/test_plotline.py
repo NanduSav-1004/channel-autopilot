@@ -93,3 +93,79 @@ def test_thumbnail_works_with_a_relative_output_path(tmp_path, monkeypatch):
     script = {"title": "Eggs", "thumbnail": {"number": "$6.23", "words": "Why prices exploded", "label": "RECORD HIGH", "photo": "", "direction": "up"}}
     out = plotline.make_thumbnail(script, b, __import__("pathlib").Path("output/plotline/2026-11-01/thumbnail.jpg"))
     assert out.exists() and out.stat().st_size > 10_000
+
+
+def _long_script(b, extra_scenes=()):
+    last = b["series"]["X"]["points"][-1][1]
+    ok = {"narration": f"Eggs cost ${last:.2f} now. " + "This is a filler sentence about the long view of the data. " * 6,
+          "visual": {"type": "line", "series": "X", "start": "2000"}}
+    return {"title": "Eggs", "scenes": [ok] * 60 + list(extra_scenes)}
+
+
+def test_settle_repairs_by_rule_instead_of_losing_the_video():
+    b = _bundle()
+    bad = [
+        {"narration": "Prices jumped 987.65 percent. Eggs are a staple.", "visual": {"type": "line", "series": "X"}},   # invented number
+        {"narration": "It cost $4.00 once.", "visual": {"type": "counter", "series": "X", "stat": "max"}},              # chart shows another number
+        {"narration": "Look at the map of states.", "visual": {"type": "map"}},                                         # no state data
+        {"narration": "Only 987.65 here.", "visual": {"type": "line", "series": "X"}},                                  # nothing left: dropped
+    ]
+    script = plotline.settle(_long_script(b, bad), b, log=lambda m: None)
+    texts = [s["narration"] for s in script["scenes"]]
+    assert not any("987.65" in t for t in texts) and any(t == "Eggs are a staple." for t in texts)
+    assert not [p for p in plotline.check_script(script, b, min_words=0) if "is repeated" not in p and "the same chart" not in p]
+    assert script["scenes"][0]["visual"]["type"] == "title"
+    assert all(s["visual"]["type"] != "map" for s in script["scenes"])
+
+
+def test_settle_refuses_a_script_that_is_too_short_to_be_a_video():
+    import pytest
+
+    b = _bundle()
+    with pytest.raises(ValueError):
+        plotline.settle({"title": "Eggs", "scenes": [{"narration": "Short.", "visual": {"type": "line", "series": "X"}}]}, b, log=lambda m: None)
+
+
+def test_fix_script_settles_when_the_model_cannot_fix_a_scene():
+    b = _bundle()
+    stubborn = {"narration": "It cost $4.00 once.", "visual": {"type": "counter", "series": "X", "stat": "max"}}
+    script = _long_script(b, [stubborn])
+    out = plotline.fix_script(script, {"title": "Eggs"}, b, "facts", ["X"], gen=lambda prompt: dict(stubborn), tries=2, log=lambda m: None)
+    assert not [p for p in plotline.check_script(out, b, min_words=0) if "is repeated" not in p and "the same chart" not in p]
+
+
+def test_shorts_are_filled_up_to_the_requested_number():
+    b = _bundle()
+    last = b["series"]["X"]["points"][-1][1]
+    mk = lambda i: {"title": f"Short {i}", "scenes": [{"narration": f"Eggs cost ${last:.2f}. " * 12, "visual": {"type": "counter", "series": "X", "stat": "last"}}]}
+    calls = []
+
+    def gen(prompt):
+        calls.append(prompt)
+        return {"shorts": [mk(len(calls))] if len(calls) < 3 else [mk(3), mk(4)]}      # one short per answer at first
+
+    out = plotline.write_shorts({"title": "Eggs", "scenes": [{"narration": "x", "visual": {}}]}, b, 3, gen=gen, log=lambda m: None)
+    assert len(out) == 3 and len(calls) == 3
+
+
+def test_country_data_becomes_ordinary_series(monkeypatch):
+    rows = {"United States": [(2000, 1888.0), (2010, 1773.0), (2023, 1789.0)], "Germany": [(2000, 1452.0), (2023, 1343.0)]}
+    monkeypatch.setattr(datasets, "owid", lambda slug: {"slug": slug, "name": "Hours worked per worker per year", "unit": "hours per year",
+                                                        "fmt": {"decimals": 0}, "theme": "jobs", "source": "Our World in Data", "rows": rows})
+    b = plotline.gather({"title": "t", "series": [], "states": None, "owid": "annual-working-hours-per-worker",
+                         "countries": ["United States", "Germany", "Nowhere"], "start": "2000"})
+    assert list(b["series"]) == ["united-states", "germany"]
+    counter = plotline.compile_visual({"type": "counter", "series": "germany", "stat": "at", "date": "2023"}, b, 4.0)
+    assert counter["value"] == 1343.0 and counter["sub"] == "2023"                     # a year, not "January 2023"
+    bars = plotline.compile_visual({"type": "bars", "series": ["united-states", "germany"], "since": "2000"}, b, 4.0)
+    assert {i["label"] for i in bars["items"]} == {"United States", "Germany"}
+    line = plotline.compile_visual({"type": "line", "series": "united-states", "start": "2000"}, b, 6.0)
+    assert line["series"][0][0] == "2000-01-01"
+
+
+def test_the_same_chart_may_not_appear_more_than_twice():
+    b = _bundle()
+    same = {"narration": "Eggs cost a lot.", "visual": {"type": "line", "series": "X", "start": "2000"}}
+    other = {"narration": "Eggs cost a lot.", "visual": {"type": "line", "series": "X", "start": "2010"}}
+    problems = plotline.check_script({"scenes": [same, other, same, same]}, b, min_words=0)
+    assert any("scene 4: the same chart" in p for p in problems) and not any("scene 3: the same chart" in p for p in problems)

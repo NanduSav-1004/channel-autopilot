@@ -109,16 +109,15 @@ def gather(plan: dict) -> dict:
         names = [c for c in plan.get("countries") or [] if c in ow["rows"]]
         ow["countries"] = names
         bundle["owid"] = ow
-        f = ow["fmt"]
-        for c in names:
-            rows = ow["rows"][c]
-            last = rows[-1]
-            line = f"[owid:{ow['slug']}] {c}: {datasets.fmt(last[1], f)} in {last[0]}"
-            then = [r for r in rows if r[0] == 2000]
-            if then:
-                line += f" (in 2000: {datasets.fmt(then[0][1], f)})"
-            bundle["facts"].append(line)
-        bundle["facts"].insert(0, f"[owid:{ow['slug']}] {ow['name']} ({ow['unit']}; source: {ow['source']})")
+        bundle["facts"].append(f"[countries] {ow['name']} ({ow['unit']}; source: {ow['source']}); each country below is a series you can chart")
+        for c in names:                      # every country is a series like any other, so lines, counters and comparisons work
+            sid = re.sub(r"[^a-z0-9]+", "-", c.lower()).strip("-")
+            s = {"id": sid, "name": f"{ow['name']} in {c}", "label": c, "unit": ow["unit"], "fmt": ow["fmt"], "theme": ow["theme"],
+                 "source": ow["source"], "yearly": True,
+                 "points": [(f"{y}-01-01", v) for y, v in sorted(ow["rows"][c])]}
+            bundle["series"][sid] = s
+            first_year = max(int(start), int(s["points"][0][0][:4]))
+            bundle["facts"] += [f"[{sid}] {x}" for x in datasets.facts(s, str(first_year))]
     bundle["start"] = start
     return bundle
 
@@ -137,7 +136,7 @@ VISUALS = """Chart types (the "visual" of a scene). Numbers on screen are comput
 - {"type": "bars", "series": [2 to 8 ids], "since": "YYYY"}  -- percent change of several series, ranked
 - {"type": "states_bars", "order": "top"|"bottom", "n": 5 to 10}  -- ranking of states (needs the state data)
 - {"type": "map"}  -- US map of the state data
-- {"type": "countries_bars"}  -- the chosen countries ranked (needs the country data)"""
+- {"type": "countries_bars"}  -- the chosen countries ranked, latest year (needs the country data); at most twice per video"""
 
 OUTLINE_PROMPT = """Plan a Plotline Data video (YouTube, US and UK viewers): "{title}".
 The story: {angle}
@@ -209,6 +208,28 @@ def allowed_numbers(bundle: dict) -> set[float]:
     return ok
 
 
+def _small(x: float) -> bool:
+    """Years and small counts ("3 reasons") need no source."""
+    return x.is_integer() and (1900 <= x <= 2100 or x <= 12)
+
+
+def scene_problems(sc: dict, bundle: dict, ok: set[float] | None = None) -> list[str]:
+    """What is wrong with one scene: numbers that are not in the facts, a chart that cannot be built or that does not show
+    the number being spoken. (Messages come without the "scene N:" prefix.)"""
+    ok = allowed_numbers(bundle) if ok is None else ok
+    out = [f"the number {x:g} is not in the facts (use only the facts' numbers)"
+           for x in _numbers(sc.get("narration", "")) if not _small(x) and abs(x) not in ok]
+    try:
+        spec = compile_visual(sc.get("visual") or {}, bundle, 6.0)
+    except (KeyError, ValueError, IndexError, TypeError) as exc:
+        return out + [f"bad visual {json.dumps(sc.get('visual'))}: {exc}"]
+    said = [x for x in _numbers(sc.get("narration", "")) if not _small(x)]
+    if spec["type"] in ("counter", "compare") and said and not any(abs(x) in shown_numbers(spec) for x in said):
+        out.append(f"the narration says {', '.join(f'{x:g}' for x in said)} but the {spec['type']} chart shows "
+                   "something else; change the chart (e.g. counter with \"stat\": \"at\" and the month) so it shows that number")
+    return out
+
+
 def check_script(script: dict, bundle: dict, min_words: int | None = None) -> list[str]:
     problems = []
     ok = allowed_numbers(bundle)
@@ -229,19 +250,18 @@ def check_script(script: dict, bundle: dict, min_words: int | None = None) -> li
     for i, sc in enumerate(scenes, 1):
         if i > 1 and (sc.get("visual") or {}).get("type") == "title":
             sc["visual"]["type"] = "statement"           # only the opening scene is a title card
-        for x in _numbers(sc.get("narration", "")):
-            if (x.is_integer() and (1900 <= x <= 2100 or x <= 12)) or abs(x) in ok:   # years and small counts are fine
-                continue
-            problems.append(f"scene {i}: the number {x:g} is not in the facts (use only the facts' numbers)")
+        problems += [f"scene {i}: {pr}" for pr in scene_problems(sc, bundle, ok)]
+    shown: dict[str, list[int]] = {}                       # the same chart again and again is dull: at most twice
+    for i, sc in enumerate(scenes, 1):
         try:
             spec = compile_visual(sc.get("visual") or {}, bundle, 6.0)
-        except (KeyError, ValueError, IndexError, TypeError) as exc:
-            problems.append(f"scene {i}: bad visual {json.dumps(sc.get('visual'))}: {exc}")
+        except (KeyError, ValueError, IndexError, TypeError):
             continue
-        said = [x for x in _numbers(sc.get("narration", "")) if not (x.is_integer() and (1900 <= x <= 2100 or x <= 12))]
-        if spec["type"] in ("counter", "compare") and said and not any(abs(x) in shown_numbers(spec) for x in said):
-            problems.append(f"scene {i}: the narration says {', '.join(f'{x:g}' for x in said)} but the {spec['type']} chart shows "
-                            f"something else; change the chart (e.g. counter with \"stat\": \"at\" and the month) so it shows that number")
+        if spec["type"] != "title":
+            shown.setdefault(json.dumps({k: v for k, v in spec.items() if k != "duration"}, sort_keys=True), []).append(i)
+    for where in shown.values():
+        if len(where) > 2:
+            problems.append(f"scene {where[2]}: the same chart is already shown in scenes {where[:2]}; use a different chart, series or period")
     return problems
 
 
@@ -266,6 +286,57 @@ def write_script(plan: dict, bundle: dict, gen=None, tries: int = 3, log=print, 
     if script["scenes"]:                                  # the opening scene is always the title card
         script["scenes"][0]["visual"] = {"type": "title", "text": script["title"], "highlight": []}
     return fix_script(script, plan, bundle, facts, ids, gen, tries, log, draft_path)
+
+
+SOFT = ("is repeated", "the same chart")        # style problems: worth a rewrite, never worth losing the video
+SENT_RE = re.compile(r"(?<=[.!?])\s+")
+
+
+def _safe_visual(sc: dict, bundle: dict, k: int = 0) -> dict:
+    """A chart that always works for this scene: a line of the series it was about (else the video's first series), or the
+    state / country ranking, or a plain text card of its first sentence."""
+    sid = (sc.get("visual") or {}).get("series")
+    sid = sid if isinstance(sid, str) and sid in bundle["series"] else next(iter(bundle["series"]), None)
+    if sid:
+        first = int(bundle["start"])
+        last = int(bundle["series"][sid]["points"][-1][0][:4])
+        return {"type": "line", "series": sid, "start": str(first + (last - first) * (k % 3) // 4)}   # a different stretch each time
+    if bundle["states"]:
+        return {"type": "states_bars", "order": "top", "n": 8}
+    if bundle["owid"] and bundle["owid"]["countries"]:
+        return {"type": "countries_bars"}
+    first = " ".join(SENT_RE.split(sc.get("narration", "").strip())[0].split()[:9])
+    return {"type": "statement", "text": first or "The data", "highlight": []}
+
+
+def settle(script: dict, bundle: dict, min_words: int | None = None, log=print) -> dict:
+    """LAST RESORT, no language model: when a scene is still wrong after the rewrites, repair it by rule so that the day's video
+    is never lost to one stubborn scene. A sentence with a number that is not in the facts is cut (its scene is dropped if
+    nothing is left); a chart that cannot be built or does not show the spoken number becomes a plain line chart of the same data.
+    Repeated numbers are allowed. Raises ValueError only if the script is then too short to be a video."""
+    ok = allowed_numbers(bundle)
+    kept, cut, swapped = [], 0, 0
+    for sc in script["scenes"]:
+        sentences = SENT_RE.split(sc.get("narration", "").strip())
+        good = [s for s in sentences if all(_small(x) or abs(x) in ok for x in _numbers(s))]
+        cut += len(sentences) - len(good)
+        if not good:
+            continue
+        sc = {**sc, "narration": " ".join(good)}
+        if any(not pr.startswith("the number") for pr in scene_problems(sc, bundle, ok)):
+            sc["visual"] = _safe_visual(sc, bundle, swapped)
+            swapped += 1
+        kept.append(sc)
+    if kept:
+        kept[0]["visual"] = {"type": "title", "text": script["title"], "highlight": []}
+    script["scenes"] = kept
+    words = sum(len(s["narration"].split()) for s in kept)
+    log(f"[plotline] settled by rule: {cut} sentence(s) cut, {swapped} chart(s) replaced, {words} words left")
+    left = [pr for pr in check_script(script, bundle, min_words=0) if not any(s in pr for s in SOFT)]
+    need = (TARGET_WORDS[0] if min_words is None else min_words) * 0.7
+    if left or words < need:
+        raise ValueError(f"the script cannot be settled ({words} words, need {need:.0f}): {left[:3]}")
+    return script
 
 
 FIX_PROMPT = """You are fixing one scene of a Plotline Data video script: "{title}".
@@ -319,7 +390,8 @@ def fix_script(script: dict, plan: dict, bundle: dict, facts: str, ids: list[str
             act = {"goal": "Add a new angle the video has not covered yet, using facts not quoted so far (another dataset, an earlier spike, "
                            "the last year's change, what it means for a household budget)", "facts": []}
             scenes[-2:-2] = _write_act(gen, plan, act, 6, 7, facts, scenes[:-2], "", ids)
-    raise ValueError(f"the script still has problems: {check_script(script, bundle)[:5]}")
+    log(f"[plotline] still {len(check_script(script, bundle))} problem(s) after {tries} rewrites; settling by rule")
+    return settle(script, bundle, log=log)
 
 
 def _write_act(gen, plan: dict, act: dict, n: int, total: int, facts: str, done: list[dict], extra: str, ids: list[str]) -> list[dict]:
@@ -369,7 +441,7 @@ def _compile(v: dict, bundle: dict, dur: float) -> dict:
                 p = max(pts, key=lambda q: q[1]) if a == "max" else min(pts, key=lambda q: q[1]) if a == "min" else None
                 if p:
                     notes.append({"date": p[0], "label": f"{'Peak' if a == 'max' else 'Low'}: {datasets.fmt(p[1], f)}"})
-            title = s["name"] + (f": change since {datasets.month_name(pts[0][0])}" if s.get("index") else "")
+            title = s["name"] + (f": change since {datasets.when(s, pts[0][0])}" if s.get("index") else "")
             span = int(pts[-1][0][:4]) - int(pts[0][0][:4])
             return {**base, "type": "line", "title": title, "series": pts, **_js_fmt(f), "annotations": notes, "source": src,
                     "yearStep": 1 if span <= 8 else 2 if span <= 16 else 5 if span <= 40 else 10, "draw": round(min(max(dur * 0.55, 2.5), 7), 2)}
@@ -384,7 +456,7 @@ def _compile(v: dict, bundle: dict, dur: float) -> dict:
                 p = {"last": pts[-1], "max": max(pts, key=lambda q: q[1]), "min": min(pts, key=lambda q: q[1])}[stat]
             label = ("Change in " + s["name"].lower() + f" since {pts[0][0][:4]}") if s.get("index") else \
                     {"last": s["name"], "max": "Peak " + s["name"].lower(), "min": "Lowest " + s["name"].lower()}[stat]
-            spec = {**base, "type": "counter", "label": label[:44], "value": p[1], **_js_fmt(f), "sub": datasets.month_name(p[0]), "source": src}
+            spec = {**base, "type": "counter", "label": label[:44], "value": p[1], **_js_fmt(f), "sub": datasets.when(s, p[0]), "source": src}
             if not s.get("index") and p != pts[0]:
                 c = datasets.pct(pts[0][1], p[1])
                 spec |= {"badge": f"{c:+.0f}% since {pts[0][0][:4]}", "badgeColor": "coral" if c > 0 else "volt"}
@@ -393,7 +465,7 @@ def _compile(v: dict, bundle: dict, dur: float) -> dict:
         b = s["points"][-1] if str(v.get("to", "last")) == "last" else datasets.at(s["points"], str(v["to"]))
         if a[0] >= b[0]:
             raise ValueError("compare needs an earlier 'from' and a later 'to'")
-        lab = lambda d: datasets.month_name(d)[:3] + " " + d[:4]
+        lab = lambda d: d[:4] if s.get("yearly") else datasets.month_name(d)[:3] + " " + d[:4]
         return {**base, "type": "compare", "title": f"{s['name']}: {lab(a[0])} vs. {lab(b[0])}", "left": {"label": lab(a[0]), "value": a[1]},
                 "right": {"label": lab(b[0]), "value": b[1]}, **_js_fmt(f), "verdict": f"{datasets.pct(a[1], b[1]):+.0f}%", "source": src}
     if t == "bars":
@@ -404,9 +476,9 @@ def _compile(v: dict, bundle: dict, dur: float) -> dict:
         items = []
         for i in ids:
             pts = datasets.window(bundle["series"][i]["points"], since)
-            items.append({"label": _short(bundle["series"][i]["name"]), "value": round(datasets.pct(pts[0][1], pts[-1][1]), 1)})
+            items.append({"label": bundle["series"][i].get("label") or _short(bundle["series"][i]["name"]), "value": round(datasets.pct(pts[0][1], pts[-1][1]), 1)})
         items.sort(key=lambda d: -d["value"])
-        when = datasets.month_name(datasets.window(bundle["series"][ids[0]]["points"], since)[0][0])
+        when = datasets.when(bundle["series"][ids[0]], datasets.window(bundle["series"][ids[0]]["points"], since)[0][0])
         small = max(abs(d["value"]) for d in items) < 10
         srcs = sorted({bundle["series"][i]["source"] for i in ids})
         return {**base, "type": "bars", "title": f"Price change since {when}" if all(bundle["series"][i]["fmt"].get("prefix") == "$" for i in ids)
@@ -639,7 +711,7 @@ SHORT_WORDS = (70, 110)
 SHORTS_PROMPT = """From this Plotline Data video, "{title}", write {n} YouTube Shorts (vertical, 30 to 45 seconds each) for US and UK
 viewers. Each Short tells ONE surprising number from the video in a self-contained way: a hook in the first sentence (a question or
 a shocking number), 2 to 3 quick beats, and a last line pointing to the full video ("The full story is on the channel.").
-Each Short uses a different number and a different angle.
+Each Short uses a different number and a different angle. Titles already used (do not repeat them): {avoid}.
 
 FACTS (the ONLY numbers you may say; never invent a number):
 {facts}
@@ -658,30 +730,34 @@ Return JSON {{"shorts": [{{"title": str (max 60 chars, punchy, no hashtags), "sc
 
 
 def write_shorts(script: dict, bundle: dict, n: int = 3, gen=None, log=print) -> list[dict]:
+    """n Shorts. A Short that cannot be repaired by rewrites is settled by rule; if some still fail, more are asked for (twice)."""
     gen = gen or llm.generate_json
     ids = list(bundle["series"]) + (["state data"] if bundle["states"] else []) + (["country data"] if bundle["owid"] else [])
     facts = "\n".join(bundle["facts"])
     story = " ".join(s["narration"] for s in script["scenes"])[:6000]
-    out = gen(SHORTS_PROMPT.format(title=script["title"], n=n, facts=facts, story=story, wmin=SHORT_WORDS[0], wmax=SHORT_WORDS[1],
-                                   visuals=VISUALS, ids=", ".join(ids)))
-    shorts = []
-    for sh in (out.get("shorts") or [])[:n]:
-        sh["scenes"] = [s for s in sh.get("scenes") or [] if s.get("narration") and isinstance(s.get("visual"), dict)]
-        if not sh["scenes"]:
-            continue
-        sh["scenes"][0]["visual"] = {"type": "title", "text": sh.get("title") or script["title"], "highlight": []}
-        try:
-            sh = _fix_short(sh, plan_title=script["title"], bundle=bundle, facts=facts, ids=ids, gen=gen, log=log)
-        except ValueError as exc:
-            log(f"[plotline] a Short was dropped: {exc}")
-            continue
-        shorts.append(sh)
+    shorts: list[dict] = []
+    for _ in range(3):
+        want = n - len(shorts)
+        if want <= 0:
+            break
+        avoid = "; ".join(s["title"] for s in shorts) or "none"
+        out = gen(SHORTS_PROMPT.format(title=script["title"], n=want, facts=facts, story=story, wmin=SHORT_WORDS[0], wmax=SHORT_WORDS[1],
+                                       visuals=VISUALS, ids=", ".join(ids), avoid=avoid))
+        for sh in (out.get("shorts") or [])[:want]:
+            sh["scenes"] = [s for s in sh.get("scenes") or [] if s.get("narration") and isinstance(s.get("visual"), dict)]
+            if not sh["scenes"]:
+                continue
+            sh["scenes"][0]["visual"] = {"type": "title", "text": sh.get("title") or script["title"], "highlight": []}
+            try:
+                shorts.append(_fix_short(sh, plan_title=script["title"], bundle=bundle, facts=facts, ids=ids, gen=gen, log=log))
+            except ValueError as exc:
+                log(f"[plotline] a Short was dropped: {exc}")
     return shorts
 
 
-def _fix_short(sh: dict, plan_title: str, bundle: dict, facts: str, ids: list[str], gen, log, tries: int = 3) -> dict:
+def _fix_short(sh: dict, plan_title: str, bundle: dict, facts: str, ids: list[str], gen, log, tries: int = 2) -> dict:
     for attempt in range(tries + 1):
-        problems = [p for p in check_script(sh, bundle, min_words=SHORT_WORDS[0]) if not p.startswith("too short")]
+        problems = [p for p in check_script(sh, bundle, min_words=0) if not any(s in p for s in SOFT)]
         if not problems:
             return sh
         if attempt == tries:
@@ -690,12 +766,15 @@ def _fix_short(sh: dict, plan_title: str, bundle: dict, facts: str, ids: list[st
         for pr in problems:
             if m := re.match(r"scene (\d+): (.*)", pr):
                 k = int(m.group(1)) - 1
-                new = gen(FIX_PROMPT.format(title=plan_title, before=json.dumps(sh["scenes"][k - 1]) if k else "(none)",
-                                            scene=json.dumps(sh["scenes"][k]), after=json.dumps(sh["scenes"][k + 1]) if k + 1 < len(sh["scenes"]) else "(none)",
-                                            problems=m.group(2), facts=facts, visuals=VISUALS, ids=", ".join(ids)))
+                try:
+                    new = gen(FIX_PROMPT.format(title=plan_title, before=json.dumps(sh["scenes"][k - 1]) if k else "(none)",
+                                                scene=json.dumps(sh["scenes"][k]), after=json.dumps(sh["scenes"][k + 1]) if k + 1 < len(sh["scenes"]) else "(none)",
+                                                problems=m.group(2), facts=facts, visuals=VISUALS, ids=", ".join(ids)))
+                except llm.LLMError:
+                    continue
                 if new.get("narration") and isinstance(new.get("visual"), dict):
                     sh["scenes"][k] = {"narration": new["narration"], "visual": new["visual"]}
-    raise ValueError(f"still has problems: {problems[:3]}")
+    return settle(sh, bundle, min_words=SHORT_WORDS[0] * 0.6, log=log)
 
 
 def make_short(short: dict, bundle: dict, out_dir: Path, log=print) -> Path:
