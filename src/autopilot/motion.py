@@ -23,7 +23,8 @@ def _chrome() -> str | None:
 
 
 def _topo() -> dict:
-    return {"states": json.loads((STAGE / "vendor" / "states-albers-10m.json").read_text())}
+    v = STAGE / "vendor"
+    return {"states": json.loads((v / "states-albers-10m.json").read_text()), "world": json.loads((v / "countries-110m.json").read_text())}
 
 
 CHROME_MB = 900        # rough memory one rendering Chrome needs at 1080p
@@ -36,7 +37,8 @@ def workers() -> int:
         avail = int(next(ln for ln in info if ln.startswith("MemAvailable")).split()[1]) // 1024
     except (OSError, StopIteration, ValueError):
         avail = 4096
-    return max(1, min(6, (os.cpu_count() or 2) - 1, (avail - 1024) // CHROME_MB))
+    cap = int(os.environ.get("PLOTLINE_WORKERS", "6"))
+    return max(1, min(cap, (os.cpu_count() or 2) - 1, (avail - 1024) // CHROME_MB))
 
 
 def _encode(out: Path, w: int, h: int, fps: int) -> subprocess.Popen:
@@ -47,7 +49,7 @@ def _encode(out: Path, w: int, h: int, fps: int) -> subprocess.Popen:
 
 def _render_frames(page, spec: dict, first: int, last: int, out: Path, fps: int) -> None:
     w, h = spec.get("canvas") or (spec.get("width", 1920), spec.get("height", 1080))
-    page.evaluate("([s, t]) => window.load(s, t)", [spec, _topo() if spec["type"] == "map" else None])
+    page.evaluate("([s, t]) => window.load(s, t)", [spec, _topo() if spec["type"] in ("map", "world_map") else None])
     ff = _encode(out, w, h, fps)
     try:
         for i in range(first, last):

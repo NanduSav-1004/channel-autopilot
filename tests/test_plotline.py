@@ -113,7 +113,7 @@ def test_settle_repairs_by_rule_instead_of_losing_the_video():
     script = plotline.settle(_long_script(b, bad), b, log=lambda m: None)
     texts = [s["narration"] for s in script["scenes"]]
     assert not any("987.65" in t for t in texts) and any(t == "Eggs are a staple." for t in texts)
-    assert not [p for p in plotline.check_script(script, b, min_words=0) if "is repeated" not in p and "the same chart" not in p]
+    assert not [p for p in plotline.check_script(script, b, min_words=0) if not any(s in p for s in plotline.SOFT)]
     assert script["scenes"][0]["visual"]["type"] == "title"
     assert all(s["visual"]["type"] != "map" for s in script["scenes"])
 
@@ -131,7 +131,7 @@ def test_fix_script_settles_when_the_model_cannot_fix_a_scene():
     stubborn = {"narration": "It cost $4.00 once.", "visual": {"type": "counter", "series": "X", "stat": "max"}}
     script = _long_script(b, [stubborn])
     out = plotline.fix_script(script, {"title": "Eggs"}, b, "facts", ["X"], gen=lambda prompt: dict(stubborn), tries=2, log=lambda m: None)
-    assert not [p for p in plotline.check_script(out, b, min_words=0) if "is repeated" not in p and "the same chart" not in p]
+    assert not [p for p in plotline.check_script(out, b, min_words=0) if not any(s in p for s in plotline.SOFT)]
 
 
 def test_shorts_are_filled_up_to_the_requested_number():
@@ -193,3 +193,35 @@ def test_a_refused_thumbnail_is_retried_on_a_later_run(tmp_path, monkeypatch):
     plotline_daily.retry_thumbnails(state, live=True)
     assert state["days"]["2026-11-01"]["thumbnail_set"] is True
     assert json.loads((tmp_path / "state.json").read_text())["days"]["2026-11-01"]["thumbnail_set"]
+
+
+def _line_scene(start):
+    return {"narration": "Eggs cost a lot.", "visual": {"type": "line", "series": "X", "start": str(start)}}
+
+
+def test_striking_chart_types_are_limited_to_twice_a_video():
+    b = _bundle()
+    gauge = {"narration": "Where it stands.", "visual": {"type": "gauge", "series": "X", "start": "2000"}}
+    scenes = [_line_scene(2000 + i) for i in range(10)] + [gauge, {**gauge, "visual": {**gauge["visual"], "start": "2005"}}, {**gauge, "visual": {**gauge["visual"], "start": "2010"}}]
+    problems = plotline.check_script({"scenes": scenes}, b, min_words=0)
+    assert any("chart type 'gauge' is already used 2 times" in p for p in problems)
+
+
+def test_every_new_chart_type_compiles_from_real_shaped_data():
+    b = _bundle()
+    jobs = {"id": "J", "name": "Retail jobs", "unit": "jobs", "source": "FRED", "theme": "jobs", "fmt": {"decimals": 1, "compact": True}, "additive": True,
+            "points": [(f"{y}-{m:02d}-01", 100.0 + y - 2000 + m) for y in range(2000, 2026) for m in range(1, 13)]}
+    jobs2 = {**jobs, "id": "K", "name": "Government jobs"}
+    rate = {**_series(), "id": "R", "name": "Saving rate", "unit": "percent", "fmt": {"suffix": "%", "decimals": 1}, "index": False,
+            "points": [(f"{y}-{m:02d}-01", 3.0 + (y % 5) + m / 20) for y in range(2000, 2026) for m in range(1, 13)]}
+    b["series"] |= {"J": jobs, "K": jobs2, "R": rate}
+    for v in ({"type": "multiline", "series": ["J", "K"], "since": "2000"}, {"type": "slope", "series": ["J", "K"], "from": "2000"},
+              {"type": "race", "series": ["J", "K", "X"][:2] + ["X"], "since": "2000"}, {"type": "kpi", "series": ["J", "R"]},
+              {"type": "waffle", "series": "R"}, {"type": "gauge", "series": "R", "start": "2000"}, {"type": "donut", "series": ["J", "K"]},
+              {"type": "heatmap", "series": "J", "years": 5}):
+        try:
+            spec = plotline.compile_visual(v, b, 6.0)
+        except ValueError as exc:                                  # race needs one kind of number: X is dollars, J is a count
+            assert v["type"] == "race" and "same kind" in str(exc)
+            continue
+        assert spec["type"] == v["type"] and spec["duration"] == 6.0

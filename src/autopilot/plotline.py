@@ -110,6 +110,13 @@ def gather(plan: dict) -> dict:
         ow["countries"] = names
         bundle["owid"] = ow
         bundle["facts"].append(f"[countries] {ow['name']} ({ow['unit']}; source: {ow['source']}); each country below is a series you can chart")
+        world, wyear = datasets.world_values(ow)
+        if world:
+            rank = sorted(world.items(), key=lambda kv: -kv[1])
+            fm = lambda n: n.replace("United States of America", "United States")
+            bundle["facts"] += [f"[world-map] #{i + 1} highest in {wyear}: {fm(k)} {datasets.fmt(x, ow['fmt'])}" for i, (k, x) in enumerate(rank[:5])]
+            bundle["facts"] += [f"[world-map] #{len(rank) - i} (lowest {i + 1}) in {wyear}: {fm(k)} {datasets.fmt(x, ow['fmt'])}" for i, (k, x) in enumerate(reversed(rank[-5:]))]
+            bundle["facts"].append(f"[world-map] a world map of {len(world)} countries for {wyear} is available (visual world_map)")
         for c in names:                      # every country is a series like any other, so lines, counters and comparisons work
             sid = re.sub(r"[^a-z0-9]+", "-", c.lower()).strip("-")
             s = {"id": sid, "name": f"{ow['name']} in {c}", "label": c, "unit": ow["unit"], "fmt": ow["fmt"], "theme": ow["theme"],
@@ -123,19 +130,35 @@ def gather(plan: dict) -> dict:
 
 
 # ---- 3. script ----------------------------------------------------------------------------------------------------------
-VISUALS = """Chart types (the "visual" of a scene). Numbers on screen are computed from the data, you only choose what to show:
+VISUALS = """Chart types (the "visual" of a scene). Numbers on screen are computed from the data, you only choose what to show.
+CHOOSE BY WHAT THE SENTENCE IS ABOUT, and use a wide variety: a good video uses at least 6 different types and never leans on one.
+The striking ones (kpi, waffle, gauge, donut, heatmap, race, map, world_map) fit only twice per video; multiline, slope, compare and bars three
+times; line and counter are the workhorses. Put the right chart on the right sentence (a ranking over years: race; "how many in 100": waffle;
+"where does it stand historically": gauge; a split into parts: donut; many things compared over time: multiline).
 - {"type": "title", "text": str, "highlight": [one or two words]}  -- the opening scene only
-- {"type": "statement", "text": str (max 9 words, punchy), "highlight": [one word]}  -- a big text card for a key idea
-- {"type": "line", "series": id, "start": "YYYY", "end": "YYYY" (optional), "annotate": ["max"|"min"]}  -- the series drawn over time (indexes are
-  shown as percent change since "start")
+- {"type": "statement", "text": str (max 9 words, punchy), "highlight": [one word]}  -- a big text card for a key idea or a cause
+- {"type": "line", "series": id, "start": "YYYY", "end": "YYYY" (optional), "annotate": ["max"|"min"]}  -- ONE series over time
+  (indexes are shown as percent change since "start")
+- {"type": "multiline", "series": [2 to 6 ids], "since": "YYYY", "as": "change"|"value"}  -- SEVERAL series racing on one chart, to
+  compare how they moved ("change" = percent change since "since"; "value" needs the same unit and no index)
 - {"type": "counter", "series": id, "stat": "last"|"max"|"min"|"at", "date": "YYYY-MM" (with "at"), "start": "YYYY"}  -- one big
   number counting up; "max"/"min" look only from "start" on; use "at" + "date" to show the value of a particular month.
   For an INDEX series (the facts say so) "at" and "compare" are NOT possible: use "last"/"max"/"min" (shown as percent change since
   "start") or a line
-- {"type": "compare", "series": id, "from": "YYYY" or "YYYY-MM", "to": "last" or "YYYY"}  -- then vs now (not for indexes)
+- {"type": "compare", "series": id, "from": "YYYY" or "YYYY-MM", "to": "last" or "YYYY"}  -- then vs now for ONE series (not for indexes)
+- {"type": "slope", "series": [2 to 8 ids, same unit, no index], "from": "YYYY", "to": "last"}  -- THEN vs NOW for many items at once
+  (a dot for then, a dot for now, joined)
 - {"type": "bars", "series": [2 to 8 ids], "since": "YYYY"}  -- percent change of several series, ranked
+- {"type": "race", "series": [3 to 10 ids, same unit], "since": "YYYY"}  -- animated ranking that reorders year by year (best for
+  countries or sectors that overtake each other)
+- {"type": "kpi", "series": [2 to 4 ids]}  -- a dashboard of big numbers with change badges and trend lines (good for an overview)
+- {"type": "waffle", "series": id (a percent), "stat": "last"|"max"|"min"}  -- 100 squares filling up: "x out of 100" (only for series in %)
+- {"type": "gauge", "series": id, "start": "YYYY"}  -- where today's value stands between the lowest and highest since "start"
+- {"type": "donut", "series": [2 to 7 ids that add up, e.g. job sectors]}  -- how a total splits into parts (only series marked additive)
+- {"type": "heatmap", "series": id (monthly), "years": 3 to 16}  -- a grid of year by month showing monthly percent changes
 - {"type": "states_bars", "order": "top"|"bottom", "n": 5 to 10}  -- ranking of states (needs the state data)
 - {"type": "map"}  -- US map of the state data
+- {"type": "world_map", "highlight": country (optional)}  -- world map of the country data (needs the country data)
 - {"type": "countries_bars"}  -- the chosen countries ranked, latest year (needs the country data); at most twice per video"""
 
 OUTLINE_PROMPT = """Plan a Plotline Data video (YouTube, US and UK viewers): "{title}".
@@ -224,7 +247,7 @@ def scene_problems(sc: dict, bundle: dict, ok: set[float] | None = None) -> list
     except (KeyError, ValueError, IndexError, TypeError) as exc:
         return out + [f"bad visual {json.dumps(sc.get('visual'))}: {exc}"]
     said = [x for x in _numbers(sc.get("narration", "")) if not _small(x)]
-    if spec["type"] in ("counter", "compare") and said and not any(abs(x) in shown_numbers(spec) for x in said):
+    if spec["type"] in ("counter", "compare", "waffle", "gauge") and said and not any(abs(x) in shown_numbers(spec) for x in said):
         out.append(f"the narration says {', '.join(f'{x:g}' for x in said)} but the {spec['type']} chart shows "
                    "something else; change the chart (e.g. counter with \"stat\": \"at\" and the month) so it shows that number")
     return out
@@ -259,6 +282,17 @@ def check_script(script: dict, bundle: dict, min_words: int | None = None) -> li
             continue
         if spec["type"] != "title":
             shown.setdefault(json.dumps({k: v for k, v in spec.items() if k != "duration"}, sort_keys=True), []).append(i)
+    kinds: dict[str, list[int]] = {}
+    for i, sc in enumerate(scenes, 1):
+        k = (sc.get("visual") or {}).get("type")
+        if k not in ("title", "statement", None):
+            kinds.setdefault(k, []).append(i)
+    charts = sum(len(w) for w in kinds.values())
+    for k, where in kinds.items():
+        cap = RARE_CAP if k in RARE else COMMON_CAP if k in COMMON else max(4, math.ceil(0.22 * charts))
+        if len(where) > cap and charts >= 10:
+            problems.append(f"scene {where[cap]}: chart type '{k}' is already used {cap} times; pick a different type from the menu "
+                            "(multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)")
     for where in shown.values():
         if len(where) > 2:
             problems.append(f"scene {where[2]}: the same chart is already shown in scenes {where[:2]}; use a different chart, series or period")
@@ -288,7 +322,10 @@ def write_script(plan: dict, bundle: dict, gen=None, tries: int = 3, log=print, 
     return fix_script(script, plan, bundle, facts, ids, gen, tries, log, draft_path)
 
 
-SOFT = ("is repeated", "the same chart")        # style problems: worth a rewrite, never worth losing the video
+RARE = ("kpi", "waffle", "gauge", "donut", "heatmap", "race", "world_map", "map")      # striking charts: twice per video at most
+COMMON_CAP, RARE_CAP = 3, 2
+COMMON = ("multiline", "slope", "compare", "bars", "states_bars", "countries_bars")
+SOFT = ("is repeated", "the same chart", "chart type")        # style problems: worth a rewrite, never worth losing the video
 SENT_RE = re.compile(r"(?<=[.!?])\s+")
 
 
@@ -484,6 +521,8 @@ def _compile(v: dict, bundle: dict, dur: float) -> dict:
         return {**base, "type": "bars", "title": f"Price change since {when}" if all(bundle["series"][i]["fmt"].get("prefix") == "$" for i in ids)
                 else f"Change since {when}", "items": items, "suffix": "%", "prefix": "", "decimals": 1 if small else 0, "highlight": 0,
                 "source": srcs[0] if len(srcs) == 1 else "; ".join(s.replace(" via FRED", "") for s in srcs) + " via FRED"}
+    if t in NEW_TYPES:
+        return _compile_new(t, v, bundle, base)
     if t in ("states_bars", "map"):
         st = bundle["states"]
         if not st:
@@ -508,11 +547,165 @@ def _compile(v: dict, bundle: dict, dur: float) -> dict:
     raise ValueError(f"unknown chart type {t!r}")
 
 
+NEW_TYPES = ("multiline", "race", "slope", "kpi", "waffle", "gauge", "donut", "heatmap", "world_map")
+PALETTE_SERIES = 6
+
+
+def _label(s: dict) -> str:
+    return s.get("label") or _short(s["name"])
+
+
+def _ids(v: dict, bundle: dict, lo: int, hi: int) -> list[str]:
+    ids = [i for i in (v.get("series") if isinstance(v.get("series"), list) else [v.get("series")]) if i in bundle["series"]][:hi]
+    if len(ids) < lo:
+        raise ValueError(f"{v.get('type')} needs {lo} to {hi} of the video's series ids")
+    return ids
+
+
+def _same_unit(ids: list[str], bundle: dict) -> None:
+    """Series that can share one axis: no index, and the same kind of number (all dollars, all percents, all counts)."""
+    kinds = {(bundle["series"][i]["fmt"].get("prefix", ""), bundle["series"][i]["fmt"].get("suffix", "").strip(),
+              bool(bundle["series"][i]["fmt"].get("compact"))) for i in ids}
+    if len(kinds) > 1 or any(bundle["series"][i].get("index") for i in ids):
+        raise ValueError("these series must be the same kind of number (all dollars, all percents, all counts) and none may be an index")
+
+
+def _src(ids: list[str], bundle: dict) -> str:
+    srcs = sorted({bundle["series"][i]["source"] for i in ids})
+    return srcs[0] if len(srcs) == 1 else "; ".join(x.replace(" via FRED", "") for x in srcs) + " via FRED"
+
+
+def _compile_new(t: str, v: dict, bundle: dict, base: dict) -> dict:
+    S = bundle["series"]
+    if t == "multiline":
+        ids = _ids(v, bundle, 2, PALETTE_SERIES)
+        since, value_mode = str(v.get("since") or bundle["start"]), v.get("as") == "value"
+        if value_mode:
+            _same_unit(ids, bundle)
+        lines, small = [], True
+        for i in ids:
+            pts = datasets.window(S[i]["points"], since)
+            if len(pts) < 2:
+                raise ValueError(f"{i} has no data since {since}")
+            pts = pts if value_mode else [(d, round(datasets.pct(pts[0][1], x), 1)) for d, x in pts]
+            small = small and max(abs(x) for _, x in pts) < 10
+            lines.append({"label": _label(S[i]), "points": pts})
+        f = _js_fmt(S[ids[0]]["fmt"]) if value_mode else {"prefix": "", "suffix": "%", "decimals": 1 if small else 0, "compact": False}
+        when = datasets.when(S[ids[0]], datasets.window(S[ids[0]]["points"], since)[0][0])
+        return {**base, "type": "multiline", "title": (S[ids[0]]["name"] + " compared") if value_mode else f"Change since {when}", "lines": lines, **f,
+                "source": _src(ids, bundle), "draw": round(min(max(base["duration"] * 0.6, 3), 8), 2)}
+    if t == "race":
+        ids = _ids(v, bundle, 3, 10)
+        _same_unit(ids, bundle)
+        since = str(v.get("since") or bundle["start"])
+        win = {i: datasets.window(S[i]["points"], since) for i in ids}
+        y0, y1 = max(int(w[0][0][:4]) for w in win.values()), min(int(w[-1][0][:4]) for w in win.values())
+        if y1 - y0 < 3:
+            raise ValueError("race needs at least 4 years of data in common")
+        step = max(1, (y1 - y0) // 40)
+        years = list(range(y0, y1 + 1, step)) + ([y1] if (y1 - y0) % step else [])
+        items = [{"label": _label(S[i]), "values": [datasets.at(win[i], f"{y}-01")[1] for y in years]} for i in ids]
+        hi_ = next((k for k, i in enumerate(ids) if _label(S[i]) in ("United States", "United Kingdom")), None)
+        return {**base, "type": "race", "title": f"{S[ids[0]]['name'].split(' in ')[0]}: {y0} to {y1}", "frames": [str(y) for y in years], "items": items,
+                **_js_fmt(S[ids[0]]["fmt"]), "highlight": hi_, "source": _src(ids, bundle)}
+    if t == "slope":
+        ids = _ids(v, bundle, 2, 8)
+        _same_unit(ids, bundle)
+        frm, to = str(v["from"]), str(v.get("to", "last"))
+        items, da, db = [], None, None
+        for i in ids:
+            pts = S[i]["points"]
+            a = datasets.at(pts, frm)
+            b = pts[-1] if to == "last" else datasets.at(pts, to)
+            if a[0] >= b[0]:
+                raise ValueError("slope needs an earlier 'from' and a later 'to'")
+            da, db = da or a[0], db or b[0]
+            items.append({"label": _label(S[i]), "a": a[1], "b": b[1]})
+        items.sort(key=lambda d: -d["b"])
+        return {**base, "type": "slope", "title": f"{datasets.when(S[ids[0]], da)} vs. {datasets.when(S[ids[0]], db)}", "items": items,
+                "aLabel": datasets.when(S[ids[0]], da), "bLabel": datasets.when(S[ids[0]], db), **_js_fmt(S[ids[0]]["fmt"]), "source": _src(ids, bundle)}
+    if t == "kpi":
+        ids = _ids(v, bundle, 2, 4)
+        cards = []
+        for i in ids:
+            s = S[i]
+            pts = datasets.window(s["points"], str(v.get("since") or bundle["start"])) or s["points"]
+            c = datasets.pct(pts[0][1], pts[-1][1])
+            step = max(1, len(pts) // 40)
+            spark = [x for _, x in pts[::step]] + [pts[-1][1]]
+            if s.get("index"):
+                f, value = {"prefix": "", "suffix": "%", "decimals": 0, "compact": False}, round(c)
+                spark = [datasets.pct(pts[0][1], x) for x in spark]
+            else:
+                f, value = _js_fmt(s["fmt"]), pts[-1][1]
+            cards.append({"label": _label(s), "value": value, **f, "valueText": datasets.fmt(value, {**s["fmt"], **({"suffix": "%", "prefix": "", "decimals": 0, "compact": False} if s.get("index") else {})}),
+                          "change": f"{c:+.0f}%", "up": c > 0, "since": f"since {datasets.when(s, pts[0][0])}", "spark": spark})
+        return {**base, "type": "kpi", "title": "The numbers at a glance", "cards": cards, "source": _src(ids, bundle)}
+    if t == "waffle":
+        sid = _ids({**v, "series": v.get("series")}, bundle, 1, 1)[0]
+        s = S[sid]
+        if s["fmt"].get("suffix", "").strip() != "%" or s.get("index"):
+            raise ValueError("waffle needs a series measured in percent")
+        pts = datasets.window(s["points"], str(v.get("start") or bundle["start"])) or s["points"]
+        p = {"last": pts[-1], "max": max(pts, key=lambda q: q[1]), "min": min(pts, key=lambda q: q[1])}[v.get("stat", "last")]
+        if not 0 < p[1] <= 100:
+            raise ValueError("waffle needs a value between 0 and 100")
+        return {**base, "type": "waffle", "label": s["name"][:48], "value": p[1], **_js_fmt(s["fmt"]), "sub": datasets.when(s, p[0]),
+                "caption": f"about 1 in {round(100 / p[1])}" if 4 <= p[1] <= 50 else "", "source": s["source"]}
+    if t == "gauge":
+        sid = _ids({**v, "series": v.get("series")}, bundle, 1, 1)[0]
+        s = S[sid]
+        if s.get("index"):
+            raise ValueError("gauge cannot show an index")
+        pts = datasets.window(s["points"], str(v.get("start") or bundle["start"])) or s["points"]
+        lo, hi, cur = min(pts, key=lambda q: q[1]), max(pts, key=lambda q: q[1]), pts[-1]
+        if hi[1] <= lo[1]:
+            raise ValueError("gauge needs a series that moves")
+        below = round(100 * sum(1 for _, x in pts if x < cur[1]) / len(pts))
+        return {**base, "type": "gauge", "title": s["name"], "value": cur[1], "min": lo[1], "max": hi[1], "minLabel": datasets.when(s, lo[0]), "maxLabel": datasets.when(s, hi[0]),
+                "label": f"{s['name']}, {datasets.when(s, cur[0])}", "sub": f"Higher than {below}% of readings since {pts[0][0][:4]}", **_js_fmt(s["fmt"]), "source": s["source"]}
+    if t == "donut":
+        ids = _ids(v, bundle, 2, 7)
+        if len({S[i]["unit"] for i in ids}) > 1 or not all(S[i].get("additive") for i in ids):
+            raise ValueError("donut needs series marked additive that share one unit")
+        items = sorted(({"label": _label(S[i]).replace(" jobs", ""), "value": S[i]["points"][-1][1]} for i in ids), key=lambda d: -d["value"])
+        return {**base, "type": "donut", "title": f"How it splits, {datasets.when(S[ids[0]], S[ids[0]]['points'][-1][0])}", "items": items, "source": _src(ids, bundle)}
+    if t == "heatmap":
+        sid = _ids({**v, "series": v.get("series")}, bundle, 1, 1)[0]
+        s = S[sid]
+        if s.get("yearly") or len(s["points"]) < 36:
+            raise ValueError("heatmap needs a monthly series with at least three years of data")
+        ch = {s["points"][k][0]: datasets.pct(s["points"][k - 1][1], s["points"][k][1]) for k in range(1, len(s["points"]))}
+        last_year = int(s["points"][-1][0][:4])
+        n = max(3, min(16, int(v.get("years", 8))))
+        rows = [{"year": y, "values": [round(ch[f"{y}-{m:02d}-01"], 2) if f"{y}-{m:02d}-01" in ch else None for m in range(1, 13)]} for y in range(last_year - n + 1, last_year + 1)]
+        flat = sorted(abs(x) for r in rows for x in r["values"] if x is not None)
+        if not flat:
+            raise ValueError("no data for the heatmap")
+        vmax = max(0.1, round(flat[int(0.95 * (len(flat) - 1))], 1))
+        return {**base, "type": "heatmap", "title": f"{s['name']}: monthly change", "rows": rows, "vmax": vmax, "suffix": "%", "prefix": "", "decimals": 1,
+                "legend": "monthly change", "source": s["source"]}
+    if t == "world_map":
+        ow = bundle["owid"]
+        if not ow:
+            raise ValueError("this video has no country data")
+        values, year = datasets.world_values(ow)
+        if len(values) < 40:
+            raise ValueError("not enough countries for a world map")
+        want = datasets.WORLD_ALIASES.get(str(v.get("highlight") or ""), str(v.get("highlight") or ""))
+        top = want if want in values else max(values, key=values.get)
+        return {**base, "type": "world_map", "title": f"{ow['name']}, {year}", "values": values, **_js_fmt(ow["fmt"]), "legend": f"{ow['name']}, {year}", "highlight": top,
+                "highlightName": top.replace("United States of America", "United States"), "source": ow["source"]}
+    raise ValueError(f"unknown chart type {t!r}")
+
+
 def shown_numbers(spec: dict) -> set[float]:
     """The headline numbers a chart displays (rounded as on screen), to check them against the narration."""
     f = {"prefix": spec.get("prefix", ""), "suffix": spec.get("suffix", ""), "decimals": spec.get("decimals", 0), "compact": spec.get("compact")}
     vals = []
-    if spec["type"] == "counter":
+    if spec["type"] in ("waffle", "gauge"):
+        vals = [spec["value"]] + ([spec["min"], spec["max"]] if spec["type"] == "gauge" else [])
+    elif spec["type"] == "counter":
         vals = [spec["value"]] + [float(m) for m in re.findall(r"[\d.]+", spec.get("badge", "").split("%")[0])]
     elif spec["type"] == "compare":
         vals = [spec["left"]["value"], spec["right"]["value"], datasets.pct(spec["left"]["value"], spec["right"]["value"])]
@@ -540,7 +733,8 @@ def round_shown(spec: dict) -> dict:
         if side in spec:
             spec[side]["value"] = r(spec[side]["value"])
     for item in spec.get("items", []):
-        item["value"] = float(f"{item['value']:.{d}f}")
+        if "value" in item:
+            item["value"] = float(f"{item['value']:.{d}f}")
     return spec
 
 

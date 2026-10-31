@@ -48,14 +48,14 @@ fred:
   # --- work and pay ---
   UNRATE: {name: "US unemployment rate", theme: jobs, unit: "percent", fmt: {suffix: "%", decimals: 1}}
   PAYEMS: {name: "Total US jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
-  MANEMP: {name: "Manufacturing jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
-  USLAH: {name: "Leisure and hospitality jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
-  USCONS: {name: "Construction jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
-  USTRADE: {name: "Retail jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
-  USEHS: {name: "Private education and health jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
-  USGOVT: {name: "Government jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
-  USMINE: {name: "Mining and logging jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 2, compact: true}}
-  USINFO: {name: "Information-sector jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 2, compact: true}}
+  MANEMP: {additive: true, name: "Manufacturing jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
+  USLAH: {additive: true, name: "Leisure and hospitality jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
+  USCONS: {additive: true, name: "Construction jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
+  USTRADE: {additive: true, name: "Retail jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
+  USEHS: {additive: true, name: "Private education and health jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
+  USGOVT: {additive: true, name: "Government jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 1, compact: true}}
+  USMINE: {additive: true, name: "Mining and logging jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 2, compact: true}}
+  USINFO: {additive: true, name: "Information-sector jobs", theme: jobs, unit: "jobs", scale: 1000, fmt: {decimals: 2, compact: true}}
   CIVPART: {name: "Labor force participation rate", theme: jobs, unit: "percent", fmt: {suffix: "%", decimals: 1}}
   JTSQUR: {name: "Quit rate (workers quitting each month)", theme: jobs, unit: "percent", fmt: {suffix: "%", decimals: 1}}
   AHETPI: {name: "Average hourly pay (non-managers)", theme: pay, unit: "US dollars per hour", fmt: {prefix: "$", decimals: 2}}

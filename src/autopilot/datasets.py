@@ -3,6 +3,7 @@ Data (no API keys needed), and the FACTS a script may quote. Every number in a P
 from a language model."""
 import csv
 import io
+import json
 import time
 import urllib.request
 from datetime import date
@@ -195,3 +196,38 @@ def facts(s: dict, start: str | None = None) -> list[str]:
             out.append(f"{w(p[0])}: " + (f"{fmt(p[1], f)}; " if not s.get("index") else "")
                        + f"change from then to {w(last[0])}: {pct(p[1], last[1]):+.0f}%")
     return out
+
+
+# ---- the world map: Our World in Data country names -> the names in the map file -----------------------------------------------
+WORLD_ALIASES = {
+    "United States": "United States of America", "Democratic Republic of Congo": "Dem. Rep. Congo", "Central African Republic": "Central African Rep.",
+    "South Sudan": "S. Sudan", "Dominican Republic": "Dominican Rep.", "Equatorial Guinea": "Eq. Guinea", "Bosnia and Herzegovina": "Bosnia and Herz.",
+    "Cote d'Ivoire": "Côte d'Ivoire", "Western Sahara": "W. Sahara", "Falkland Islands": "Falkland Is.", "Solomon Islands": "Solomon Is.",
+    "Eswatini": "eSwatini", "Czechia": "Czechia", "North Macedonia": "Macedonia", "Timor": "Timor-Leste", "East Timor": "Timor-Leste", "French Southern Territories": "Fr. S. Antarctic Lands",
+}
+
+
+def world_names() -> set[str]:
+    topo = json.loads((CATALOG.parent.parent / "assets" / "motion" / "vendor" / "countries-110m.json").read_text())
+    return {g["properties"]["name"] for g in topo["objects"]["countries"]["geometries"]}
+
+
+def world_values(ow: dict, min_countries: int = 100) -> tuple[dict, str]:
+    """Latest value per country for the world map: {map name: value}, and the year shown. The year is the newest one that most
+    countries have; a country without that year is left grey."""
+    names = world_names()
+    counts: dict[int, int] = {}
+    for rows in ow["rows"].values():
+        for y, _ in rows:
+            counts[y] = counts.get(y, 0) + 1
+    years = [y for y, n in counts.items() if n >= min_countries]
+    if not years:
+        return {}, ""
+    year = max(years)
+    out = {}
+    for country, rows in ow["rows"].items():
+        name = WORLD_ALIASES.get(country, country)
+        hit = [v for y, v in rows if y == year]
+        if name in names and hit:
+            out[name] = hit[0]
+    return out, str(year)

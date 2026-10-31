@@ -270,7 +270,7 @@
         .attr("opacity", 0.35).attr("width", X1 - X0);
       const bar = r.append("rect").attr("y", rowH * 0.18).attr("height", rowH * 0.64).attr("rx", rowH * 0.18)
         .attr("fill", neg ? C.coral : hot ? "url(#hot)" : "url(#bar)").attr("filter", hot ? "url(#glow)" : null);
-      const val = r.append("text").attr("class", "num").attr("y", rowH * 0.64).attr("font-size", 32).attr("text-anchor", neg ? "end" : "start");
+      const val = r.append("text").attr("class", "num").attr("y", rowH * 0.64).attr("font-size", 32).attr("fill", neg ? C.coral : C.ink);
       return { r, bar, val, d, i, neg };
     });
     const src = source(g, s.source);
@@ -282,7 +282,7 @@
         r.attr("opacity", a).attr("transform", `translate(${(1 - E.out(a)) * -60},${top + i * rowH})`);
         const end = x(d.value * p), z = x(0);
         bar.attr("x", Math.min(z, end)).attr("width", Math.max(1, Math.abs(end - z)));
-        val.attr("x", neg ? Math.min(z, end) - 16 : Math.max(z, end) + 16).text(fmt(d.value * p, s));
+        val.attr("x", neg ? z + 16 : Math.max(z, end) + 16).text(fmt(d.value * p, s));      // a fall's number sits right of the zero line, clear of the names
       });
     };
   };
@@ -359,6 +359,365 @@
         lab.attr("opacity", prog(t, 0.4 + i * 0.9, 0.4));
       });
       if (badge) { const b = E.back(prog(t, 3.0, 0.5)); badge.g.attr("transform", `translate(${W / 2},${top + hMax * 0.42}) scale(${b}) rotate(${-6 * b})`); }
+    };
+  };
+
+  // ======================================================================================================================
+  // More chart types. Each reads its numbers from the spec (computed in Python from the data) and lays itself out for a wide
+  // frame (1920 x 1080) or a narrow one (a Short's 1080-wide chart area).
+  // ======================================================================================================================
+  const PAL = [C.volt, C.cyan, C.coral, C.amber, "#b388ff", "#4dffb0", "#ff8ad8", "#8aa4ff", "#ffd966", "#7fe7ff"];
+  const rid = () => Math.random().toString(36).slice(2);
+
+  // ---- several lines on one chart -------------------------------------------------------------------------------------
+  SCENES.multiline = (g, s) => {
+    const head = heading(g, s.title);
+    const narrow = W < 1300;
+    const legendH = narrow ? 56 * s.lines.length : 0;
+    const m = narrow ? { l: 150, r: 70, t: 290 + legendH, b: 190 } : { l: 200, r: 430, t: 270, b: 150 };
+    const lines = s.lines.map((l, i) => ({ ...l, color: PAL[i % PAL.length], pts: l.points.map((p) => [new Date(p[0]), p[1]]) }));
+    const all = lines.flatMap((l) => l.pts);
+    const x = d3.scaleTime().domain(d3.extent(all, (p) => p[0])).range([m.l, W - m.r]);
+    const lo = Math.min(0, d3.min(all, (p) => p[1])), hi = d3.max(all, (p) => p[1]);
+    const y = d3.scaleLinear().domain([lo, hi + (hi - lo) * 0.08]).nice().range([H - m.b, m.t]);
+    const axis = g.append("g");
+    const yt = y.ticks(5).map((v) => ({
+      line: axis.append("line").attr("x1", m.l).attr("x2", W - m.r).attr("y1", y(v)).attr("y2", y(v)).attr("stroke", v === 0 ? C.muted : C.faint)
+        .attr("stroke-dasharray", v === 0 ? null : "4 8"),
+      label: axis.append("text").attr("class", "body").attr("x", m.l - 22).attr("y", y(v) + 9).attr("text-anchor", "end").attr("font-size", 26)
+        .attr("fill", C.muted).text(fmt(v, s)),
+    }));
+    const span = x.domain()[1].getFullYear() - x.domain()[0].getFullYear();
+    const years = x.ticks(d3.timeYear.every(span <= 8 ? 1 : span <= 16 ? 2 : span <= 40 ? 5 : 10)).map((d) => axis.append("text").attr("class", "body")
+      .attr("x", x(d)).attr("y", H - m.b + 48).attr("text-anchor", "middle").attr("font-size", 26).attr("fill", C.muted).text(d.getFullYear()));
+    const cid = "clip" + rid();
+    const clip = g.append("clipPath").attr("id", cid).append("rect").attr("y", 0).attr("height", H).attr("x", 0);
+    const plot = g.append("g").attr("clip-path", `url(#${cid})`);
+    lines.forEach((l, i) => {
+      l.path = plot.append("path").attr("d", d3.line().x((p) => x(p[0])).y((p) => y(p[1])).curve(d3.curveMonotoneX)(l.pts)).attr("fill", "none")
+        .attr("stroke", l.color).attr("stroke-width", i === 0 ? 8 : 5.5).attr("stroke-linejoin", "round").attr("stroke-linecap", "round")
+        .attr("filter", i === 0 ? "url(#glow)" : null).attr("opacity", i === 0 ? 1 : 0.92);
+      l.dot = g.append("circle").attr("r", 10).attr("fill", l.color).attr("filter", "url(#glow)");
+      l.tag = g.append("g");
+      if (!narrow) {
+        l.tag.append("text").attr("x", 0).attr("y", -2).attr("font-size", 30).attr("font-weight", 700).attr("fill", l.color).text(l.label);
+        l.val = l.tag.append("text").attr("class", "num").attr("x", 0).attr("y", 30).attr("font-size", 28).attr("fill", C.ink);
+      }
+    });
+    if (narrow) lines.forEach((l, i) => {
+      const r = g.append("g").attr("transform", `translate(${m.l},${300 + i * 56})`);
+      r.append("circle").attr("cx", 10).attr("cy", -9).attr("r", 10).attr("fill", l.color);
+      l.val = r.append("text").attr("x", 34).attr("font-size", 30).attr("font-weight", 600).attr("fill", C.ink);
+      l.legend = l.label;
+    });
+    const src = source(g, s.source), bis = d3.bisector((q) => q[0]).left;
+    const valueAt = (pts, date) => {
+      const i = bis(pts, date), a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i)];
+      return lerp(a[1], b[1], b[0] - a[0] ? clamp((date - a[0]) / (b[0] - a[0])) : 0);
+    };
+    return (t) => {
+      head(t); src(t);
+      yt.forEach((k, i) => { const p = prog(t, 0.2 + i * 0.06, 0.5); k.line.attr("opacity", p); k.label.attr("opacity", p); });
+      years.forEach((e, i) => e.attr("opacity", prog(t, 0.3 + i * 0.05, 0.5)));
+      const p = E.inOut(prog(t, 0.6, s.draw || 4.5)), xx = lerp(m.l, W - m.r, p), date = x.invert(xx), vis = prog(t, 0.6, 0.2);
+      clip.attr("width", xx + 8);
+      const ys = lines.map((l) => { const lim = l.pts[l.pts.length - 1][0]; const v = valueAt(l.pts, date > lim ? lim : date); l.cur = v; return y(v); });
+      const order = d3.range(lines.length).sort((a, b) => ys[a] - ys[b]), ly = [];
+      order.forEach((k, n) => { ly[k] = Math.max(ys[k], n ? ly[order[n - 1]] + 66 : -1e9); });
+      lines.forEach((l, k) => {
+        const lim = l.pts[l.pts.length - 1][0], dx = x(date > lim ? lim : date);
+        l.dot.attr("cx", dx).attr("cy", ys[k]).attr("opacity", vis);
+        if (!narrow) { l.tag.attr("transform", `translate(${dx + 30},${ly[k] + 6})`).attr("opacity", vis); l.val.text(fmt(l.cur, s)); }
+        else l.val.text(`${l.legend}   ${fmt(l.cur, s)}`).attr("opacity", vis);
+      });
+    };
+  };
+
+  // ---- ranking race: bars that reorder as time passes ---------------------------------------------------------------------
+  SCENES.race = (g, s) => {
+    const head = heading(g, s.title);
+    const narrow = W < 1300, items = s.items, n = items.length, F = s.frames.length;
+    const top = narrow ? 300 : 260, rowH = Math.min(96, (H - top - 150) / n);
+    const X0 = narrow ? 400 : 560, X1 = W - (narrow ? 190 : 250);
+    const maxV = d3.max(items, (d) => d3.max(d.values));
+    const x = d3.scaleLinear().domain([0, maxV * 1.04]).range([0, X1 - X0]);
+    const rank = d3.range(F).map((k) => {
+      const ord = d3.range(n).sort((a, b) => items[b].values[k] - items[a].values[k]);
+      const r = []; ord.forEach((i, pos) => { r[i] = pos; }); return r;
+    });
+    const rows = items.map((d, i) => {
+      const r = g.append("g");
+      const lab = r.append("text").attr("x", X0 - 18).attr("y", rowH * 0.62).attr("text-anchor", "end").attr("font-size", narrow ? 30 : 34).attr("font-weight", 600).text(d.label);
+      const bar = r.append("rect").attr("x", X0).attr("y", rowH * 0.14).attr("height", rowH * 0.72).attr("rx", rowH * 0.2)
+        .attr("fill", PAL[i % PAL.length]).attr("filter", i === s.highlight ? "url(#glow)" : null);
+      const val = r.append("text").attr("class", "num").attr("y", rowH * 0.64).attr("font-size", 32);
+      return { r, bar, val, lab, i };
+    });
+    const tick = g.append("text").attr("class", "num").attr("x", W - (narrow ? 70 : 120)).attr("y", H - (narrow ? 90 : 120)).attr("text-anchor", "end")
+      .attr("font-size", narrow ? 150 : 220).attr("fill", C.ink).attr("opacity", 0.14);
+    const src = source(g, s.source), play = Math.max(1, s.duration - 2.2);
+    return (t) => {
+      head(t); src(t);
+      const pr = prog(t, 0.9, play), yf = pr * (F - 1), k = Math.min(F - 2, Math.floor(yf)), f = yf - k, sm = f * f * (3 - 2 * f);
+      tick.text(s.frames[Math.round(yf)]);
+      rows.forEach(({ r, bar, val, i }) => {
+        const v = lerp(items[i].values[k], items[i].values[k + 1], f), pos = lerp(rank[k][i], rank[k + 1][i], sm), a = prog(t, 0.3 + i * 0.05, 0.4);
+        r.attr("transform", `translate(0,${top + pos * rowH})`).attr("opacity", a);
+        bar.attr("width", Math.max(2, x(v)));
+        val.attr("x", X0 + x(v) + 14).text(fmt(v, s));
+      });
+    };
+  };
+
+  // ---- dumbbell: then and now for many items --------------------------------------------------------------------------------
+  SCENES.slope = (g, s) => {
+    const head = heading(g, s.title);
+    const narrow = W < 1300, items = s.items, n = items.length, top = narrow ? 330 : 300, rowH = Math.min(150, (H - top - 170) / n);
+    const X0 = narrow ? 410 : 560, X1 = W - (narrow ? 170 : 230);
+    const lo = d3.min(items, (d) => Math.min(d.a, d.b)), hi = d3.max(items, (d) => Math.max(d.a, d.b));
+    const x = d3.scaleLinear().domain([Math.max(0, lo - (hi - lo) * 0.08), hi + (hi - lo) * 0.04]).range([X0, X1]);
+    const key = g.append("g").attr("transform", `translate(${X0},${top - 50})`);
+    key.append("circle").attr("r", 9).attr("fill", C.cyan); key.append("text").attr("x", 20).attr("y", 9).attr("font-size", 26).attr("fill", C.muted).text(s.aLabel);
+    key.append("circle").attr("cx", 230).attr("r", 9).attr("fill", C.coral); key.append("text").attr("x", 250).attr("y", 9).attr("font-size", 26).attr("fill", C.muted).text(s.bLabel);
+    const rows = items.map((d, i) => {
+      const r = g.append("g"), col = d.b >= d.a ? C.coral : C.cyan;
+      r.append("text").attr("x", X0 - 28).attr("y", rowH * 0.62).attr("text-anchor", "end").attr("font-size", narrow ? 30 : 34).attr("font-weight", 600).text(d.label);
+      r.append("line").attr("x1", X0).attr("x2", X1).attr("y1", rowH / 2).attr("y2", rowH / 2).attr("stroke", C.faint).attr("stroke-dasharray", "3 9");
+      const link = r.append("line").attr("y1", rowH / 2).attr("y2", rowH / 2).attr("stroke", col).attr("stroke-width", 8).attr("stroke-linecap", "round");
+      const da = r.append("circle").attr("cy", rowH / 2).attr("r", 15).attr("fill", C.cyan);
+      const db = r.append("circle").attr("cy", rowH / 2).attr("r", 15).attr("fill", col).attr("filter", "url(#glow)");
+      const ta = r.append("text").attr("class", "num").attr("y", rowH / 2 - 26).attr("text-anchor", "middle").attr("font-size", 26).attr("fill", C.muted);
+      const tb = r.append("text").attr("class", "num").attr("y", rowH / 2 + 46).attr("text-anchor", "middle").attr("font-size", 28).attr("fill", col);
+      return { r, link, da, db, ta, tb, d, i };
+    });
+    const src = source(g, s.source);
+    return (t) => {
+      head(t); src(t);
+      rows.forEach(({ r, link, da, db, ta, tb, d, i }) => {
+        const a = prog(t, 0.4 + i * 0.16, 0.4), p = E.inOut(prog(t, 0.8 + i * 0.16, 0.9)), xa = x(d.a), xb = lerp(xa, x(d.b), p);
+        r.attr("transform", `translate(0,${top + i * rowH})`).attr("opacity", a);
+        da.attr("cx", xa); db.attr("cx", xb); link.attr("x1", xa).attr("x2", xb);
+        ta.attr("x", xa).text(fmt(d.a, s)); tb.attr("x", xb).text(fmt(lerp(d.a, d.b, p), s)).attr("opacity", prog(t, 0.8 + i * 0.16, 0.3));
+      });
+    };
+  };
+
+  // ---- dashboard of big numbers with trend lines ---------------------------------------------------------------------------
+  SCENES.kpi = (g, s) => {
+    const head = heading(g, s.title);
+    const narrow = W < 1300, n = s.cards.length, gap = 36;
+    const cw = narrow ? W - 160 : (W - 280 - (n - 1) * gap) / n, ch = narrow ? (H - 470 - (n - 1) * gap) / n : 560;
+    const top = narrow ? 300 : (H - ch) / 2 + 40;
+    const cards = s.cards.map((c, i) => {
+      const gx = narrow ? 80 : 140 + i * (cw + gap), gy = narrow ? top + i * (ch + gap) : top;
+      const r = g.append("g").attr("transform", `translate(${gx},${gy})`);
+      const col = PAL[i % PAL.length];
+      r.append("rect").attr("width", cw).attr("height", ch).attr("rx", 28).attr("fill", C.bg2).attr("stroke", C.faint).attr("stroke-width", 2);
+      r.append("rect").attr("x", 28).attr("y", 28).attr("width", 56).attr("height", 8).attr("rx", 4).attr("fill", col);
+      const lab = narrow ? 30 : 32;
+      r.append("text").attr("class", "body").attr("x", 28).attr("y", 90).attr("font-size", lab).attr("fill", C.muted).text(c.label);
+      const size = Math.min(narrow ? 110 : 120, (cw - 56) / (Math.max(4, c.valueText.length) * 0.6));
+      const num = r.append("text").attr("class", "num").attr("x", 28).attr("y", narrow ? 195 : 200).attr("font-size", size).attr("fill", C.ink);
+      const pillG = r.append("g").attr("transform", `translate(28,${narrow ? 230 : 250})`);
+      const tx = pillG.append("text").attr("class", "num").attr("x", 22).attr("y", 33).attr("font-size", 30).attr("font-weight", 700).attr("fill", C.bg).text(c.change);
+      pillG.insert("rect", "text").attr("width", tx.node().getComputedTextLength() + 44).attr("height", 50).attr("rx", 25).attr("fill", c.up ? C.coral : C.cyan);
+      pillG.append("text").attr("class", "body").attr("x", tx.node().getComputedTextLength() + 64).attr("y", 34).attr("font-size", 24).attr("fill", C.muted).text(c.since);
+      const sy0 = narrow ? 320 : 350, sh = ch - sy0 - 36, sw = cw - 56;
+      const xs = d3.scaleLinear().domain([0, c.spark.length - 1]).range([0, sw]);
+      const ys = d3.scaleLinear().domain(d3.extent(c.spark)).range([sh, 0]);
+      const sp = r.append("g").attr("transform", `translate(28,${sy0})`);
+      const cidk = "kc" + rid();
+      const clipk = sp.append("clipPath").attr("id", cidk).append("rect").attr("x", -10).attr("y", -20).attr("height", sh + 40);
+      const spp = sp.append("g").attr("clip-path", `url(#${cidk})`);
+      spp.append("path").attr("d", d3.area().x((_, k) => xs(k)).y0(sh).y1((v) => ys(v)).curve(d3.curveMonotoneX)(c.spark)).attr("fill", col).attr("opacity", 0.15);
+      spp.append("path").attr("d", d3.line().x((_, k) => xs(k)).y((v) => ys(v)).curve(d3.curveMonotoneX)(c.spark)).attr("fill", "none").attr("stroke", col)
+        .attr("stroke-width", 5).attr("stroke-linecap", "round");
+      return { r, num, clipk, sw, c, i, gx, gy };
+    });
+    const src = source(g, s.source);
+    return (t) => {
+      head(t); src(t);
+      cards.forEach(({ r, num, clipk, sw, c, i, gx, gy }) => {
+        const a = E.out(prog(t, 0.3 + i * 0.18, 0.6)), p = E.expo(prog(t, 0.5 + i * 0.18, 1.6));
+        r.attr("opacity", a).attr("transform", `translate(${gx},${gy + (1 - a) * 50})`);
+        num.text(fmt(lerp(0, c.value, p), c));
+        clipk.attr("width", sw * E.inOut(prog(t, 0.9 + i * 0.18, 1.8)) + 20);
+      });
+    };
+  };
+
+  // ---- waffle: 100 squares, "x out of 100" ---------------------------------------------------------------------------------
+  SCENES.waffle = (g, s) => {
+    const narrow = W < 1300, cell = narrow ? 60 : 70, gap = 8, side = 10 * cell + 9 * gap;
+    const gx = narrow ? (W - side) / 2 : 190, gy = narrow ? 250 : (H - side) / 2 + 10;
+    const filled = Math.max(0, Math.min(100, s.value)), whole = Math.floor(filled), part = filled - whole;
+    const sq = d3.range(100).map((i) => {
+      const col = i % 10, row = 9 - Math.floor(i / 10);        // fills left to right, bottom to top
+      const cx = gx + col * (cell + gap) + cell / 2, cy = gy + row * (cell + gap) + cell / 2;
+      return { i, cx, cy, el: g.append("rect").attr("rx", 12).attr("x", -cell / 2).attr("y", -cell / 2).attr("width", cell).attr("height", cell) };
+    });
+    const tx = narrow ? W / 2 : gx + side + 120, ty = narrow ? gy + side + 150 : H / 2 - 20;
+    const anchor = narrow ? "middle" : "start";
+    const label = g.append("text").attr("x", tx).attr("y", narrow ? ty - 130 : ty - 150).attr("text-anchor", anchor).attr("font-size", narrow ? 34 : 40)
+      .attr("font-weight", 600).attr("fill", C.muted).attr("letter-spacing", 3).text(s.label.toUpperCase());
+    const num = g.append("text").attr("class", "num").attr("x", tx).attr("y", ty + (narrow ? 20 : 40)).attr("text-anchor", anchor).attr("font-size", narrow ? 190 : 250).attr("fill", C.volt).attr("filter", "url(#glow)");
+    const sub = g.append("text").attr("class", "body").attr("x", tx).attr("y", ty + (narrow ? 110 : 130)).attr("text-anchor", anchor).attr("font-size", narrow ? 38 : 44).attr("fill", C.ink).text(s.sub || "");
+    const sub2 = g.append("text").attr("class", "body").attr("x", tx).attr("y", ty + (narrow ? 170 : 200)).attr("text-anchor", anchor).attr("font-size", narrow ? 34 : 40).attr("fill", C.muted).text(s.caption || "");
+    const src = source(g, s.source);
+    return (t) => {
+      src(t);
+      const p = E.inOut(prog(t, 0.4, 2.2)), cnt = filled * p;
+      sq.forEach((q) => {
+        const on = q.i + 1 <= cnt, edge = q.i < cnt && q.i + 1 > cnt, pop = E.back(prog(t, 0.2 + q.i * 0.012, 0.5));
+        const fill = on ? C.volt : edge && q.i === whole ? C.volt : C.faint;
+        q.el.attr("transform", `translate(${q.cx},${q.cy}) scale(${clamp(pop, 0, 1.15)})`).attr("fill", fill)
+          .attr("opacity", on ? 1 : edge && q.i === whole ? 0.25 + 0.75 * part : 0.5);
+      });
+      label.attr("opacity", prog(t, 0.2, 0.5));
+      num.text(fmt(s.value * p, s));
+      sub.attr("opacity", prog(t, 1.6, 0.6)); sub2.attr("opacity", prog(t, 2.0, 0.6));
+    };
+  };
+
+  // ---- gauge: where a rate stands against its own history -----------------------------------------------------------------------
+  SCENES.gauge = (g, s) => {
+    const narrow = W < 1300, R = Math.min(W * 0.36, 430), cx = W / 2, cy = narrow ? 640 : H * 0.56;
+    const head = heading(g, s.title);
+    const arc = d3.arc().innerRadius(R - 46).outerRadius(R).cornerRadius(10);
+    const band = (a0, a1, col, op) => g.append("path").attr("transform", `translate(${cx},${cy})`).attr("d", arc({ startAngle: a0, endAngle: a1 })).attr("fill", col).attr("opacity", op);
+    const A0 = -Math.PI / 2, A1 = Math.PI / 2, third = Math.PI / 3;
+    band(A0, A0 + third - 0.02, C.cyan, 0.28); band(A0 + third, A0 + 2 * third - 0.02, C.volt, 0.28); band(A0 + 2 * third, A1, C.coral, 0.28);
+    const frac = clamp((s.value - s.min) / ((s.max - s.min) || 1));
+    const fillP = g.append("path").attr("transform", `translate(${cx},${cy})`).attr("fill", frac > 0.66 ? C.coral : frac > 0.33 ? C.volt : C.cyan).attr("filter", "url(#glow)");
+    const needle = g.append("g").attr("transform", `translate(${cx},${cy})`);
+    needle.append("line").attr("y2", -(R - 70)).attr("stroke", C.ink).attr("stroke-width", 10).attr("stroke-linecap", "round");
+    needle.append("circle").attr("r", 26).attr("fill", C.ink);
+    const ends = g.append("g");
+    ends.append("text").attr("class", "num").attr("x", cx - R + 23).attr("y", cy + 70).attr("text-anchor", "middle").attr("font-size", 36).text(fmt(s.min, s));
+    ends.append("text").attr("class", "body").attr("x", cx - R + 23).attr("y", cy + 112).attr("text-anchor", "middle").attr("font-size", 26).attr("fill", C.muted).text(s.minLabel);
+    ends.append("text").attr("class", "num").attr("x", cx + R - 23).attr("y", cy + 70).attr("text-anchor", "middle").attr("font-size", 36).text(fmt(s.max, s));
+    ends.append("text").attr("class", "body").attr("x", cx + R - 23).attr("y", cy + 112).attr("text-anchor", "middle").attr("font-size", 26).attr("fill", C.muted).text(s.maxLabel);
+    const num = g.append("text").attr("class", "num").attr("x", cx).attr("y", cy + (narrow ? 250 : 215)).attr("text-anchor", "middle").attr("font-size", narrow ? 170 : 180).attr("fill", C.ink);
+    const label = g.append("text").attr("x", cx).attr("y", cy + (narrow ? 330 : 285)).attr("text-anchor", "middle").attr("font-size", narrow ? 38 : 40).attr("fill", C.muted).text(s.label);
+    const sub = g.append("text").attr("class", "body").attr("x", cx).attr("y", cy + (narrow ? 390 : 340)).attr("text-anchor", "middle").attr("font-size", narrow ? 32 : 34).attr("fill", C.ink).text(s.sub || "");
+    const src = source(g, s.source);
+    return (t) => {
+      head(t); src(t);
+      const p = E.out(prog(t, 0.5, 2.0)), ang = A0 + (A1 - A0) * frac * p;
+      fillP.attr("d", arc({ startAngle: A0, endAngle: Math.max(A0 + 0.04, ang) }));
+      needle.attr("transform", `translate(${cx},${cy}) rotate(${(ang * 180) / Math.PI})`).attr("opacity", prog(t, 0.3, 0.4));
+      ends.attr("opacity", prog(t, 0.3, 0.6));
+      num.text(fmt(lerp(s.min, s.value, p), s)).attr("opacity", prog(t, 0.4, 0.4));
+      label.attr("opacity", prog(t, 0.8, 0.5)); sub.attr("opacity", prog(t, 2.0, 0.6));
+    };
+  };
+
+  // ---- donut: how a total splits ---------------------------------------------------------------------------------------------------
+  SCENES.donut = (g, s) => {
+    const head = heading(g, s.title);
+    const narrow = W < 1300, R = narrow ? 270 : 340, r0 = R * 0.62, cx = narrow ? W / 2 : 170 + R + 40, cy = narrow ? 300 + R + 30 : H / 2 + 60;
+    const total = d3.sum(s.items, (d) => d.value), arcs = d3.pie().sort(null).value((d) => d.value).padAngle(0.012)(s.items);
+    const gen = d3.arc().innerRadius(r0).outerRadius(R).cornerRadius(8);
+    const slices = arcs.map((a, i) => ({ a, el: g.append("path").attr("transform", `translate(${cx},${cy})`).attr("fill", PAL[i % PAL.length]), i }));
+    const big = s.items.reduce((b, d, i) => (d.value > s.items[b].value ? i : b), 0);
+    const cNum = g.append("text").attr("class", "num").attr("x", cx).attr("y", cy + 20).attr("text-anchor", "middle").attr("font-size", narrow ? 100 : 110).attr("fill", PAL[big % PAL.length]);
+    let cs = 30; const cLab = g.append("text").attr("x", cx).attr("y", cy + 70).attr("text-anchor", "middle").attr("font-size", cs).attr("fill", C.muted).text(s.items[big].label);
+    while (cLab.node().getComputedTextLength() > r0 * 1.7 && cs > 16) cLab.attr("font-size", --cs);
+    const lx = narrow ? 120 : cx + R + 140, ly0 = narrow ? cy + R + 70 : cy - (s.items.length * 70) / 2 + 20;
+    const leg = s.items.map((d, i) => {
+      const r = g.append("g").attr("transform", `translate(${lx},${ly0 + i * (narrow ? 50 : 70)})`);
+      r.append("rect").attr("y", -26).attr("width", 28).attr("height", 28).attr("rx", 8).attr("fill", PAL[i % PAL.length]);
+      r.append("text").attr("x", 46).attr("font-size", narrow ? 28 : 34).attr("font-weight", 600).text(d.label);
+      const v = r.append("text").attr("class", "num").attr("x", narrow ? W - 240 : 640).attr("text-anchor", "end").attr("font-size", narrow ? 28 : 34).attr("fill", PAL[i % PAL.length]);
+      return { r, v, d };
+    });
+    const src = source(g, s.source);
+    return (t) => {
+      head(t); src(t);
+      const p = E.inOut(prog(t, 0.4, 1.8)), sweep = p * 2 * Math.PI;
+      slices.forEach(({ a, el }) => el.attr("d", gen({ startAngle: a.startAngle, endAngle: Math.max(a.startAngle, Math.min(a.endAngle, sweep)), padAngle: 0.012 })));
+      cNum.text(fmt((s.items[big].value / total) * 100 * p, { decimals: 0, suffix: "%" })).attr("opacity", prog(t, 0.4, 0.4));
+      cLab.attr("opacity", prog(t, 1.0, 0.5));
+      leg.forEach(({ r, v, d }, i) => { r.attr("opacity", prog(t, 0.6 + i * 0.15, 0.4)); v.text(fmt((d.value / total) * 100 * p, { decimals: 1, suffix: "%" })); });
+    };
+  };
+
+  // ---- heatmap: a grid of year by month ----------------------------------------------------------------------------------------------
+  SCENES.heatmap = (g, s) => {
+    const head = heading(g, s.title);
+    const narrow = W < 1300, rows = s.rows, n = rows.length;
+    const m = narrow ? { l: 130, r: 60, t: 360, b: 170 } : { l: 230, r: 190, t: 300, b: 190 };
+    const cw = (W - m.l - m.r) / 12, chh = Math.min(76, (H - m.t - m.b) / n);
+    const vmax = s.vmax, color = d3.scaleDiverging().domain([-vmax, 0, vmax]).interpolator(d3.interpolateRgbBasis([C.cyan, "#161b30", C.coral])).clamp(true);
+    const months = "JFMAMJJASOND";
+    for (let k = 0; k < 12; k++) g.append("text").attr("class", "body").attr("x", m.l + k * cw + cw / 2).attr("y", m.t - 22).attr("text-anchor", "middle")
+      .attr("font-size", 28).attr("fill", C.muted).text(narrow ? months[k] : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][k]);
+    const cells = [];
+    rows.forEach((row, i) => {
+      g.append("text").attr("class", "num").attr("x", m.l - 22).attr("y", m.t + i * chh + chh * 0.66).attr("text-anchor", "end").attr("font-size", Math.min(30, chh * 0.5)).attr("fill", C.muted).text(row.year);
+      row.values.forEach((v, k) => {
+        if (v === null) return;
+        const c = g.append("g").attr("transform", `translate(${m.l + k * cw + cw / 2},${m.t + i * chh + chh / 2})`);
+        c.append("rect").attr("x", -cw / 2 + 3).attr("y", -chh / 2 + 3).attr("width", cw - 6).attr("height", chh - 6).attr("rx", 10).attr("fill", color(v));
+        if (!narrow && chh >= 44) c.append("text").attr("class", "num").attr("text-anchor", "middle").attr("y", 9).attr("font-size", 24).attr("fill", Math.abs(v) > vmax * 0.55 ? C.bg : C.ink).text(fmt(v, s));
+        cells.push({ c, d: (i + k) * 0.035 });
+      });
+    });
+    const lgid = "hl" + rid(), lgd = svg.select("defs").append("linearGradient").attr("id", lgid);
+    [-1, 0, 1].forEach((u, i) => lgd.append("stop").attr("offset", `${i * 50}%`).attr("stop-color", color(u * vmax)));
+    const lg = g.append("g").attr("transform", `translate(${m.l},${m.t + n * chh + 36})`);
+    lg.append("rect").attr("width", 560).attr("height", 18).attr("rx", 9).attr("fill", `url(#${lgid})`);
+    lg.append("text").attr("class", "num").attr("y", 56).attr("font-size", 26).attr("fill", C.cyan).text(fmt(-vmax, s));
+    lg.append("text").attr("class", "body").attr("x", 280).attr("y", 56).attr("text-anchor", "middle").attr("font-size", 26).attr("fill", C.muted).text(s.legend || "");
+    lg.append("text").attr("class", "num").attr("x", 560).attr("y", 56).attr("text-anchor", "end").attr("font-size", 26).attr("fill", C.coral).text("+" + fmt(vmax, s));
+    const src = source(g, s.source);
+    return (t) => {
+      head(t); src(t);
+      cells.forEach(({ c, d }) => { const p = E.out(prog(t, 0.4 + d, 0.5)); c.attr("opacity", p).attr("transform-origin", "center"); });
+      lg.attr("opacity", prog(t, 1.4, 0.5));
+    };
+  };
+
+  // ---- world map ----------------------------------------------------------------------------------------------------------------------------
+  SCENES.world_map = (g, s) => {
+    const head = heading(g, s.title);
+    const narrow = W < 1300, topo = window.__topo.world;
+    const feats = topojson.feature(topo, topo.objects.countries).features.filter((f) => f.properties.name !== "Antarctica");
+    const vals = Object.values(s.values);
+    const lo = d3.quantile(vals.sort(d3.ascending), 0.03), hi = d3.quantile(vals, 0.97);
+    const color = d3.scaleSequential().domain([lo, hi]).interpolator(d3.interpolateRgbBasis(["#1d2a6b", "#2b6cff", C.cyan, C.volt])).clamp(true);
+    const area = narrow ? { x: 30, y: 320, w: W - 60, h: 700 } : { x: 120, y: 250, w: W - 240, h: H - 400 };
+    const proj = d3.geoNaturalEarth1().fitExtent([[area.x, area.y], [area.x + area.w, area.y + area.h]], { type: "FeatureCollection", features: feats });
+    const path = d3.geoPath(proj), mapG = g.append("g");
+    const mapBottom = path.bounds({ type: "FeatureCollection", features: feats })[1][1];
+    const xs = feats.map((f) => path.centroid(f)[0]), [x0, x1] = d3.extent(xs.filter((v) => !Number.isNaN(v)));
+    const shapes = feats.map((f, i) => ({ f, name: f.properties.name, at: ((xs[i] || x0) - x0) / (x1 - x0), el: mapG.append("path").attr("d", path(f)).attr("stroke", C.bg).attr("stroke-width", 0.7) }));
+    const hi_ = shapes.find((sh) => sh.name === s.highlight);
+    const out = hi_ ? mapG.append("path").attr("d", path(hi_.f)).attr("fill", "none").attr("stroke", C.ink).attr("stroke-width", 3).attr("filter", "url(#glow)") : null;
+    const lgid = "wl" + rid(), lgd = svg.select("defs").append("linearGradient").attr("id", lgid);
+    ["#1d2a6b", "#2b6cff", C.cyan, C.volt].forEach((c, i) => lgd.append("stop").attr("offset", `${(i / 3) * 100}%`).attr("stop-color", c));
+    const lg = g.append("g").attr("transform", narrow ? `translate(60,${mapBottom + 40})` : `translate(160,${H - 120})`);
+    lg.append("text").attr("class", "body").attr("font-size", 24).attr("fill", C.muted).text(s.legend || "");
+    lg.append("rect").attr("y", 18).attr("width", 400).attr("height", 18).attr("rx", 9).attr("fill", `url(#${lgid})`);
+    lg.append("text").attr("class", "num").attr("y", 72).attr("font-size", 26).text(fmt(lo, s));
+    lg.append("text").attr("class", "num").attr("x", 400).attr("y", 72).attr("text-anchor", "end").attr("font-size", 26).text(fmt(hi, s));
+    let card = null;
+    if (hi_) {
+      card = g.append("g").attr("transform", narrow ? `translate(${W - 460},${mapBottom + 30})` : `translate(${W - 560},${H - 250})`);
+      card.append("rect").attr("x", 0).attr("y", 0).attr("width", 400).attr("height", 150).attr("rx", 18).attr("fill", C.bg2).attr("stroke", C.volt);
+      card.append("text").attr("x", 24).attr("y", 52).attr("font-size", 32).attr("font-weight", 600).text(s.highlightName || s.highlight);
+      card.append("text").attr("class", "num").attr("x", 24).attr("y", 120).attr("font-size", 62).attr("fill", C.volt).text(fmt(s.values[s.highlight], s));
+    }
+    const src = source(g, s.source);
+    return (t) => {
+      head(t); src(t);
+      shapes.forEach((sh) => {
+        const p = E.out(prog(t, 0.4 + sh.at * 1.8, 0.7)), v = s.values[sh.name];
+        sh.el.attr("fill", v == null ? "#20263d" : d3.interpolateRgb("#20263d", color(v))(p));
+      });
+      lg.attr("opacity", prog(t, 1.8, 0.5));
+      if (out) out.attr("opacity", prog(t, 2.6, 0.4));
+      if (card) card.attr("opacity", Math.min(1, E.back(prog(t, 2.8, 0.5))));
     };
   };
 
