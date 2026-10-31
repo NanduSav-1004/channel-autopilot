@@ -42,9 +42,9 @@ topics:
     space: 0.20                  # space and astronomy (NASA media is added for these)
     what_if: 0.15                # "what if" questions answered with established science
     history: 0.15                # history mysteries and the history of science
-cta:                             # calls to action (approved to build 2026-10-31; samples first, then switch on)
-  long_closing: false            # one varied spoken line at the end of long videos: subscribe for the next explainer (Malayalam: translated with the script)
-  short_tag: false               # for the last ~2.5 s of a Short, a tag on screen: "full video on the channel" (no spoken ask)
+cta:                             # calls to action (switched ON 2026-10-31 after samples)
+  long_closing: true             # one varied spoken line at the end of long videos: subscribe for the next explainer (Malayalam: translated with the script)
+  short_tag: true                # for the last ~2.5 s of a Short, a tag on screen: "full video on the channel" (no spoken ask)
 render:
   mascot: shorts                 # a talking character in the corner: false | shorts | all (approved for Shorts only, 2026-10-27)
   data_shots: shorts             # animated number, bar, timeline and line-chart shots at the moment the figures are spoken: false | shorts | all
