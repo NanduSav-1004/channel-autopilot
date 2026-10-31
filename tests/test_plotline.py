@@ -84,3 +84,12 @@ def test_description_lists_sources_and_disclosure():
     b = _bundle()
     text = plotline_daily.description({"description": "About eggs."}, b, long_id="xyz")
     assert "About eggs." in text and "youtu.be/xyz" in text and "- FRED" in text and "synthetic voice" in text
+
+
+def test_thumbnail_works_with_a_relative_output_path(tmp_path, monkeypatch):
+    # the workflow writes to output/plotline/<day>/thumbnail.jpg: a RELATIVE path, which once crashed the browser's file URL
+    monkeypatch.chdir(tmp_path)
+    b = _bundle()
+    script = {"title": "Eggs", "thumbnail": {"number": "$6.23", "words": "Why prices exploded", "label": "RECORD HIGH", "photo": "", "direction": "up"}}
+    out = plotline.make_thumbnail(script, b, __import__("pathlib").Path("output/plotline/2026-11-01/thumbnail.jpg"))
+    assert out.exists() and out.stat().st_size > 10_000

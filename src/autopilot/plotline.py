@@ -130,7 +130,9 @@ VISUALS = """Chart types (the "visual" of a scene). Numbers on screen are comput
 - {"type": "line", "series": id, "start": "YYYY", "end": "YYYY" (optional), "annotate": ["max"|"min"]}  -- the series drawn over time (indexes are
   shown as percent change since "start")
 - {"type": "counter", "series": id, "stat": "last"|"max"|"min"|"at", "date": "YYYY-MM" (with "at"), "start": "YYYY"}  -- one big
-  number counting up; "max"/"min" look only from "start" on; use "at" + "date" to show the value of a particular month
+  number counting up; "max"/"min" look only from "start" on; use "at" + "date" to show the value of a particular month.
+  For an INDEX series (the facts say so) "at" and "compare" are NOT possible: use "last"/"max"/"min" (shown as percent change since
+  "start") or a line
 - {"type": "compare", "series": id, "from": "YYYY" or "YYYY-MM", "to": "last" or "YYYY"}  -- then vs now (not for indexes)
 - {"type": "bars", "series": [2 to 8 ids], "since": "YYYY"}  -- percent change of several series, ranked
 - {"type": "states_bars", "order": "top"|"bottom", "n": 5 to 10}  -- ranking of states (needs the state data)
@@ -616,11 +618,12 @@ def make_thumbnail(script: dict, bundle: dict, out: Path, gen=None) -> Path:
                         py=xy[-1][1], number=escape(number), nsize=nsize, label=escape(str(th.get("label") or "THE DATA").upper()),
                         words=escape(words), wsize=86 if len(words) <= 16 else 72, wtop=118 + nsize + 30,
                         arrow="▲" if up else "▼", acolor="#ff3b5c" if up else "#39d2ff")
+    out.parent.mkdir(parents=True, exist_ok=True)
     tmp = out.with_suffix(".html")
     tmp.write_text(html)
     with motion.Browser() as b:
         page = b._b.new_page(viewport={"width": 1280, "height": 720})
-        page.goto(tmp.as_uri())
+        page.goto(tmp.resolve().as_uri())
         page.evaluate("document.fonts.ready")
         page.wait_for_timeout(300)
         page.screenshot(path=str(out), type="jpeg", quality=92)
