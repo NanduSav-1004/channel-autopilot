@@ -59,7 +59,7 @@ _DATA = {"collection": {"items": [
     {"data": [{"nasa_id": "C", "center": "", "title": "Unknown source", "description": "", "media_type": "image"}],
      "links": [{"href": "u"}], "href": "m"},
     {"data": [{"nasa_id": "D", "center": "GSFC", "title": "Clip", "description": "", "media_type": "video"}],
-     "links": [{"href": "u"}], "href": "m"},
+     "links": [{"href": "https://images-assets.nasa.gov/video/D/D~thumb.jpg"}], "href": "m"},
 ]}}
 
 
@@ -135,3 +135,28 @@ def test_daily_chooses_another_topic_when_the_first_fails_for_good(tmp_path, mon
     monkeypatch.setattr(sys, "argv", ["autopilot", "daily", "--live"])
     cli.main()                                                          # no SystemExit: a video was finished
     assert seen["runs"] == 2 and seen["avoid"] == [None, {"what_if"}]
+
+
+def test_nasa_uses_the_preview_picture_not_a_caption_file():
+    data = {"collection": {"items": [{
+        "data": [{"nasa_id": "V", "center": "JPL", "title": "Clip", "description": "", "media_type": "video"}],
+        "links": [{"href": "https://images-assets.nasa.gov/video/V/V.srt", "rel": "captions"},
+                  {"href": "https://images-assets.nasa.gov/video/V/V~thumb.jpg", "rel": "preview", "render": "image"}],
+        "href": "https://x/V/collection.json"},
+        {"data": [{"nasa_id": "W", "center": "JPL", "title": "Only captions", "description": "", "media_type": "video"}],
+         "links": [{"href": "https://images-assets.nasa.gov/video/W/W.srt", "rel": "captions"}], "href": "https://x/W/collection.json"}]}}
+    out = nasa.parse_results(data, "video")
+    assert [o["id"] for o in out] == ["V"] and out[0]["thumb"].endswith("V~thumb.jpg")
+
+
+def test_a_download_that_is_not_an_image_is_dropped_before_it_is_rated(tmp_path, monkeypatch):
+    import pytest
+
+    from autopilot import shots
+
+    bad = tmp_path / "pic.jpg"
+    bad.write_text("1\n00:00:02,085 --> 00:00:05,588\nThere aren't many\n")
+    monkeypatch.setattr(shots.nasa, "download_thumb", lambda item, cache: bad)
+    with pytest.raises(OSError):
+        shots._thumb({"source": "nasa", "kind": "image"}, tmp_path)
+    assert not bad.exists()

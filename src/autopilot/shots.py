@@ -184,8 +184,16 @@ NASA_CANDIDATES = 8
 
 def _thumb(item: dict, cache: Path) -> Path:
     if item.get("source") == "nasa":
-        return nasa.download_thumb(item, cache)
-    return commons.download(item, cache) if item["kind"] == "image" else stock.download_thumb(item, cache)
+        path = nasa.download_thumb(item, cache)
+    else:
+        path = commons.download(item, cache) if item["kind"] == "image" else stock.download_thumb(item, cache)
+    try:                                   # a source once handed over a subtitle file instead of a picture: never let that reach the rating
+        with Image.open(path) as img:
+            img.verify()
+    except (OSError, SyntaxError, ValueError) as exc:
+        path.unlink(missing_ok=True)
+        raise OSError(f"{path.name} is not a readable image") from exc
+    return path
 
 
 def gather_images(

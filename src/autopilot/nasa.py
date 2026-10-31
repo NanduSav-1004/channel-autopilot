@@ -29,7 +29,9 @@ def parse_results(data: dict, kind: str) -> list[dict]:
     out = []
     for it in data.get("collection", {}).get("items", []):
         meta = (it.get("data") or [{}])[0]
-        links = it.get("links") or []
+        # a video item lists a preview picture AND other files (captions .srt, ...), in any order: take the picture
+        links = [x for x in (it.get("links") or []) if str(x.get("render", "")) == "image"
+                 or str(x.get("href", "")).lower().split("?")[0].endswith((".jpg", ".jpeg", ".png", ".gif"))]
         center = str(meta.get("center", "")).upper()
         text = f"{meta.get('title', '')} {meta.get('description', '')} {meta.get('secondary_creator', '')}"
         if not links or center not in NASA_CENTERS or BAD_NOTES.search(text) or meta.get("media_type") != kind:
