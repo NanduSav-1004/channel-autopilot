@@ -21,7 +21,7 @@ from autopilot import datasets, llm, motion
 MODELS = "gemini-3.5-flash,gemini-3.6-flash,gemini-3.8-flash,gemini-3.1-flash-lite"   # 3.8 is often overloaded
 TARGET_WORDS = (750, 1050)          # about 5 to 7 minutes of narration
 VOICE = {"engine": "kokoro", "name": "am_michael", "speed": 1.08}
-SFX = False                 # soft sound effects on the animated charts (sfx.py): built 2026-10-31, switched on after the user has heard the sample
+SFX = True                  # soft sound effects on the animated charts (sfx.py): switched on 2026-10-31 after the user heard the sample
 MUSIC_STYLE = "ambient"     # the soft pad the user prefers (as on Brightwork); "lofi", "upbeat" or "pulse" are beat styles from music.py
 
 
