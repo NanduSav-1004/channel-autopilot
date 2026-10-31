@@ -21,6 +21,21 @@ from autopilot import datasets, llm, motion
 MODELS = "gemini-3.5-flash,gemini-3.6-flash,gemini-3.8-flash,gemini-3.1-flash-lite"   # 3.8 is often overloaded
 TARGET_WORDS = (750, 1050)          # about 5 to 7 minutes of narration
 VOICE = {"engine": "kokoro", "name": "am_michael", "speed": 1.08}
+MUSIC_STYLE = "ambient"     # the soft pad the user prefers (as on Brightwork); "lofi", "upbeat" or "pulse" are beat styles from music.py
+
+
+def bundle_mood(bundle: dict) -> str:
+    """The mood of a video's music from the theme of its data (housing and money mysterious, jobs and food curious, anything else plain)."""
+    from autopilot import audio
+
+    first = next(iter(bundle["series"].values()), None) or bundle.get("states") or bundle.get("owid") or {}
+    return audio.mood_for_theme(first.get("theme"))
+
+
+def make_bed(seconds: float, out: Path, seed: int, mood: str = "plain") -> Path:
+    from autopilot import audio, music
+
+    return audio.generate_ambient(seconds, out, seed=seed, mood=mood) if MUSIC_STYLE == "ambient" else music.generate_beat(seconds, out, seed=seed, style=MUSIC_STYLE)
 
 
 @contextmanager
@@ -831,7 +846,7 @@ def _js_fmt(f: dict) -> dict:
 
 # ---- 4. video -----------------------------------------------------------------------------------------------------------
 def make_video(script: dict, bundle: dict, out_dir: Path, log=print) -> Path:
-    from autopilot import music, render, tts
+    from autopilot import render, tts
 
     out_dir.mkdir(parents=True, exist_ok=True)
     scenes = script["scenes"]
@@ -855,7 +870,7 @@ def make_video(script: dict, bundle: dict, out_dir: Path, log=print) -> Path:
     listing.write_text("".join(f"file '{p.resolve()}'\n" for p in files))
     video = out_dir / "charts.mp4"
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", str(video)], check=True)
-    beat = music.generate_beat(total + 2, out_dir / "music.wav", seed=len(script["title"]), style="lofi")
+    beat = make_bed(total + 2, out_dir / "music.wav", seed=len(script["title"]), mood=bundle_mood(bundle))
     mixed = out_dir / "mix.wav"
     log(f"[mix] audio: {render.mix_audio(narration, beat, mixed)}")
     final = out_dir / "final.mp4"
@@ -1060,7 +1075,7 @@ def _fix_short(sh: dict, plan_title: str, bundle: dict, facts: str, ids: list[st
 
 def make_short(short: dict, bundle: dict, out_dir: Path, log=print) -> Path:
     """A vertical Short: charts in the upper area, word-by-word captions below, voice and music."""
-    from autopilot import music, render, tts
+    from autopilot import render, tts
 
     out_dir.mkdir(parents=True, exist_ok=True)
     narration, timings_path = out_dir / "narration.wav", out_dir / "timings.json"
@@ -1085,7 +1100,7 @@ def make_short(short: dict, bundle: dict, out_dir: Path, log=print) -> Path:
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", str(charts)], check=True)
     ass = out_dir / "captions.ass"
     render.write_ass_words(timings, ass, SHORT_CAPTIONS)
-    beat = music.generate_beat(total + 2, out_dir / "music.wav", seed=len(short.get("title", "")), style="pulse")
+    beat = make_bed(total + 2, out_dir / "music.wav", seed=len(short.get("title", "")), mood=bundle_mood(bundle))
     mixed = out_dir / "mix.wav"
     log(f"[mix] Short audio: {render.mix_audio(narration, beat, mixed)}")
     final = out_dir / "final.mp4"

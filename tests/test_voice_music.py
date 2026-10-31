@@ -79,7 +79,7 @@ def test_stage_picks_beat_or_ambient_music_from_config(tmp_path, monkeypatch):
 
     calls = []
     monkeypatch.setattr(stages.music, "generate_beat", lambda s, o, seed, style: calls.append(("beat", style)) or o)
-    monkeypatch.setattr(stages.audio, "generate_ambient", lambda s, o, seed: calls.append(("ambient",)) or o)
+    monkeypatch.setattr(stages.audio, "generate_ambient", lambda s, o, seed, mood="plain": calls.append(("ambient",)) or o)
     conn = sqlite3.connect(":memory:")
     for settings, expect in (({"music_style": "pulse"}, ("beat", "pulse")), ({}, ("ambient",)), ({"music_style": "ambient"}, ("ambient",))):
         cfg = Config(niche="s", audience="en", formats={}, audio=settings)
@@ -435,3 +435,19 @@ def test_sentence_boundaries_fall_back_to_letters_when_nothing_matches_or_the_te
     assert tts._boundaries_by_words(["പൂർണ്ണ വീഡിയോ.", "ചാനലിൽ കാണാം."], words, 3.0) is None
     spans = tts.align_sentences(["Aaaa bbbb.", "Cccc dddd."], words, 3.0)          # still works through the old letter-count path
     assert spans[0][0] == 0.0 and spans[1][1] == 3.0
+
+
+def test_a_short_takes_its_music_mood_from_its_long_video(tmp_path):
+    from autopilot import db
+
+    conn = db.connect(":memory:")
+    conn.execute("INSERT INTO jobs (id, topic, kind, category) VALUES (1, 'Oceans', 'long', 'what_if')")
+    conn.execute("INSERT INTO jobs (id, topic, kind, parent_id, short_idx) VALUES (2, 'Oceans', 'short', 1, 0)")
+    conn.execute("INSERT INTO jobs (id, topic, kind) VALUES (3, 'Old topic', 'long')")
+    conn.commit()
+    st = stages.Stages(conn, Config(niche="s", audience="en", formats={}, audio={"music_moods": True}), root=tmp_path, work=tmp_path)
+    row = lambda i: conn.execute("SELECT * FROM jobs WHERE id = ?", (i,)).fetchone()
+    assert st.mood(row(1)) == "mysterious" and st.mood(row(2)) == "mysterious"      # the Short follows its long video
+    assert st.mood(row(3)) == "curious"                                           # an old job without a category counts as core
+    off = stages.Stages(conn, Config(niche="s", audience="en", formats={}), root=tmp_path, work=tmp_path)
+    assert off.mood(row(1)) == "plain"

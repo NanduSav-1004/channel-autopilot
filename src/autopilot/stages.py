@@ -22,7 +22,7 @@ from autopilot import (
     tts,
     wiki,
 )
-from autopilot.config import Config, cta_on, data_shots_on, mascot_style
+from autopilot.config import Config, cta_on, data_shots_on, mascot_style, music_mood
 from autopilot.errors import RestartJob, TransientError
 from autopilot.render import render_photo_video, render_short
 from autopilot.script import (
@@ -93,11 +93,16 @@ class Stages:
                 self._fallback = tts.PiperEngine()
         return self._fallback
 
-    def make_music(self, out: Path, seconds: float, seed: int) -> Path:
+    def mood(self, job) -> str:
+        """The mood of this video's music: from the topic's category (a Short uses its long video's)."""
+        cat = job["category"] if job["kind"] == "long" else (self._parent(job)["category"] if job["parent_id"] else None)
+        return music_mood(self.cfg, cat)
+
+    def make_music(self, out: Path, seconds: float, seed: int, mood: str = "plain") -> Path:
         style = self.cfg.audio.get("music_style", "ambient")
         if style in music.STYLES:
             return music.generate_beat(seconds, out, seed=seed, style=style)
-        return audio.generate_ambient(seconds, out, seed=seed)
+        return audio.generate_ambient(seconds, out, seed=seed, mood=mood)
 
     def handlers(self) -> dict:
         raw = {"script": self.script, "qa": self.qa, "voice": self.voice,
@@ -226,7 +231,7 @@ class Stages:
         script, timings = _read(d / "script.json"), _read(d / "timings.json")
         items = shots.fill_sparse_sections(
             [[{"kind": i["kind"], "path": Path(i["path"])} for i in sec] for sec in _read(d / "items.json")])
-        music = self.make_music(d / "music.wav", timings[-1]["end"] + 5, job["id"])
+        music = self.make_music(d / "music.wav", timings[-1]["end"] + 5, job["id"], self.mood(job))
         wd = self.work / d.name
         wd.mkdir(parents=True, exist_ok=True)
         data = []
@@ -396,7 +401,7 @@ class Stages:
         sections = _read(parent_dir / "items.json")
         pool = shots.short_media_pool(sections, s["section_index"])  # this section's media, then its neighbours'
         items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]
-        music = self.make_music(d / "music.wav", timings[-1]["end"] + 3, job["id"] + 1000)
+        music = self.make_music(d / "music.wav", timings[-1]["end"] + 3, job["id"] + 1000, self.mood(job))
         wd = self.work / f"{self.dir(self._parent(job)).name}-{d.name}"
         wd.mkdir(parents=True, exist_ok=True)
         data = []

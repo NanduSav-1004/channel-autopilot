@@ -21,6 +21,7 @@ forbidden_topics:
   - financial advice
   - legal advice
 audio:
+  music_moods: true             # the same soft pad in three moods chosen by topic: space and what-if mysterious, core science curious, history plain
   music_style: ambient          # the soft pad you preferred; beat styles (upbeat, lofi, pulse) exist but are not used
   voices:                       # one is picked at random per video, never the same as the previous video's
     - {engine: kokoro, name: bm_george, speed: 1.1}

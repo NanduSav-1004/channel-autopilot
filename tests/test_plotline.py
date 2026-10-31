@@ -250,3 +250,22 @@ def test_scatter_and_stacked_compile_and_need_their_data():
                  "ymeta": {"name": "Life", "fmt": {"decimals": 1}, "source": "Our World in Data", "rows": {}}}
     sc = plotline.compile_visual({"type": "scatter"}, b, 6.0)
     assert len(sc["points"]) == 5 and sum(p["hi"] for p in sc["points"]) == 2 and sc["note"].startswith("correlation +0.")
+
+
+def test_plotline_uses_the_soft_ambient_pad_like_brightwork(tmp_path, monkeypatch):
+    from autopilot import audio
+
+    assert plotline.MUSIC_STYLE == "ambient"
+    made = []
+    monkeypatch.setattr(audio, "generate_ambient", lambda seconds, out, seed=0, mood="plain": made.append((round(seconds), seed, mood)) or out)
+    assert plotline.make_bed(12.0, tmp_path / "m.wav", 7, "mysterious") == tmp_path / "m.wav" and made == [(12, 7, "mysterious")]
+
+
+def test_plotline_music_mood_follows_the_theme_of_its_data():
+    b = _bundle()
+    b["series"]["X"]["theme"] = "housing"
+    assert plotline.bundle_mood(b) == "mysterious"
+    b["series"]["X"]["theme"] = "food"
+    assert plotline.bundle_mood(b) == "curious"
+    assert plotline.bundle_mood({"series": {}, "states": {"theme": "jobs"}, "owid": None}) == "curious"
+    assert plotline.bundle_mood({"series": {}, "states": None, "owid": None}) == "plain"

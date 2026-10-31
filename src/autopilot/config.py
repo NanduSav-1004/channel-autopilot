@@ -54,3 +54,10 @@ def data_shots_on(cfg: Config, short: bool) -> bool:
 def cta_on(cfg: Config, what: str) -> bool:
     """Is this call-to-action on? what: "long_closing" (the spoken line ending a long video) or "short_tag" (the on-screen tag in a Short)."""
     return bool((cfg.cta or {}).get(what))
+
+
+def music_mood(cfg: Config, category: str | None) -> str:
+    """The mood of the music bed for a Brightwork video of this topic category ("plain" when audio.music_moods is off)."""
+    from autopilot import audio
+
+    return audio.mood_for_category(category) if (cfg.audio or {}).get("music_moods") else "plain"

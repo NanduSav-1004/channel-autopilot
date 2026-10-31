@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 
 from autopilot import closing, llm, tts
-from autopilot.config import cta_on, mascot_style
+from autopilot.config import cta_on, mascot_style, music_mood
 from autopilot.shots import estimate_timings as shots_estimate_timings
 
 TRANSLATE_MODELS = "gemini-3.5-flash,gemini-3.1-flash-lite,gemini-3.5-flash-lite"   # the last one is a fallback: both others were unavailable at once on 31 Oct
@@ -718,7 +718,7 @@ def recover_media(src_dir: Path, timings: list[dict], topic: str, gather=None, u
 
 
 def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, translate=translate_script, topic: str = "",
-                  mascot: str | None = None, use_nasa: bool = False) -> Path:
+                  mascot: str | None = None, use_nasa: bool = False, mood: str = "plain") -> Path:
     """Make the Malayalam video from an English job directory (script.json, items.json, credits.json)."""
     from autopilot import audio, shots, thumbnail
     from autopilot.render import render_photo_video
@@ -744,7 +744,7 @@ def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, transla
         recover_media(src_dir, timings, topic or script.get("title", ""), use_nasa=use_nasa)
     items = shots.fill_sparse_sections([[{"kind": i["kind"], "path": Path(i["path"])} for i in sec]
                                         for sec in json.loads((src_dir / "items.json").read_text())])
-    music = audio.generate_ambient(timings[-1]["end"] + 5, out_dir / "music.wav", seed=1)
+    music = audio.generate_ambient(timings[-1]["end"] + 5, out_dir / "music.wav", seed=1, mood=mood)
     final = out_dir / "final.mp4"
     en_total = json.loads((src_dir / "timings.json").read_text())[-1]["end"] if (src_dir / "timings.json").exists() else 0
     cut = shots.CUT_SECONDS * max(1.0, timings[-1]["end"] / en_total) if en_total else shots.CUT_SECONDS
@@ -765,7 +765,7 @@ SHORT_DISCLOSURE = "ഈ വീഡിയോയുടെ തിരക്കഥ AI 
 
 
 def build_short(short_dir: Path, long_items: list[list[dict]], out_dir: Path, work: Path, voice: dict,
-                translate=translate_short, speak=None, mascot: str | None = None, cta: str | None = None) -> Path:
+                translate=translate_short, speak=None, mascot: str | None = None, cta: str | None = None, mood: str = "plain") -> Path:
     """The Malayalam edition of one English Short (short_dir holds its script.json). Raises if it cannot be made to fit
     58 seconds or the translation stays unfaithful."""
     from autopilot import audio, shots
@@ -794,7 +794,7 @@ def build_short(short_dir: Path, long_items: list[list[dict]], out_dir: Path, wo
     ml, timings = json.loads(sp.read_text()), json.loads(tp.read_text())
     pool = shots.short_media_pool(long_items, ml.get("section_index", short.get("section_index", 0)))
     items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]
-    music = audio.generate_ambient(timings[-1]["end"] + 3, out_dir / "music.wav", seed=int(short.get("section_index", 0)) + 1000)
+    music = audio.generate_ambient(timings[-1]["end"] + 3, out_dir / "music.wav", seed=int(short.get("section_index", 0)) + 1000, mood=mood)
     final = out_dir / "final.mp4"
     render_short(ml, timings, items, wav, final, work, music=music, look=ML_SHORT_CAPTIONS, mascot=mascot, cta=cta)
     return final
@@ -844,7 +844,8 @@ def run_daily_shorts(conn, cfg, long_job, src: Path, voice: dict, privacy: str, 
             continue
         try:
             final = build_short(sdir, items, sdir / "ml", Path("work") / "ml" / f"{src.name}-short{row['short_idx']}", voice,
-                                mascot=mascot_style(cfg, short=True), cta=closing.SHORT_TAG["ml"] if cta_on(cfg, "short_tag") else None)
+                                mascot=mascot_style(cfg, short=True), cta=closing.SHORT_TAG["ml"] if cta_on(cfg, "short_tag") else None,
+                                mood=music_mood(cfg, long_job["category"]))
             if live and not build_only:
                 ml = json.loads((sdir / "ml" / "script_ml.json").read_text())
                 vid = upload.insert_video(final, f"{ml['title']} #Shorts",
@@ -948,7 +949,7 @@ def run_daily_edition(conn, cfg, privacy: str, live: bool, root: Path, retry: bo
     voice = pick_ml_voice(job["id"], ml_cfg.get("voices"))
     try:
         build_edition(src, src / "ml", Path("work") / "ml" / src.name, voice, topic=job["topic"],
-                      mascot=mascot_style(cfg, short=False), use_nasa=job["category"] == "space")
+                      mascot=mascot_style(cfg, short=False), use_nasa=job["category"] == "space", mood=music_mood(cfg, job["category"]))
         vid = upload_edition(conn, job, src / "ml", src, ml_cfg.get("publish_hour_utc"), privacy, live and not build_only)
         if ml_cfg.get("shorts") and (vid or build_only):
             run_daily_shorts(conn, cfg, job, src, voice, privacy, live, build_only, retry)
