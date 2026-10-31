@@ -246,3 +246,41 @@ def test_punch_up_is_skipped_when_text_is_already_punchy_and_ignored_when_it_mak
 
     kept = _write_section(script, 0, SOURCE, "", 100, worse)
     assert kept["narration"] == LONG_WINDED.strip()                                    # the rewrite was not better: keep the draft
+
+
+def test_comparison_check_reads_the_narration_not_the_writers_claim_list():
+    from autopilot import qa
+
+    script = {"sections": [{"narration": "Jupiter is big. The average density is 1.326 g/cm3. It is lighter than water, yet massive. Its mass is 318 times Earth's."}]}
+    assert qa.comparison_sentences(script) == ["It is lighter than water, yet massive.", "Its mass is 318 times Earth's."]
+    prompts = []
+
+    def gen(prompt):
+        prompts.append(prompt)
+        return {"wrong": [{"n": 1, "why": "1.326 g/cm3 is denser than water"}, {"n": 9, "why": "bad index"}, {"n": "x"}]}
+
+    issues = qa.comparison_issues(script, {"text": "SOURCE TEXT"}, gen)
+    assert issues == ["unsupported claim: It is lighter than water, yet massive."]            # a bad index from the model is ignored
+    assert "1. It is lighter than water" in prompts[0] and "SOURCE TEXT" in prompts[0] and "1 g/cm3" in prompts[0]
+    assert qa.comparison_issues({"sections": [{"narration": "Nothing to compare here."}]}, {"text": "s"}, gen) == []
+
+
+def test_comparison_check_retries_once_and_never_blocks_the_video(capsys):
+    from autopilot import llm, qa
+
+    calls = []
+
+    def flaky(prompt):
+        calls.append(1)
+        if len(calls) == 1:
+            raise llm.LLMUnavailable("busy")
+        return {"wrong": [{"n": 1, "why": "wrong"}]}
+
+    script = {"sections": [{"narration": "It is heavier than lead."}]}
+    assert qa.comparison_issues(script, {"text": "s"}, flaky) == ["unsupported claim: It is heavier than lead."] and len(calls) == 2
+
+    def down(prompt):
+        raise llm.LLMUnavailable("quota")
+
+    assert qa.comparison_issues(script, {"text": "s"}, down) == []
+    assert "comparison check unavailable" in capsys.readouterr().out
