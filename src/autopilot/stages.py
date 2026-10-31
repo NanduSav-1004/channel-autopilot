@@ -8,6 +8,7 @@ from typing import ClassVar
 
 from autopilot import (
     audio,
+    closing,
     datashots,
     db,
     metadata,
@@ -21,7 +22,7 @@ from autopilot import (
     tts,
     wiki,
 )
-from autopilot.config import Config, data_shots_on, mascot_style
+from autopilot.config import Config, cta_on, data_shots_on, mascot_style
 from autopilot.errors import RestartJob, TransientError
 from autopilot.render import render_photo_video, render_short
 from autopilot.script import (
@@ -182,6 +183,11 @@ class Stages:
         d = self.dir(job)
         if (d / "timings.json").exists() and (d / "narration.wav").exists():
             return
+        if cta_on(self.cfg, "long_closing"):          # a varied closing line, written before the voice is made (once per script)
+            script = closing.add_closing(_read(d / "script.json"), job["id"])
+            _write(d / "script.json", script)
+            if script.get("closing"):
+                print(f"[job {job['id']}] closing line: {script['closing']}", flush=True)
         _write(d / "timings.json", tts.synthesize_script(_read(d / "script.json"), d / "narration.wav",
                                                                  self.engine(job), self.fallback_engine()))
 
@@ -389,7 +395,7 @@ class Stages:
             data = datashots.shots_for([{"heading": s["title"], "narration": s["narration"], "sentences": timings[0]["sentences"]}],
                                        (1080, 1920), wd)
         render_short(s, timings, items, d / "narration.wav", d / "final.mp4", wd, music=music, data_shots=data or None,
-                     mascot=mascot_style(self.cfg, short=True))
+                     mascot=mascot_style(self.cfg, short=True), cta=closing.SHORT_TAG["en"] if cta_on(self.cfg, "short_tag") else None)
         shutil.rmtree(wd, ignore_errors=True)
 
     def short_upload(self, job) -> None:

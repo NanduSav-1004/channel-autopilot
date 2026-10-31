@@ -15,6 +15,7 @@ class Config:
     malayalam: dict = field(default_factory=dict)  # the Malayalam channel: enabled, publish_hour_utc, voices
     topics: dict = field(default_factory=dict)  # mix: share of each topic category (core, space, what_if, history)
     render: dict = field(default_factory=dict)  # look options: mascot (false | shorts | all), mascot_style (bulb | atom)
+    cta: dict = field(default_factory=dict)  # long_closing: spoken subscribe line at the end of long videos; short_tag: on-screen "full video" tag on Shorts
 
 
 def load_config(path: str | Path = "config/channel.yaml") -> Config:
@@ -29,6 +30,7 @@ def load_config(path: str | Path = "config/channel.yaml") -> Config:
         malayalam=data.get("malayalam", {}),
         topics=data.get("topics", {}),
         render=data.get("render", {}),
+        cta=data.get("cta", {}),
     )
 
 
@@ -47,3 +49,8 @@ def data_shots_on(cfg: Config, short: bool) -> bool:
     """Are animated data shots drawn into this kind of video? render.data_shots is false, "shorts" or "all"."""
     where = (cfg.render or {}).get("data_shots")
     return where is True or where == "all" or (where == "shorts" and short)
+
+
+def cta_on(cfg: Config, what: str) -> bool:
+    """Is this call-to-action on? what: "long_closing" (the spoken line ending a long video) or "short_tag" (the on-screen tag in a Short)."""
+    return bool((cfg.cta or {}).get(what))

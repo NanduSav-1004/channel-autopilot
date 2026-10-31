@@ -14,8 +14,8 @@ from pathlib import Path
 
 import numpy as np
 
-from autopilot import llm, tts
-from autopilot.config import mascot_style
+from autopilot import closing, llm, tts
+from autopilot.config import cta_on, mascot_style
 from autopilot.shots import estimate_timings as shots_estimate_timings
 
 TRANSLATE_MODELS = "gemini-3.5-flash,gemini-3.1-flash-lite"
@@ -721,7 +721,7 @@ SHORT_DISCLOSURE = "ഈ വീഡിയോയുടെ തിരക്കഥ AI 
 
 
 def build_short(short_dir: Path, long_items: list[list[dict]], out_dir: Path, work: Path, voice: dict,
-                translate=translate_short, speak=None, mascot: str | None = None) -> Path:
+                translate=translate_short, speak=None, mascot: str | None = None, cta: str | None = None) -> Path:
     """The Malayalam edition of one English Short (short_dir holds its script.json). Raises if it cannot be made to fit
     58 seconds or the translation stays unfaithful."""
     from autopilot import audio, shots
@@ -752,7 +752,7 @@ def build_short(short_dir: Path, long_items: list[list[dict]], out_dir: Path, wo
     items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]
     music = audio.generate_ambient(timings[-1]["end"] + 3, out_dir / "music.wav", seed=int(short.get("section_index", 0)) + 1000)
     final = out_dir / "final.mp4"
-    render_short(ml, timings, items, wav, final, work, music=music, look=ML_SHORT_CAPTIONS, mascot=mascot)
+    render_short(ml, timings, items, wav, final, work, music=music, look=ML_SHORT_CAPTIONS, mascot=mascot, cta=cta)
     return final
 
 
@@ -800,7 +800,7 @@ def run_daily_shorts(conn, cfg, long_job, src: Path, voice: dict, privacy: str, 
             continue
         try:
             final = build_short(sdir, items, sdir / "ml", Path("work") / "ml" / f"{src.name}-short{row['short_idx']}", voice,
-                                mascot=mascot_style(cfg, short=True))
+                                mascot=mascot_style(cfg, short=True), cta=closing.SHORT_TAG["ml"] if cta_on(cfg, "short_tag") else None)
             if live and not build_only:
                 ml = json.loads((sdir / "ml" / "script_ml.json").read_text())
                 vid = upload.insert_video(final, f"{ml['title']} #Shorts",
