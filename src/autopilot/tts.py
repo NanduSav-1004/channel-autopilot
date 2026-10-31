@@ -75,6 +75,35 @@ GEMINI_STYLE = "Say this in an energetic, fast-paced, curious YouTube-explainer 
 UA = {"User-Agent": "channel-autopilot/0.1 (https://github.com/NanduSav-1004/channel-autopilot)"}
 
 
+def _boundaries_by_words(sentences: list[str], words: list[dict], total: float) -> list[float] | None:
+    """Sentence end times found by MATCHING the script's words to the recognised words (the same matching refine_word_times uses), so every
+    sentence boundary sits where its words really are. Counting letters instead drifted whenever the recognition wrote digits ("97.5%")
+    for words the voice spoke out ("ninety-seven point five percent"), and the captions ran ahead of the voice for a few sentences.
+    None when too few words match to trust it."""
+    flat = [{"w": tok} for s in sentences for tok in s.split()]
+    first, n = [], 0
+    for s in sentences:
+        first.append(n)
+        n += len(s.split())
+    if not flat or any(len(s.split()) == 0 for s in sentences):
+        return None
+    heard = [{"word": w.get("word", ""), "start": float(w["start"]), "end": float(w["end"])} for w in words]
+    a = [_norm(w["w"]) for w in flat]
+    b = [_norm(h["word"]) for h in heard]
+    if sum(1 for x in a if x) < 0.8 * len(a):          # not Latin text (Malayalam, say): _norm would empty every word, so nothing can be matched
+        return None
+    matched = sum(blk.size for blk in difflib.SequenceMatcher(None, a, b, autojunk=False).get_matching_blocks())
+    if matched < 0.3 * len(flat):
+        return None
+    timed = refine_word_times(flat, heard, 0.0, total)
+    ends = []
+    for k in range(len(sentences) - 1):
+        last_end, next_start = timed[first[k + 1] - 1]["e"], timed[first[k + 1]]["s"]
+        ends.append((last_end + next_start) / 2)
+    ends.append(min(max(float(heard[-1]["end"]), ends[-1] if ends else 0.0), total) if total else float(heard[-1]["end"]))
+    return ends
+
+
 def align_sentences(sentences: list[str], words: list[dict], total: float) -> list[tuple[float, float]]:
     """Sentence (start, end) times inside one section's audio. `words` are timed words from speech recognition
     (they may differ a little from the script), so each sentence boundary is placed where the same fraction of the
@@ -84,7 +113,10 @@ def align_sentences(sentences: list[str], words: list[dict], total: float) -> li
 
     total_letters = sum(letters(s) for s in sentences)
     cum, ends = 0, []
-    if words:
+    by_words = _boundaries_by_words(sentences, words, total) if words else None
+    if by_words:
+        ends = by_words
+    elif words:
         spoken, acc = [], 0
         for w in words:
             acc += letters(w.get("word", ""))

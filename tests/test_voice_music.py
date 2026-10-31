@@ -418,3 +418,20 @@ def test_gemini_section_with_a_spoken_direction_comes_back_clean_and_correctly_t
 def test_the_gemini_direction_is_short_and_ends_with_a_clear_break_before_the_script():
     assert len(tts.GEMINI_STYLE.split()) <= 16 and tts.GEMINI_STYLE.endswith("\n\n")
     assert "Read the following" not in tts.GEMINI_STYLE and "Text:" not in tts.GEMINI_STYLE
+
+
+def test_sentence_boundaries_follow_the_words_even_when_digits_stand_for_spoken_numbers():
+    sentences = ["Saltwater makes up 97.5 percent of that total.", "Fresh water is just 2.5 percent."]
+    heard = [("saltwater", 0.0, 0.5), ("makes", 0.5, 0.8), ("up", 0.8, 0.9), ("97.5%", 0.9, 2.7), ("of", 2.7, 2.9), ("that", 2.9, 3.1), ("total.", 3.1, 3.6),
+             ("Fresh", 4.0, 4.3), ("water", 4.3, 4.6), ("is", 4.6, 4.7), ("just", 4.7, 4.9), ("2.5%", 4.9, 6.2)]
+    words = [{"word": w, "start": s, "end": e} for w, s, e in heard]
+    spans = tts.align_sentences(sentences, words, 6.4)
+    assert spans[0][0] == 0.0 and spans[0][1] == pytest.approx(3.8, abs=0.05) and spans[1] == (spans[0][1], pytest.approx(6.2))
+
+
+def test_sentence_boundaries_fall_back_to_letters_when_nothing_matches_or_the_text_is_not_latin():
+    words = [{"word": "zzz", "start": 0.0, "end": 1.0}, {"word": "yyy", "start": 1.0, "end": 3.0}]
+    assert tts._boundaries_by_words(["Aaaa bbbb.", "Cccc dddd."], words, 3.0) is None
+    assert tts._boundaries_by_words(["പൂർണ്ണ വീഡിയോ.", "ചാനലിൽ കാണാം."], words, 3.0) is None
+    spans = tts.align_sentences(["Aaaa bbbb.", "Cccc dddd."], words, 3.0)          # still works through the old letter-count path
+    assert spans[0][0] == 0.0 and spans[1][1] == 3.0
