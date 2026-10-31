@@ -21,6 +21,7 @@ from autopilot import datasets, llm, motion
 MODELS = "gemini-3.5-flash,gemini-3.6-flash,gemini-3.8-flash,gemini-3.1-flash-lite"   # 3.8 is often overloaded
 TARGET_WORDS = (750, 1050)          # about 5 to 7 minutes of narration
 VOICE = {"engine": "kokoro", "name": "am_michael", "speed": 1.08}
+SFX = False                 # soft sound effects on the animated charts (sfx.py): built 2026-10-31, switched on after the user has heard the sample
 MUSIC_STYLE = "ambient"     # the soft pad the user prefers (as on Brightwork); "lofi", "upbeat" or "pulse" are beat styles from music.py
 
 
@@ -859,11 +860,12 @@ def make_video(script: dict, bundle: dict, out_dir: Path, log=print) -> Path:
         timings_path.write_text(json.dumps(timings))
     timings = json.loads(timings_path.read_text())
     total = timings[-1]["end"] + 1.6
-    specs = []
+    specs, starts = [], []
     for i, sc in enumerate(scenes):
         start = 0.0 if i == 0 else timings[i]["start"]
         end = timings[i + 1]["start"] if i + 1 < len(timings) else total
         specs.append(compile_visual(sc["visual"], bundle, end - start))
+        starts.append(start)
     log(f"[plotline] {len(specs)} scenes, {total / 60:.1f} min; rendering charts")
     files = render_cached(specs, out_dir / "scenes")
     listing = out_dir / "scenes.txt"
@@ -873,10 +875,28 @@ def make_video(script: dict, bundle: dict, out_dir: Path, log=print) -> Path:
     beat = make_bed(total + 2, out_dir / "music.wav", seed=len(script["title"]), mood=bundle_mood(bundle))
     mixed = out_dir / "mix.wav"
     log(f"[mix] audio: {render.mix_audio(narration, beat, mixed)}")
+    mixed = add_effects(specs, starts, total, mixed, out_dir, log)
     final = out_dir / "final.mp4"
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(video), "-i", str(mixed), "-filter_complex", "[1:a]apad[a]", "-map", "0:v",
                     "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", f"{total:.3f}", str(final)], check=True)
     return final
+
+
+def add_effects(specs: list[dict], starts: list[float], total: float, mixed: Path, out_dir: Path, log=print) -> Path:
+    """The chart sound effects on top of the voice-and-music mix. Never a reason to lose a video: on any problem the plain mix is used."""
+    if not SFX:
+        return mixed
+    from autopilot import sfx
+
+    try:
+        events = sfx.track_events(specs, starts)
+        track = sfx.render_track(events, total, out_dir / "sfx.wav")
+        out = sfx.add_to_mix(mixed, track, out_dir / "mix_sfx.wav")
+        log(f"[sfx] {len(events)} sound effects")
+        return out
+    except Exception as exc:  # noqa: BLE001
+        log(f"[sfx] skipped ({type(exc).__name__}: {exc})")
+        return mixed
 
 
 def render_cached(specs: list[dict], folder: Path) -> list[Path]:
@@ -1085,10 +1105,11 @@ def make_short(short: dict, bundle: dict, out_dir: Path, log=print) -> Path:
         timings_path.write_text(json.dumps(timings))
     timings = json.loads(timings_path.read_text())
     total = timings[-1]["end"] + 1.0
-    specs = []
+    specs, starts = [], []
     for i, sc in enumerate(short["scenes"]):
         start = 0.0 if i == 0 else timings[i]["start"]
         end = timings[i + 1]["start"] if i + 1 < len(timings) else total
+        starts.append(start)
         spec = compile_visual(sc["visual"], bundle, end - start)
         if spec["type"] == "map":                           # a map is too small in a vertical frame: show the ranking instead
             spec = compile_visual({"type": "states_bars", "order": "top", "n": 8}, bundle, end - start)
@@ -1103,6 +1124,7 @@ def make_short(short: dict, bundle: dict, out_dir: Path, log=print) -> Path:
     beat = make_bed(total + 2, out_dir / "music.wav", seed=len(short.get("title", "")), mood=bundle_mood(bundle))
     mixed = out_dir / "mix.wav"
     log(f"[mix] Short audio: {render.mix_audio(narration, beat, mixed)}")
+    mixed = add_effects(specs, starts, total, mixed, out_dir, log)
     final = out_dir / "final.mp4"
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(charts), "-i", str(mixed), "-filter_complex", f"[0:v]ass={ass}[v];[1:a]apad[a]",
                     "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p", "-c:a", "aac",
