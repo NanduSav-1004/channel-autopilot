@@ -225,3 +225,28 @@ def test_every_new_chart_type_compiles_from_real_shaped_data():
             assert v["type"] == "race" and "same kind" in str(exc)
             continue
         assert spec["type"] == v["type"] and spec["duration"] == 6.0
+
+
+def test_sources_are_merged_without_naming_fred_twice():
+    assert plotline._merge_sources(["U.S. Census Bureau via FRED", "U.S. Bureau of Labor Statistics via FRED"]) == \
+        "U.S. Bureau of Labor Statistics; U.S. Census Bureau via FRED"
+    assert plotline._merge_sources(["Our World in Data", "Our World in Data"]) == "Our World in Data"
+
+
+def test_scatter_and_stacked_compile_and_need_their_data():
+    import pytest
+
+    b = _bundle()
+    with pytest.raises(ValueError):
+        plotline.compile_visual({"type": "scatter"}, b, 6.0)            # no second dataset in this video
+    pts = [(f"{y}-{m:02d}-01", 100.0 + y - 2000 + m) for y in range(2000, 2026) for m in range(1, 13)]
+    mk = lambda i, n: {"id": i, "name": n, "unit": "jobs", "source": "FRED", "theme": "jobs", "fmt": {"decimals": 1, "compact": True}, "additive": True, "points": pts}  # noqa: E731
+    b["series"] |= {"A": mk("A", "A jobs"), "B": mk("B", "B jobs"), "C": mk("C", "C jobs")}
+    spec = plotline.compile_visual({"type": "stacked", "series": ["A", "B", "C"], "as": "share"}, b, 6.0)
+    assert spec["type"] == "stacked" and len(spec["layers"]) == 3 and spec["mode"] == "share"
+    b["pair"] = {"kind": "countries", "names": {c: c for c in "abcde"}, "x": dict(zip("abcde", [1.0, 2, 3, 4, 5], strict=True)),
+                 "y": dict(zip("abcde", [2.0, 4, 5, 8, 10], strict=True)), "year": "2023", "highlight": ["a", "e"],
+                 "xmeta": {"name": "GDP", "fmt": {"decimals": 0}, "source": "Our World in Data", "rows": {}},
+                 "ymeta": {"name": "Life", "fmt": {"decimals": 1}, "source": "Our World in Data", "rows": {}}}
+    sc = plotline.compile_visual({"type": "scatter"}, b, 6.0)
+    assert len(sc["points"]) == 5 and sum(p["hi"] for p in sc["points"]) == 2 and sc["note"].startswith("correlation +0.")

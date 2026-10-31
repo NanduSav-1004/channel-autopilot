@@ -65,7 +65,9 @@ Available data (id: description):
 Return JSON {{"title": str (YouTube title, max 65 characters, curiosity-driven, honest), "angle": str (one sentence: the story
 the data tells), "series": [1 to 4 ids from the list, without "state:" or "owid:"], "states": null or the state dataset key,
 "owid": null or the owid key, "countries": null or a list of 5 to 8 country names (only with owid; include United States and
-United Kingdom), "start": "YYYY" (first year to show; enough history for the story)}}"""
+United Kingdom), "owid2": null or a SECOND owid key to set against the first in a scatter plot (e.g. GDP per person against life
+expectancy), "states2": null or a SECOND state dataset key to set against "states", "start": "YYYY" (first year to show; enough
+history for the story)}}"""
 
 
 def pick_topic(gen=None, recent: list[str] | None = None) -> dict:
@@ -79,6 +81,10 @@ def pick_topic(gen=None, recent: list[str] | None = None) -> dict:
             plan["states"] = None
         if plan.get("owid") not in cat["owid"]:
             plan["owid"], plan["countries"] = None, None
+        if not plan["owid"] or plan.get("owid2") not in cat["owid"] or plan.get("owid2") == plan["owid"]:
+            plan["owid2"] = None
+        if not plan["states"] or plan.get("states2") not in cat["states"] or plan.get("states2") == plan["states"]:
+            plan["states2"] = None
         if plan["series"] or plan["states"] or plan["owid"]:
             return plan
     raise ValueError("the topic planner chose no usable data")
@@ -87,7 +93,7 @@ def pick_topic(gen=None, recent: list[str] | None = None) -> dict:
 # ---- 2. data ------------------------------------------------------------------------------------------------------------
 def gather(plan: dict) -> dict:
     start = str(plan.get("start") or "2000")
-    bundle: dict = {"start": start, "series": {}, "states": None, "owid": None, "facts": []}
+    bundle: dict = {"start": start, "series": {}, "states": None, "owid": None, "facts": [], "pair": None}
     for sid in plan["series"]:
         s = datasets.series(sid)
         if not datasets.window(s["points"], start):
@@ -125,6 +131,32 @@ def gather(plan: dict) -> dict:
             bundle["series"][sid] = s
             first_year = max(int(start), int(s["points"][0][0][:4]))
             bundle["facts"] += [f"[{sid}] {x}" for x in datasets.facts(s, str(first_year))]
+    bundle["pair"] = None
+    if plan.get("states") and plan.get("states2"):
+        st2 = datasets.state_values(plan["states2"])
+        common = [k for k in bundle["states"]["values"] if k in st2["values"]]
+        if len(common) >= 30:
+            bundle["states2"] = st2
+            bundle["pair"] = {"kind": "states", "names": {k: datasets.STATE_NAMES[k] for k in common},
+                              "x": {k: bundle["states"]["values"][k] for k in common}, "y": {k: st2["values"][k] for k in common},
+                              "xmeta": bundle["states"], "ymeta": st2, "year": bundle["states"]["year"]}
+    if plan.get("owid") and plan.get("owid2"):
+        ow2 = datasets.owid(plan["owid2"])
+        pair = datasets.pair_countries(bundle["owid"], ow2)
+        if pair:
+            bundle["owid2"] = ow2
+            bundle["pair"] = {"kind": "countries", **pair, "xmeta": bundle["owid"], "ymeta": ow2, "highlight": bundle["owid"].get("countries") or []}
+    if bundle["pair"]:
+        pr = bundle["pair"]
+        r = datasets.correlation([pr["x"][k] for k in pr["x"]], [pr["y"][k] for k in pr["x"]])
+        xm, ym = pr["xmeta"], pr["ymeta"]
+        bundle["facts"].append(f"[scatter] {xm['name']} against {ym['name']}, {pr['year']}, {len(pr['x'])} {pr['kind']}: they move "
+                               f"{'together' if r > 0 else 'in opposite directions'} (correlation {r:+.2f}); sources: {xm['source']}")
+        keys = pr.get("highlight") or [k for k, _ in sorted(pr["x"].items(), key=lambda kv: kv[1])][:2] + [k for k, _ in sorted(pr["x"].items(), key=lambda kv: -kv[1])][:3]
+        for k in keys:
+            if k in pr["x"]:
+                name = pr["names"].get(k, k)
+                bundle["facts"].append(f"[scatter] {name}: {xm['name']} {datasets.fmt(pr['x'][k], xm['fmt'])}, {ym['name']} {datasets.fmt(pr['y'][k], ym['fmt'])}")
     bundle["start"] = start
     return bundle
 
@@ -132,7 +164,7 @@ def gather(plan: dict) -> dict:
 # ---- 3. script ----------------------------------------------------------------------------------------------------------
 VISUALS = """Chart types (the "visual" of a scene). Numbers on screen are computed from the data, you only choose what to show.
 CHOOSE BY WHAT THE SENTENCE IS ABOUT, and use a wide variety: a good video uses at least 6 different types and never leans on one.
-The striking ones (kpi, waffle, gauge, donut, heatmap, race, map, world_map) fit only twice per video; multiline, slope, compare and bars three
+The striking ones (kpi, waffle, gauge, donut, heatmap, race, map, world_map, scatter, stacked) fit only twice per video; multiline, slope, compare and bars three
 times; line and counter are the workhorses. Put the right chart on the right sentence (a ranking over years: race; "how many in 100": waffle;
 "where does it stand historically": gauge; a split into parts: donut; many things compared over time: multiline).
 - {"type": "title", "text": str, "highlight": [one or two words]}  -- the opening scene only
@@ -155,6 +187,10 @@ times; line and counter are the workhorses. Put the right chart on the right sen
 - {"type": "waffle", "series": id (a percent), "stat": "last"|"max"|"min"}  -- 100 squares filling up: "x out of 100" (only for series in %)
 - {"type": "gauge", "series": id, "start": "YYYY"}  -- where today's value stands between the lowest and highest since "start"
 - {"type": "donut", "series": [2 to 7 ids that add up, e.g. job sectors]}  -- how a total splits into parts (only series marked additive)
+- {"type": "stacked", "series": [3 to 7 additive ids], "as": "share"|"total", "since": "YYYY"}  -- stacked area: how the parts of a total
+  shift over time ("share" shows each part's percent of the whole)
+- {"type": "scatter", "trails": true|false}  -- two measures against each other, one dot per country or state, the highlighted ones
+  labelled and (with trails) traced over the years; only when the video has a second dataset ("owid2" / "states2")
 - {"type": "heatmap", "series": id (monthly), "years": 3 to 16}  -- a grid of year by month showing monthly percent changes
 - {"type": "states_bars", "order": "top"|"bottom", "n": 5 to 10}  -- ranking of states (needs the state data)
 - {"type": "map"}  -- US map of the state data
@@ -322,7 +358,7 @@ def write_script(plan: dict, bundle: dict, gen=None, tries: int = 3, log=print, 
     return fix_script(script, plan, bundle, facts, ids, gen, tries, log, draft_path)
 
 
-RARE = ("kpi", "waffle", "gauge", "donut", "heatmap", "race", "world_map", "map")      # striking charts: twice per video at most
+RARE = ("kpi", "waffle", "gauge", "donut", "heatmap", "race", "world_map", "map", "scatter", "stacked")      # striking charts: twice per video at most
 COMMON_CAP, RARE_CAP = 3, 2
 COMMON = ("multiline", "slope", "compare", "bars", "states_bars", "countries_bars")
 SOFT = ("is repeated", "the same chart", "chart type")        # style problems: worth a rewrite, never worth losing the video
@@ -547,7 +583,7 @@ def _compile(v: dict, bundle: dict, dur: float) -> dict:
     raise ValueError(f"unknown chart type {t!r}")
 
 
-NEW_TYPES = ("multiline", "race", "slope", "kpi", "waffle", "gauge", "donut", "heatmap", "world_map")
+NEW_TYPES = ("multiline", "race", "slope", "kpi", "waffle", "gauge", "donut", "heatmap", "world_map", "stacked", "scatter")
 PALETTE_SERIES = 6
 
 
@@ -570,9 +606,16 @@ def _same_unit(ids: list[str], bundle: dict) -> None:
         raise ValueError("these series must be the same kind of number (all dollars, all percents, all counts) and none may be an index")
 
 
+def _merge_sources(srcs) -> str:
+    """Several sources on one line: "A; B via FRED" when all come through FRED, else "A; B"."""
+    srcs = sorted(set(srcs))
+    if len(srcs) > 1 and all(x.endswith(" via FRED") for x in srcs):
+        return "; ".join(x.removesuffix(" via FRED") for x in srcs) + " via FRED"
+    return "; ".join(srcs)
+
+
 def _src(ids: list[str], bundle: dict) -> str:
-    srcs = sorted({bundle["series"][i]["source"] for i in ids})
-    return srcs[0] if len(srcs) == 1 else "; ".join(x.replace(" via FRED", "") for x in srcs) + " via FRED"
+    return _merge_sources(bundle["series"][i]["source"] for i in ids)
 
 
 def _compile_new(t: str, v: dict, bundle: dict, base: dict) -> dict:
@@ -685,6 +728,50 @@ def _compile_new(t: str, v: dict, bundle: dict, base: dict) -> dict:
         vmax = max(0.1, round(flat[int(0.95 * (len(flat) - 1))], 1))
         return {**base, "type": "heatmap", "title": f"{s['name']}: monthly change", "rows": rows, "vmax": vmax, "suffix": "%", "prefix": "", "decimals": 1,
                 "legend": "monthly change", "source": s["source"]}
+    if t == "stacked":
+        ids = _ids(v, bundle, 3, 7)
+        if len({S[i]["unit"] for i in ids}) > 1 or not all(S[i].get("additive") for i in ids):
+            raise ValueError("stacked needs series marked additive that share one unit")
+        since = str(v.get("since") or bundle["start"])
+        common = sorted(set.intersection(*[{d for d, _ in datasets.window(S[i]["points"], since)} for i in ids]))
+        if len(common) < 24:
+            raise ValueError("stacked needs at least two years of dates in common")
+        step = max(1, len(common) // 150)
+        common = common[::step] + ([common[-1]] if (len(common) - 1) % step else [])
+        layers = []
+        for i in ids:
+            val = dict(S[i]["points"])
+            layers.append({"label": _label(S[i]).replace(" jobs", ""), "points": [(d, val[d]) for d in common]})
+        layers.sort(key=lambda lay: -lay["points"][-1][1])           # the biggest part at the bottom
+        share = v.get("as", "share") != "total"
+        return {**base, "type": "stacked", "title": ("Share of " if share else "") + S[ids[0]]["unit"].replace("jobs", "jobs by sector") + f", {common[0][:4]} to {common[-1][:4]}",
+                "layers": layers, "mode": "share" if share else "total", **_js_fmt(S[ids[0]]["fmt"]), "source": _src(ids, bundle), "draw": round(min(max(base["duration"] * 0.6, 3), 6), 2)}
+    if t == "scatter":
+        pr = bundle.get("pair")
+        if not pr:
+            raise ValueError("this video has no second dataset to set against the first (plan needs owid2 or states2)")
+        xm, ym = pr["xmeta"], pr["ymeta"]
+        keys = list(pr["x"])
+        hi = set(pr.get("highlight") or []) if pr["kind"] == "countries" else {k for k, _ in sorted(pr["x"].items(), key=lambda kv: kv[1])[:2]} | {k for k, _ in sorted(pr["x"].items(), key=lambda kv: -kv[1])[:3]}
+        pts = [{"label": pr["names"].get(k, k), "x": pr["x"][k], "y": pr["y"][k], "hi": k in hi} for k in keys]
+        xs, ys = [p["x"] for p in pts], [p["y"] for p in pts]
+        mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+        den = sum((a - mx) ** 2 for a in xs) or 1
+        slope = sum((a - mx) * (b - my) for a, b in zip(xs, ys, strict=True)) / den
+        xlog = pr["kind"] == "countries" and min(xs) > 0 and max(xs) / min(xs) > 30
+        trend = None
+        if not xlog:
+            x0, x1 = min(xs), max(xs)
+            trend = {"x0": x0, "y0": my + slope * (x0 - mx), "x1": x1, "y1": my + slope * (x1 - mx)}
+        trails = []
+        if v.get("trails") and pr["kind"] == "countries":
+            for k in hi:
+                path = datasets.pair_path(xm, ym, k, int(bundle["start"]), int(pr["year"]))
+                if len(path) >= 4:
+                    trails.append({"label": k, "pts": path})
+        return {**base, "type": "scatter", "title": f"{xm['name']} and {ym['name']}", "points": pts, "trails": trails, "xlog": xlog, "trend": trend,
+                "xLabel": xm["name"], "yLabel": ym["name"], "xfmt": _js_fmt(xm["fmt"]), "yfmt": _js_fmt(ym["fmt"]),
+                "note": f"correlation {datasets.correlation(xs, ys):+.2f}", "source": _merge_sources([xm["source"], ym["source"]])}
     if t == "world_map":
         ow = bundle["owid"]
         if not ow:

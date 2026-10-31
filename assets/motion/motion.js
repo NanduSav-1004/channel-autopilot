@@ -721,6 +721,118 @@
     };
   };
 
+  // ---- stacked area: how a total's parts change over time -----------------------------------------------------------------
+  SCENES.stacked = (g, s) => {
+    const head = heading(g, s.title);
+    const narrow = W < 1300, share = s.mode === "share", n = s.layers.length;
+    const legendH = narrow ? 52 * n : 0;
+    const m = narrow ? { l: 150, r: 60, t: 290 + legendH, b: 190 } : { l: 200, r: 470, t: 270, b: 150 };
+    const dates = s.layers[0].points.map((p) => new Date(p[0]));
+    const rows = dates.map((d, i) => { const o = { date: d }; s.layers.forEach((l, k) => { o["k" + k] = l.points[i][1]; }); return o; });
+    const keys = s.layers.map((_, k) => "k" + k);
+    const series = d3.stack().keys(keys).offset(share ? d3.stackOffsetExpand : d3.stackOffsetNone).order(d3.stackOrderNone)(rows);
+    const x = d3.scaleTime().domain(d3.extent(dates)).range([m.l, W - m.r]);
+    const yMax = share ? 1 : d3.max(series[series.length - 1], (d) => d[1]);
+    const y = d3.scaleLinear().domain([0, yMax]).nice().range([H - m.b, m.t]);
+    const yfmt = share ? (v) => `${Math.round(v * 100)}%` : (v) => fmt(v, s);
+    const axis = g.append("g");
+    y.ticks(5).forEach((v) => {
+      axis.append("line").attr("x1", m.l).attr("x2", W - m.r).attr("y1", y(v)).attr("y2", y(v)).attr("stroke", C.faint).attr("stroke-dasharray", "4 8");
+      axis.append("text").attr("class", "body").attr("x", m.l - 22).attr("y", y(v) + 9).attr("text-anchor", "end").attr("font-size", 26).attr("fill", C.muted).text(yfmt(v));
+    });
+    const span = dates[dates.length - 1].getFullYear() - dates[0].getFullYear();
+    x.ticks(d3.timeYear.every(span <= 8 ? 1 : span <= 16 ? 2 : span <= 40 ? 5 : 10)).forEach((d) => axis.append("text").attr("class", "body")
+      .attr("x", x(d)).attr("y", H - m.b + 48).attr("text-anchor", "middle").attr("font-size", 26).attr("fill", C.muted).text(d.getFullYear()));
+    const cid = "clip" + rid();
+    const clip = g.append("clipPath").attr("id", cid).append("rect").attr("y", 0).attr("height", H).attr("x", 0);
+    const plot = g.append("g").attr("clip-path", `url(#${cid})`);
+    const area = d3.area().x((d) => x(d.data.date)).y0((d) => y(d[0])).y1((d) => y(d[1])).curve(d3.curveMonotoneX);
+    series.forEach((sr, k) => plot.append("path").attr("d", area(sr)).attr("fill", PAL[k % PAL.length]).attr("opacity", 0.88).attr("stroke", C.bg).attr("stroke-width", 2));
+    const last = rows.length - 1;
+    const labels = series.map((sr, k) => {
+      const mid = (sr[last][0] + sr[last][1]) / 2, tot = share ? 1 : yMax;
+      const val = share ? sr[last][1] - sr[last][0] : s.layers[k].points[last][1];
+      if (narrow) {
+        const r = g.append("g").attr("transform", `translate(${m.l},${290 + k * 52})`);
+        r.append("rect").attr("y", -24).attr("width", 26).attr("height", 26).attr("rx", 8).attr("fill", PAL[k % PAL.length]);
+        r.append("text").attr("x", 40).attr("font-size", 28).attr("font-weight", 600).text(`${s.layers[k].label}  ${share ? Math.round(val * 100) + "%" : fmt(val, s)}`);
+        return r;
+      }
+      const t = g.append("g");
+      t.append("text").attr("y", -2).attr("font-size", 28).attr("font-weight", 700).attr("fill", PAL[k % PAL.length]).text(s.layers[k].label);
+      t.append("text").attr("class", "num").attr("y", 28).attr("font-size", 26).text(share ? Math.round(val * 100) + "%" : fmt(val, s));
+      t.datum({ want: y(mid * (tot / yMax)) });
+      return t;
+    });
+    if (!narrow) {                                           // top to bottom, at least 62 px apart
+      const ord = labels.map((l, i) => i).sort((a, b) => labels[a].datum().want - labels[b].datum().want);
+      let prev = -1e9;
+      ord.forEach((i) => { const yy = Math.max(labels[i].datum().want, prev + 62); labels[i].attr("transform", `translate(${W - m.r + 22},${yy})`); prev = yy; });
+    }
+    const src = source(g, s.source);
+    return (t) => {
+      head(t); src(t);
+      const p = E.inOut(prog(t, 0.5, s.draw || 3.5));
+      clip.attr("width", lerp(m.l, W - m.r, p) + 6);
+      labels.forEach((l) => l.attr("opacity", prog(t, 0.5 + (s.draw || 3.5) * 0.8, 0.5)));
+    };
+  };
+
+  // ---- scatter: two measures against each other, with paths for the highlighted ones ---------------------------------------------
+  SCENES.scatter = (g, s) => {
+    const head = heading(g, s.title);
+    const narrow = W < 1300;
+    const m = narrow ? { l: 250, r: 60, t: 300, b: 250 } : { l: 230, r: 130, t: 270, b: 200 };
+    const allp = s.points.concat((s.trails || []).flatMap((tr) => tr.pts.map((q) => ({ x: q[0], y: q[1] }))));
+    const xs = allp.map((p) => p.x), ys = allp.map((p) => p.y);
+    const xlog = !!s.xlog && d3.min(xs) > 0;
+    const x = (xlog ? d3.scaleLog() : d3.scaleLinear()).domain([d3.min(xs) * (xlog ? 0.9 : 1), d3.max(xs) * (xlog ? 1.1 : 1.03)]).range([m.l, W - m.r]);
+    const y = d3.scaleLinear().domain([d3.min(ys) - (d3.max(ys) - d3.min(ys)) * 0.04, d3.max(ys) + (d3.max(ys) - d3.min(ys)) * 0.04]).range([H - m.b, m.t]);
+    const axis = g.append("g");
+    y.ticks(5).forEach((v) => {
+      axis.append("line").attr("x1", m.l).attr("x2", W - m.r).attr("y1", y(v)).attr("y2", y(v)).attr("stroke", C.faint).attr("stroke-dasharray", "4 8");
+      axis.append("text").attr("class", "body").attr("x", m.l - 20).attr("y", y(v) + 9).attr("text-anchor", "end").attr("font-size", 26).attr("fill", C.muted).text(fmt(v, s.yfmt));
+    });
+    (xlog ? x.ticks(5).filter((v) => (narrow ? [1, 5] : [1, 2, 5]).includes(v / Math.pow(10, Math.floor(Math.log10(v))))) : x.ticks(narrow ? 4 : 6)).forEach((v) => {
+      axis.append("line").attr("x1", x(v)).attr("x2", x(v)).attr("y1", m.t).attr("y2", H - m.b).attr("stroke", C.faint).attr("stroke-dasharray", "4 8").attr("opacity", 0.6);
+      axis.append("text").attr("class", "body").attr("x", x(v)).attr("y", H - m.b + 44).attr("text-anchor", "middle").attr("font-size", 26).attr("fill", C.muted).text(fmt(v, s.xfmt));
+    });
+    axis.append("text").attr("x", (m.l + W - m.r) / 2).attr("y", H - m.b + (narrow ? 110 : 100)).attr("text-anchor", "middle").attr("font-size", narrow ? 30 : 34).attr("font-weight", 600).attr("fill", C.cyan).text(s.xLabel + " →");
+    axis.append("text").attr("transform", `translate(${narrow ? 60 : 70},${(m.t + H - m.b) / 2}) rotate(-90)`).attr("text-anchor", "middle").attr("font-size", narrow ? 30 : 34)
+      .attr("font-weight", 600).attr("fill", C.volt).text(s.yLabel + " →");
+    const dots = s.points.map((p, i) => ({ p, i, el: g.append("circle").attr("cx", x(p.x)).attr("cy", y(p.y)).attr("r", p.hi ? 16 : 8).attr("fill", p.hi ? C.volt : C.cyan)
+      .attr("opacity", 0).attr("filter", p.hi ? "url(#glow)" : null), at: (x(p.x) - m.l) / (W - m.r - m.l) }));
+    const trend = s.trend ? g.append("line").attr("stroke", C.coral).attr("stroke-width", 5).attr("stroke-dasharray", "14 10").attr("stroke-linecap", "round")
+      .attr("x1", x(s.trend.x0)).attr("y1", y(s.trend.y0)).attr("opacity", 0.9) : null;
+    const trails = (s.trails || []).map((tr, i) => {
+      const pts = tr.pts.map((q) => [x(q[0]), y(q[1])]);
+      const path = g.append("path").attr("d", d3.line().curve(d3.curveCatmullRom)(pts)).attr("fill", "none").attr("stroke", C.volt).attr("stroke-width", 6).attr("stroke-linecap", "round")
+        .attr("opacity", 0.9);
+      const len = path.node().getTotalLength();
+      path.attr("stroke-dasharray", `${len} ${len}`);
+      g.append("circle").attr("cx", pts[0][0]).attr("cy", pts[0][1]).attr("r", 9).attr("fill", C.bg).attr("stroke", C.volt).attr("stroke-width", 4);
+      return { path, len, i };
+    });
+    const hi = dots.filter((d) => d.p.hi), used = [];
+    const labels = hi.map((d) => {
+      let ly = y(d.p.y) - 24; while (used.some((u) => Math.abs(u - ly) < 34)) ly -= 36;
+      used.push(ly);
+      const right = x(d.p.x) < W - m.r - 300;
+      return { d, el: g.append("text").attr("x", x(d.p.x) + (right ? 26 : -26)).attr("y", ly).attr("text-anchor", right ? "start" : "end").attr("font-size", 30).attr("font-weight", 700)
+        .attr("fill", C.ink).attr("paint-order", "stroke").attr("stroke", C.bg).attr("stroke-width", 7).text(d.p.label) };
+    });
+    const note = s.note ? g.append("text").attr("class", "body").attr("x", m.l + 20).attr("y", m.t + 40).attr("font-size", narrow ? 28 : 32).attr("fill", C.coral).text(s.note) : null;
+    const src = source(g, s.source);
+    return (t) => {
+      head(t); src(t);
+      dots.forEach(({ p, el, at }) => el.attr("opacity", p.hi ? E.out(prog(t, 2.2 + at * 0.4, 0.4)) : 0.55 * E.out(prog(t, 0.4 + at * 1.6, 0.5))));
+      if (trend) { const q = E.inOut(prog(t, 1.9, 0.9)); trend.attr("x2", lerp(x(s.trend.x0), x(s.trend.x1), q)).attr("y2", lerp(y(s.trend.y0), y(s.trend.y1), q)); }
+      trails.forEach(({ path, len, i }) => path.attr("stroke-dashoffset", len * (1 - E.inOut(prog(t, 2.6 + i * 0.25, 1.6)))));
+      labels.forEach(({ el }) => el.attr("opacity", prog(t, 2.5, 0.6)));
+      if (note) note.attr("opacity", prog(t, 3.0, 0.6));
+    };
+  };
+
   // ---- public API -----------------------------------------------------------------------------------------------------
   window.load = async (spec, topo) => {
     if (topo) window.__topo = topo;

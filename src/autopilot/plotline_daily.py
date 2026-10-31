@@ -48,7 +48,8 @@ def recent_titles(state: dict, n: int = 40) -> list[str]:
 
 def description(script: dict, bundle: dict, long_id: str | None = None) -> str:
     sources = sorted({s["source"] for s in bundle["series"].values()} | ({bundle["states"]["source"]} if bundle["states"] else set())
-                     | ({bundle["owid"]["source"]} if bundle["owid"] else set()))
+                     | ({bundle["owid"]["source"]} if bundle["owid"] else set())
+                     | ({bundle["owid2"]["source"]} if bundle.get("owid2") else set()) | ({bundle["states2"]["source"]} if bundle.get("states2") else set()))
     parts = [str(script.get("description", "")).strip()]
     if long_id:
         parts.append(f"Full video: https://youtu.be/{long_id}")

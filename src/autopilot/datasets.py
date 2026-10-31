@@ -67,7 +67,7 @@ def monthly(points: list[tuple[str, float]]) -> list[tuple[str, float]]:
 ORIGINS = [(("APU", "CPI", "CUSR", "UNRATE", "PAYEMS", "MANEMP", "US", "CIVPART", "JTS", "AHETPI", "LES"), "U.S. Bureau of Labor Statistics"),
            (("MSPUS", "HOUST", "RSAFS", "RSNSR", "ECOMPCTSA", "MEHOINUS", "POPTHM", "RRVR", "MSACSR", "TOTALSA"), "U.S. Census Bureau"),
            (("PSAVERT",), "U.S. Bureau of Economic Analysis"), (("GFDEBTN", "FYFSD"), "U.S. Treasury"),
-           (("MORTGAGE30US",), "Freddie Mac"), (("CSUSHPINSA",), "S&P Cotality Case-Shiller"),
+           (("UR",), "U.S. Bureau of Labor Statistics"), (("POP",), "U.S. Census Bureau"), (("MORTGAGE30US",), "Freddie Mac"), (("CSUSHPINSA",), "S&P Cotality Case-Shiller"),
            (("FEDFUNDS", "DGS10", "CCLAC", "TDSP", "M2SL"), "Federal Reserve"), (("GASREGW", "DCOILWTICO"), "U.S. Energy Information Administration"),
            (("FEDMINNFRWG",), "U.S. Department of Labor"), (("SP",), "World Bank"), (("LRHUT",), "OECD"), (("QGBN",), "Bank for International Settlements")]
 
@@ -231,3 +231,35 @@ def world_values(ow: dict, min_countries: int = 100) -> tuple[dict, str]:
         if name in names and hit:
             out[name] = hit[0]
     return out, str(year)
+
+
+# ---- two datasets against each other (scatter plots) ----------------------------------------------------------------------------------
+def correlation(a: list[float], b: list[float]) -> float:
+    n = len(a)
+    if n < 3:
+        return 0.0
+    ma, mb = sum(a) / n, sum(b) / n
+    cov = sum((x - ma) * (y - mb) for x, y in zip(a, b, strict=True))
+    va, vb = sum((x - ma) ** 2 for x in a), sum((y - mb) ** 2 for y in b)
+    return cov / ((va * vb) ** 0.5) if va and vb else 0.0
+
+
+def pair_countries(ow_x: dict, ow_y: dict, min_countries: int = 60) -> dict | None:
+    """One value of each measure per country, in the newest year that enough countries have BOTH."""
+    by_year: dict[int, dict] = {}
+    for c, rows in ow_x["rows"].items():
+        yrows = dict(ow_y["rows"].get(c, []))
+        for y, v in rows:
+            if y in yrows:
+                by_year.setdefault(y, {})[c] = (v, yrows[y])
+    years = [y for y, d in by_year.items() if len(d) >= min_countries]
+    if not years:
+        return None
+    year = max(years)
+    d = by_year[year]
+    return {"names": {c: c for c in d}, "x": {c: v[0] for c, v in d.items()}, "y": {c: v[1] for c, v in d.items()}, "year": str(year)}
+
+
+def pair_path(ow_x: dict, ow_y: dict, country: str, first: int, last: int) -> list[list[float]]:
+    xs, ys = dict(ow_x["rows"].get(country, [])), dict(ow_y["rows"].get(country, []))
+    return [[xs[y], ys[y]] for y in range(first, last + 1) if y in xs and y in ys]
