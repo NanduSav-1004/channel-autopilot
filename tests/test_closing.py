@@ -14,7 +14,9 @@ def test_closing_line_is_added_once_to_the_last_section():
 
 
 def test_a_bad_model_answer_falls_back_to_a_clean_template():
-    for bad in ({"closing": "Like and subscribe, smash that bell!"}, {"closing": "Subscribe for 3 more."}, {"closing": "Thanks."}, {}):
+    for bad in ({"closing": "Like and subscribe, smash that bell!"}, {"closing": "Subscribe for 3 more."}, {"closing": "Thanks."}, {},
+                {"closing": "Thanks for watching, hit that subscribe button and join us on the journey!"},
+                {"closing": "If you enjoyed this one, subscribe and we will explore more wonders together."}):
         out = closing.add_closing(_script(), 2, gen=lambda p, b=bad: b)
         line = out["closing"]
         assert closing.valid(line) and line == closing.FALLBACKS[2 % len(closing.FALLBACKS)]
@@ -28,8 +30,8 @@ def test_a_failing_model_never_stops_the_video():
 
 
 def test_styles_rotate_with_the_job_so_neighbours_differ():
-    seen = {closing.make_closing("T", "x", n, gen=lambda p: {}) for n in range(5)}
-    assert len(seen) == 5
+    seen = {closing.make_closing("T", "x", n, gen=lambda p: {}) for n in range(len(closing.FALLBACKS))}
+    assert len(seen) == len(closing.FALLBACKS)
 
 
 def test_cta_flags_default_off():

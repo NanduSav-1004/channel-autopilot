@@ -14,9 +14,12 @@ import uuid
 import wave
 from pathlib import Path
 
+from autopilot.speech import speech_text
+
 SENTENCE_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z\"'(])")
 SENTENCE_PAUSE = 0.22
 SECTION_PAUSE = 0.6
+
 PIPER_MODEL = "models/en_US-lessac-medium.onnx"
 KOKORO_MODEL, KOKORO_VOICES = "models/kokoro-v1.0.int8.onnx", "models/voices-v1.0.bin"
 
@@ -49,7 +52,7 @@ class PiperEngine:
         self.voice = PiperVoice.load(model)
 
     def synth(self, text: str) -> tuple[bytes, int]:
-        chunks = list(self.voice.synthesize(text))
+        chunks = list(self.voice.synthesize(speech_text(text)))
         return b"".join(c.audio_int16_bytes for c in chunks), chunks[0].sample_rate
 
 
@@ -65,7 +68,7 @@ class KokoroEngine:
     def synth(self, text: str) -> tuple[bytes, int]:
         import numpy as np
 
-        audio, rate = self.k.create(text, voice=self.voice, speed=self.speed, lang=self.lang)
+        audio, rate = self.k.create(speech_text(text), voice=self.voice, speed=self.speed, lang=self.lang)   # numbers written out: it mangles digits
         return (np.clip(audio, -1, 1) * 32767).astype("<i2").tobytes(), rate
 
 
