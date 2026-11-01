@@ -252,7 +252,7 @@ class Stages:
         if data_shots_on(self.cfg, short=False):
             data = datashots.shots_for([{"heading": sec["heading"], "narration": sec["narration"], "sentences": tm["sentences"]}
                                         for sec, tm in zip(script["sections"], timings, strict=False)], (1280, 720), wd,
-                                       render=shot_renderer(self.cfg))
+                                       render=shot_renderer(self.cfg), allow_3d=shot_engine(self.cfg) == "html")
         render_photo_video(script, timings, items, shots.plan_cuts(timings, [len(s) for s in items]), d / "narration.wav",
                            d / "final.mp4", wd, music=music, data_shots=data or None,
                            mascot=mascot_style(self.cfg, short=False), xfade=transitions_on(self.cfg, short=False))
@@ -422,7 +422,7 @@ class Stages:
         data = []
         if data_shots_on(self.cfg, short=True):
             data = datashots.shots_for([{"heading": s["title"], "narration": s["narration"], "sentences": timings[0]["sentences"]}],
-                                       (1080, 1920), wd, render=shot_renderer(self.cfg))
+                                       (1080, 1920), wd, render=shot_renderer(self.cfg), allow_3d=shot_engine(self.cfg) == "html")
         render_short(s, timings, items, d / "narration.wav", d / "final.mp4", wd, music=music, data_shots=data or None,
                      mascot=mascot_style(self.cfg, short=True), cta=closing.SHORT_TAG["en"] if cta_on(self.cfg, "short_tag") else None,
                      xfade=transitions_on(self.cfg, short=True))

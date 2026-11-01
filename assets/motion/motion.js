@@ -1048,7 +1048,7 @@
     const pulse = g.append("circle").attr("fill", "none").attr("stroke", C.volt).attr("stroke-width", 4);
     const rim = g.append("circle").attr("cx", cx).attr("cy", cy).attr("r", size / 2 - 6).attr("fill", "none").attr("stroke", C.cyan).attr("stroke-width", 2).attr("opacity", 0.5);
     const facts = factsPanel(g, s.facts, narrow ? 120 : 130 + size + 110, narrow ? cy + size / 2 + 60 : 330, narrow ? W - 240 : W - (130 + size + 110) - 130, narrow);
-    const src = source(g, s.source), lab = g.append("text").attr("class", "num").attr("font-size", narrow ? 70 : 84).attr("fill", C.volt).text((s.highlight || []).slice(0, 1).join(""));
+    const src = source(g, s.source), lab = g.append("text").attr("class", "num").attr("font-size", narrow ? 70 : 84).attr("fill", C.volt).text(s.label || (s.highlight || []).slice(0, 1).join(""));
     if (narrow) lab.attr("x", W / 2).attr("y", cy + size / 2 + 20).attr("text-anchor", "middle"); else lab.attr("x", 130 + size + 110).attr("y", 260);
     return (t) => {
       head(t); src(t);

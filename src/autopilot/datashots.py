@@ -18,6 +18,18 @@ FONT_REG = "/usr/share/fonts/truetype/lato/Lato-Medium.ttf"
 AMBER, ICE, WHITE, NAVY = (255, 190, 40), (190, 215, 255), (255, 255, 255), (14, 27, 61)
 FPS = 24
 KINDS = ("number", "bars", "timeline", "line")
+KINDS_3D = ("planet", "atom", "globe")           # drawn only by the HTML engine (three.js / d3 globe); never offered when it is not in use
+BODIES = {"mercury": "rocky", "venus": "venus", "earth": "earth", "moon": "moon", "mars": "mars", "jupiter": "gas", "saturn": "gas",
+          "uranus": "ice", "neptune": "ice", "pluto": "rocky", "sun": "sun"}
+RINGED = {"saturn"}
+ALIASES = {"united states": "united states of america", "the united states": "united states of america", "usa": "united states of america", "america": "united states of america"}
+ELEMENTS = {  # name: (symbol, protons, neutrons of the common isotope)
+    "hydrogen": ("H", 1, 0), "helium": ("He", 2, 2), "lithium": ("Li", 3, 4), "carbon": ("C", 6, 6), "nitrogen": ("N", 7, 7),
+    "oxygen": ("O", 8, 8), "neon": ("Ne", 10, 10), "sodium": ("Na", 11, 12), "magnesium": ("Mg", 12, 12), "aluminium": ("Al", 13, 14),
+    "aluminum": ("Al", 13, 14), "silicon": ("Si", 14, 14), "phosphorus": ("P", 15, 16), "sulfur": ("S", 16, 16), "sulphur": ("S", 16, 16),
+    "chlorine": ("Cl", 17, 18), "argon": ("Ar", 18, 22), "potassium": ("K", 19, 20), "calcium": ("Ca", 20, 20), "iron": ("Fe", 26, 30),
+    "zinc": ("Zn", 30, 35), "copper": ("Cu", 29, 35), "silver": ("Ag", 47, 61), "tin": ("Sn", 50, 69), "gold": ("Au", 79, 118),
+    "mercury (element)": ("Hg", 80, 121), "lead": ("Pb", 82, 125), "uranium": ("U", 92, 146)}
 
 PROMPT = """From this narrated section of a science video, pick AT MOST ONE moment where an animated data graphic would help the viewer
 SEE the figures the narrator gives. Use ONLY numbers that appear in the narration, exactly as stated; never compute, convert or invent.
@@ -29,11 +41,20 @@ Kinds:
 - "line": 3-8 (year, value) points of ONE quantity over time
 
 Return JSON {{"shots": []}} when nothing fits (that is fine). Otherwise
-{{"shots": [{{"kind": "number|bars|timeline|line", "title": str (<=6 words), "items": [{{"label": str, "value": number, "unit": str}}]}}]}}
-For "timeline" give value = the year and unit = "". For "line" give label = the x value (year) and value = the figure.
+{{"shots": [{{"kind": "{kinds}", "title": str (<=6 words), "items": [{{"label": str, "value": number, "unit": str}}]}}]}}
+For "timeline" give value = the year and unit = "". For "line" give label = the x value (year) and value = the figure.{extra}
 
 SECTION: {heading}
 NARRATION: {narration}"""
+
+PROMPT_3D = """
+Three more kinds exist for 3D pictures. Use one ONLY when the section is mostly ABOUT that object and the narrator states at least one figure
+about it (never invent one):
+- "planet": a Solar System body. "subject" = its name (Mercury, Venus, Earth, Moon, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, Sun);
+  items = 1-4 stated facts {{"label": "Diameter", "value": 12742, "unit": "km"}}
+- "atom": a chemical element. "subject" = its English name (carbon, gold, uranium ...); items = 1-4 stated facts about it
+- "globe": a country. "subject" = the country's English name as the narrator says it; items = 1-3 stated facts about it
+For these three also add "subject" to the shot."""
 
 _font_cache: dict = {}
 
@@ -54,16 +75,32 @@ def numbers_in(text: str) -> set[float]:
     return out
 
 
-def validate(shot: dict, narration: str) -> dict | None:
-    """The shot if it is well formed and uses only numbers the narration states; else None."""
-    if not isinstance(shot, dict) or shot.get("kind") not in KINDS:
+def country_names() -> set[str]:
+    import json
+
+    topo = json.loads((Path(__file__).resolve().parents[2] / "assets" / "motion" / "vendor" / "countries-110m.json").read_text())
+    return {g["properties"]["name"].lower() for g in topo["objects"]["countries"]["geometries"] if g.get("properties", {}).get("name")}
+
+
+def _subject_ok(kind: str, subject: str, narration: str) -> bool:
+    """A 3D shot's subject must be one we can draw truthfully AND be named in the narration."""
+    sub = subject.strip().lower()
+    if not sub or sub not in narration.lower():
+        return False
+    sub = ALIASES.get(sub, sub)
+    return sub in {"planet": BODIES, "atom": ELEMENTS, "globe": country_names()}[kind]
+
+
+def validate(shot: dict, narration: str, allow_3d: bool = False) -> dict | None:
+    """The shot if it is well formed and uses only numbers the narration states; else None. 3D kinds only when `allow_3d`."""
+    if not isinstance(shot, dict) or shot.get("kind") not in KINDS + (KINDS_3D if allow_3d else ()):
         return None
     try:
         items = [{"label": str(i.get("label", ""))[:28], "value": float(i["value"]), "unit": str(i.get("unit", ""))[:14]}
                  for i in shot.get("items", [])]
     except (KeyError, TypeError, ValueError, AttributeError):
         return None
-    need = {"number": (1, 1), "bars": (2, 5), "timeline": (3, 6), "line": (3, 8)}[shot["kind"]]
+    need = {"number": (1, 1), "bars": (2, 5), "timeline": (3, 6), "line": (3, 8), "planet": (1, 4), "atom": (1, 4), "globe": (1, 3)}[shot["kind"]]
     if not need[0] <= len(items) <= need[1]:
         return None
     said = numbers_in(narration)
@@ -72,7 +109,13 @@ def validate(shot: dict, narration: str) -> dict | None:
         return None
     if shot["kind"] == "bars" and len({i["unit"] for i in items}) > 1:
         return None
-    return {"kind": shot["kind"], "title": str(shot.get("title", ""))[:48], "items": items}
+    out = {"kind": shot["kind"], "title": str(shot.get("title", ""))[:48], "items": items}
+    if shot["kind"] in KINDS_3D:
+        subject = str(shot.get("subject", "")).strip()
+        if not _subject_ok(shot["kind"], subject, narration):
+            return None
+        out["subject"] = ALIASES.get(subject.lower(), subject.lower())
+    return out
 
 
 STOP = {"is", "are", "was", "were", "has", "have", "had", "its", "it", "the", "a", "an", "about", "only", "just", "over", "at", "of", "to", "by",
@@ -113,15 +156,16 @@ def rule_based_shot(narration: str) -> dict | None:
     return None
 
 
-def propose_shot(heading: str, narration: str, gen: Callable[[str], dict]) -> tuple[dict | None, str]:
+def propose_shot(heading: str, narration: str, gen: Callable[[str], dict], allow_3d: bool = False) -> tuple[dict | None, str]:
     """(shot or None, note about how it went). The model chooses; if the model is unavailable, a rule-based number shot is used instead."""
     try:
-        out = gen(PROMPT.format(heading=heading, narration=narration))
+        kinds = "number|bars|timeline|line" + ("|planet|atom|globe" if allow_3d else "")
+        out = gen(PROMPT.format(heading=heading, narration=narration, kinds=kinds, extra=PROMPT_3D if allow_3d else ""))
     except Exception as exc:  # noqa: BLE001 - quota or outage: fall back to the rule-based shot
         shot = rule_based_shot(narration)
         return shot, f"model unavailable ({type(exc).__name__}); " + ("used a rule-based number shot" if shot else "no figure with a unit found")
     for s in (out.get("shots") if isinstance(out, dict) else None) or []:
-        ok = validate(s, narration)
+        ok = validate(s, narration, allow_3d)
         if ok:
             return ok, "chosen by the model"
     return None, "the model found no figures worth drawing"
@@ -351,6 +395,30 @@ def _decimals(*values: float) -> int:
     return max((len(f"{v:.2f}".rstrip("0").split(".")[1]) for v in values), default=0)
 
 
+def _fact(it: dict) -> dict:
+    """One fact row for a 3D scene: label and the figure exactly as stated, with its unit."""
+    v = it["value"]
+    num = f"{v:,.{_decimals(v)}f}"
+    return {"k": it["label"] or "Fact", "v": f"{num} {it['unit']}".strip()}
+
+
+def _spec_3d(shot: dict) -> dict:
+    sub, facts = ALIASES.get(shot["subject"], shot["subject"]), [_fact(i) for i in shot["items"]]
+    if shot["kind"] == "planet":
+        return {"type": "planet", "name": sub.title(), "look": BODIES[sub], "ring": sub in RINGED, "tilt": 23 if sub == "earth" else 18, "facts": facts}
+    if shot["kind"] == "atom":
+        symbol, z, n = ELEMENTS[sub]
+        left, shells = z, []
+        for cap in (2, 8, 8):                              # a stylised picture: at most three shells, never more than 8 electrons on one
+            take = min(cap, left)
+            if take <= 0:
+                break
+            shells.append(take)
+            left -= take
+        return {"type": "atom", "symbol": symbol, "protons": z, "neutrons": n, "shells": shells, "facts": facts}
+    return {"type": "globe", "highlight": [sub], "label": " ".join(w if w in ("and", "of", "the") else w.capitalize() for w in sub.split()), "facts": facts}
+
+
 def shot_to_spec(shot: dict, seconds: float, vertical: bool) -> dict:
     """The shot as a scene spec for the HTML motion engine (assets/motion/motion.js, theme "brightwork"). Same figures, same words."""
     items, kind = shot["items"], shot["kind"]
@@ -359,6 +427,8 @@ def shot_to_spec(shot: dict, seconds: float, vertical: bool) -> dict:
         base |= {"canvas": [1080, 1920], "width": 1080, "height": 1100, "offset": 150}
     else:
         base |= {"canvas": [1920, 1080], "width": 1920, "height": 810, "offset": 0}   # the bottom quarter stays free for the captions
+    if kind in KINDS_3D:
+        return base | _spec_3d(shot)
     if kind == "number":
         it = items[0]
         pct = it["unit"].strip() in ("%", "percent")
@@ -401,8 +471,12 @@ def render_shot_any(shot: dict, size: tuple[int, int], out: Path, seconds: float
     if engine == "html":
         try:
             return render_shot_html(shot, size, out, seconds, fps)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
+            if shot["kind"] in KINDS_3D:
+                raise                                   # the classic engine cannot draw 3D shots: this one is skipped
             log(f"[datashot] html engine failed ({type(exc).__name__}: {exc}), used the classic one")
+    if shot["kind"] in KINDS_3D:
+        raise ValueError("3D shots need the html engine")
     return render_shot(shot, size, out, seconds, fps)
 
 
@@ -420,8 +494,11 @@ def place_shot(shot: dict, sentences: list[dict], hold: float = 6.0) -> dict | N
     return None
 
 
+MAX_3D = 2    # 3D shots render slowly, so a video gets at most this many
+
+
 def shots_for(sections: list[dict], size: tuple[int, int], work: Path, gen: Callable[[str], dict] | None = None, min_gap: float = 10.0,
-              render=None, log: Callable[[str], None] = print) -> list[dict]:
+              render=None, log: Callable[[str], None] = print, allow_3d: bool = False) -> list[dict]:
     """The data shots of a video: for each section ({"heading", "narration", "sentences"} with timed words) ask for a shot, check it against
     the narration, place it where the figure is spoken, and render its clip. Returns [{"start", "seconds", "clip", "kind"}], at least
     `min_gap` seconds apart. Any failure just means one shot fewer: a data shot is an extra and never stops a video."""
@@ -432,7 +509,7 @@ def shots_for(sections: list[dict], size: tuple[int, int], work: Path, gen: Call
     out: list[dict] = []
     for i, sec in enumerate(sections):
         try:
-            shot, note = propose_shot(sec["heading"], sec["narration"], gen)
+            shot, note = propose_shot(sec["heading"], sec["narration"], gen, allow_3d and sum(o["kind"] in KINDS_3D for o in out) < MAX_3D)
             when = place_shot(shot, sec["sentences"]) if shot else None
             if not (shot and when):
                 log(f"[datashot] no shot for {sec['heading'][:40]!r}: " + (note if not shot else "could not find where the figure is spoken"))

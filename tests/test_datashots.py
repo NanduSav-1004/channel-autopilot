@@ -226,3 +226,44 @@ def test_html_engine_failure_falls_back_to_the_classic_engine(monkeypatch, tmp_p
     assert calls == ["classic"] and "classic one" in logs[0]
     ds.render_shot_any(shot, (1280, 720), tmp_path / "x.mp4", engine="pillow", log=logs.append)
     assert calls == ["classic", "classic"] and len(logs) == 1
+
+
+NARR_3D = "Mars is 6,779 kilometres across, and a day there lasts 24.6 hours. Carbon has 6 protons. Japan has 125 million people."
+
+
+def test_3d_kinds_need_the_html_engine_a_known_subject_named_in_the_narration_and_stated_figures():
+    mars = {"kind": "planet", "title": "Mars", "subject": "Mars", "items": [{"label": "Diameter", "value": 6779, "unit": "km"}]}
+    assert ds.validate(mars, NARR_3D) is None                                           # not offered without the html engine
+    ok = ds.validate(mars, NARR_3D, allow_3d=True)
+    assert ok["subject"] == "mars"
+    assert ds.validate({**mars, "items": [{"label": "Diameter", "value": 6800, "unit": "km"}]}, NARR_3D, allow_3d=True) is None   # never invented
+    assert ds.validate({**mars, "subject": "Jupiter"}, NARR_3D, allow_3d=True) is None   # not in the narration
+    assert ds.validate({**mars, "subject": "Kepler-22b"}, "Kepler-22b is 6779 km", allow_3d=True) is None   # not a body we can draw
+    assert ds.validate({**mars, "items": []}, NARR_3D, allow_3d=True) is None
+    atom = {"kind": "atom", "title": "Carbon", "subject": "carbon", "items": [{"label": "Protons", "value": 6, "unit": ""}]}
+    globe = {"kind": "globe", "title": "Japan", "subject": "Japan", "items": [{"label": "People", "value": 125, "unit": "million"}]}
+    assert ds.validate(atom, NARR_3D, allow_3d=True) and ds.validate(globe, NARR_3D, allow_3d=True)
+    assert ds.validate({**globe, "subject": "Atlantis"}, "Atlantis has 125 million people", allow_3d=True) is None
+
+
+def test_3d_specs_use_true_data_from_tables_and_the_prompt_only_offers_3d_when_allowed():
+    planet = ds.shot_to_spec({"kind": "planet", "title": "t", "subject": "saturn", "items": [{"label": "Moons", "value": 146, "unit": ""}]}, 6, False)
+    assert planet["type"] == "planet" and planet["ring"] and planet["look"] == "gas" and planet["facts"] == [{"k": "Moons", "v": "146"}]
+    atom = ds.shot_to_spec({"kind": "atom", "title": "t", "subject": "gold", "items": [{"label": "Protons", "value": 79, "unit": ""}]}, 6, True)
+    assert atom["symbol"] == "Au" and atom["protons"] == 79 and atom["shells"] == [2, 8, 8] and atom["canvas"] == [1080, 1920]
+    globe = ds.shot_to_spec({"kind": "globe", "title": "t", "subject": "united states", "items": [{"label": "People", "value": 340, "unit": "million"}]}, 6, False)
+    assert globe["highlight"] == ["united states of america"] and globe["label"] == "United States of America" and globe["facts"][0]["v"] == "340 million"
+    seen = []
+    ds.propose_shot("h", NARR_3D, lambda p: seen.append(p) or {"shots": []}, allow_3d=True)
+    ds.propose_shot("h", NARR_3D, lambda p: seen.append(p) or {"shots": []})
+    assert "planet|atom|globe" in seen[0] and "planet" not in seen[1]
+
+
+def test_3d_shots_are_never_drawn_by_the_classic_engine_and_are_capped(monkeypatch, tmp_path):
+    shot = {"kind": "planet", "title": "t", "subject": "mars", "items": [{"label": "d", "value": 6779, "unit": "km"}]}
+    monkeypatch.setattr(ds, "render_shot", lambda *a, **k: (_ for _ in ()).throw(AssertionError("classic engine used")))
+    with pytest.raises(ValueError):
+        ds.render_shot_any(shot, (1280, 720), tmp_path / "x.mp4", engine="pillow")
+    secs = [{"heading": f"s{i}", "narration": NARR_3D, "sentences": [{"text": NARR_3D, "start": 20.0 * i, "end": 20.0 * i + 15}]} for i in range(4)]
+    out = ds.shots_for(secs, (1280, 720), tmp_path, gen=lambda p: {"shots": [shot]}, render=lambda *a, **k: tmp_path / "c.mp4", allow_3d=True, log=lambda m: None)
+    assert [o["kind"] for o in out] == ["planet", "planet"]                       # MAX_3D, then the model's 3D answer is refused
