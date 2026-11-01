@@ -901,6 +901,169 @@
     };
   };
 
+  // ---- 3D scenes (three.js, drawn by software GL in the same headless Chrome) --------------------------------------------
+  const pending = [];                                              // image decodes the frame grab must wait for
+  function view3(g, x, y, w, h) {
+    // One shared WebGL renderer; each frame is copied into an <image> inside the SVG, so the scene's entry effects and fades still apply.
+    if (!window.__r3) window.__r3 = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    const r = window.__r3; r.setPixelRatio(1); r.setSize(w, h, false); r.setClearColor(0x000000, 0);
+    const img = g.append("image").attr("x", x).attr("y", y).attr("width", w).attr("height", h);
+    return { r, img, show() { img.attr("href", r.domElement.toDataURL("image/png")); pending.push(img.node().decode().catch(() => {})); } };
+  }
+  function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function noiseTexture(look, seed) {
+    // A deterministic painted surface for a planet: bands for gas giants, blotchy for rock, oceans and land for Earth.
+    const cv = document.createElement("canvas"); cv.width = 1024; cv.height = 512;
+    const c = cv.getContext("2d"), R = rng(seed), P = {
+      rocky: ["#8c6d52", "#a98466", "#6e5440", "#c19a78"], mars: ["#b5522f", "#d27a4c", "#8a3b22", "#e0a070"], moon: ["#9a9a9a", "#bdbdbd", "#767676", "#d6d6d6"],
+      venus: ["#d9b46a", "#e8cc8c", "#c29a52", "#f1dcaa"], gas: ["#d8b48a", "#b98a5e", "#efd9b8", "#9c6b47"], ice: ["#7fd6e0", "#5fb7d1", "#a8ecf0", "#4a9bbd"],
+      earth: ["#1d5fa8", "#2a7bc4", "#3f8f4a", "#c9b27a"], sun: ["#ffcf3a", "#ff9d1c", "#ffe27a", "#ff7a14"],
+    }[look] || ["#888", "#aaa", "#666", "#ccc"];
+    c.fillStyle = P[0]; c.fillRect(0, 0, 1024, 512);
+    if (look === "gas" || look === "ice") {
+      for (let y = 0; y < 512;) { const hh = 8 + R() * 36; c.fillStyle = P[Math.floor(R() * 4)]; c.globalAlpha = 0.55 + R() * 0.4; c.fillRect(0, y, 1024, hh); y += hh * (0.6 + R() * 0.5); }
+      c.globalAlpha = 0.5; for (let i = 0; i < 40; i++) { c.fillStyle = P[Math.floor(R() * 4)]; c.beginPath(); c.ellipse(R() * 1024, R() * 512, 20 + R() * 60, 4 + R() * 10, 0, 0, 6.3); c.fill(); }
+      if (look === "gas") { c.globalAlpha = 0.9; c.fillStyle = "#b5522f"; c.beginPath(); c.ellipse(700, 330, 70, 38, 0, 0, 6.3); c.fill(); }
+    } else if (look === "earth") {
+      c.fillStyle = P[1]; c.fillRect(0, 0, 1024, 512);
+      c.globalAlpha = 1; for (let i = 0; i < 26; i++) { c.fillStyle = R() < 0.8 ? P[2] : P[3]; c.beginPath(); const cx = R() * 1024, cy = 90 + R() * 330;
+        for (let k = 0; k < 14; k++) { const a = (k / 14) * 6.28, rr = 22 + R() * 80; c.lineTo(cx + Math.cos(a) * rr * 1.4, cy + Math.sin(a) * rr * 0.8); } c.closePath(); c.fill(); }
+      c.fillStyle = "#f2f6fa"; c.fillRect(0, 0, 1024, 26); c.fillRect(0, 486, 1024, 26);
+      c.globalAlpha = 0.35; c.fillStyle = "#ffffff"; for (let i = 0; i < 60; i++) { c.beginPath(); c.ellipse(R() * 1024, R() * 512, 30 + R() * 90, 5 + R() * 14, 0, 0, 6.3); c.fill(); }
+    } else {
+      for (let i = 0; i < 420; i++) { c.globalAlpha = 0.18 + R() * 0.35; c.fillStyle = P[Math.floor(R() * 4)]; c.beginPath(); c.arc(R() * 1024, R() * 512, 4 + R() * 46, 0, 6.3); c.fill(); }
+      if (look === "moon" || look === "mars" || look === "rocky") { c.globalAlpha = 0.5; c.strokeStyle = P[2]; c.lineWidth = 3; for (let i = 0; i < 46; i++) { c.beginPath(); c.arc(R() * 1024, R() * 512, 6 + R() * 26, 0, 6.3); c.stroke(); } }
+    }
+    c.globalAlpha = 1;
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; return tex;
+  }
+
+  function factsPanel(g, facts, x, y, w, narrow) {
+    // A column of "label / value" rows that fade in one after another.
+    const rows = (facts || []).slice(0, 4).map((f, i) => {
+      const r = g.append("g").attr("transform", `translate(${x},${y + i * (narrow ? 118 : 128)})`).attr("opacity", 0);
+      r.append("rect").attr("x", 0).attr("y", -6).attr("width", 7).attr("height", narrow ? 84 : 92).attr("rx", 3).attr("fill", PAL[i % PAL.length]);
+      r.append("text").attr("class", "body").attr("x", 30).attr("y", 24).attr("font-size", narrow ? 28 : 30).attr("fill", C.muted).text(String(f.k).toUpperCase()).attr("letter-spacing", 3);
+      const v = r.append("text").attr("class", "num").attr("x", 30).attr("y", narrow ? 76 : 84).attr("font-size", narrow ? 54 : 62).attr("fill", C.ink).text(f.v);
+      for (let fs = narrow ? 54 : 62; v.node().getComputedTextLength() > w - 40 && fs > 26;) v.attr("font-size", --fs);
+      return r;
+    });
+    return (t, start = 1.0) => rows.forEach((r, i) => r.attr("opacity", E.out(prog(t, start + i * 0.35, 0.5))).attr("transform",
+      `translate(${x},${y + i * (narrow ? 118 : 128) + 18 * (1 - E.out(prog(t, start + i * 0.35, 0.5)))})`));
+  }
+
+  function lights(scene) {
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const key = new THREE.DirectionalLight(0xffffff, 2.4); key.position.set(-4, 3, 5); scene.add(key);
+    const rim = new THREE.DirectionalLight(0x6fa8ff, 1.1); rim.position.set(5, -1, -4); scene.add(rim);
+  }
+
+  SCENES.planet = (g, s) => {
+    const head = heading(g, s.title), narrow = W < 1300;
+    const size = narrow ? Math.min(W - 80, 880) : Math.min(H - 330, 760);
+    const x = narrow ? (W - size) / 2 : 130, y = narrow ? 290 : 235;
+    const v = view3(g, x, y, size, size), scene3 = new THREE.Scene();
+    const cam = new THREE.PerspectiveCamera(32, 1, 0.1, 100); cam.position.set(0, 0, s.ring ? 13.5 : 8.2);
+    lights(scene3);
+    const rad = 1.8, look = s.look || "rocky";
+    const mat = look === "sun" ? new THREE.MeshBasicMaterial({ map: noiseTexture(look, 7) }) : new THREE.MeshStandardMaterial({ map: noiseTexture(look, 11), roughness: 0.9, metalness: 0 });
+    const pivot = new THREE.Group(); pivot.rotation.z = THREE.MathUtils.degToRad(s.tilt ?? 18); scene3.add(pivot);
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(rad, 96, 64), mat); pivot.add(ball);
+    const atmo = { earth: 0x6fb4ff, venus: 0xffd58a, ice: 0x9ff0ff, sun: 0xffb347, mars: 0xff9a6a }[look];
+    if (atmo) pivot.add(new THREE.Mesh(new THREE.SphereGeometry(rad * 1.045, 64, 48), new THREE.MeshBasicMaterial({ color: atmo, transparent: true, opacity: look === "sun" ? 0.22 : 0.12, side: THREE.BackSide })));
+    if (s.ring) {
+      const rg = new THREE.RingGeometry(rad * 1.35, rad * 2.25, 128), pos = rg.attributes.position, uv = rg.attributes.uv;
+      for (let i = 0; i < pos.count; i++) { const rr = Math.hypot(pos.getX(i), pos.getY(i)); uv.setXY(i, (rr - rad * 1.35) / (rad * 0.9), 0.5); }
+      const cv = document.createElement("canvas"); cv.width = 512; cv.height = 4; const c = cv.getContext("2d"), R = rng(5);
+      for (let i = 0; i < 512; i++) { c.fillStyle = `rgba(${200 + R() * 40},${170 + R() * 40},${130 + R() * 30},${R() < 0.12 ? 0.05 : 0.45 + R() * 0.5})`; c.fillRect(i, 0, 1, 4); }
+      const ring = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), side: THREE.DoubleSide, transparent: true }));
+      ring.rotation.x = THREE.MathUtils.degToRad(76); pivot.add(ring);
+    }
+    const name = g.append("text").attr("class", "num").attr("font-size", narrow ? 84 : 96).attr("fill", C.volt).text(s.name || "");
+    const facts = factsPanel(g, s.facts, narrow ? 120 : x + size + 110, narrow ? y + size + 70 : 470, narrow ? W - 240 : W - (x + size + 110) - 130, narrow);
+    if (narrow) name.attr("x", W / 2).attr("y", y + size + 10).attr("text-anchor", "middle"); else name.attr("x", x + size + 110).attr("y", 380);
+    const src = source(g, s.source);
+    return (t) => {
+      head(t); src(t);
+      ball.rotation.y = t * (s.spin ?? 0.35);
+      const p = E.out(prog(t, 0.2, 0.9)); pivot.scale.setScalar(0.55 + 0.45 * p); v.r.render(scene3, cam); v.show();
+      name.attr("opacity", prog(t, 0.6, 0.5)); facts(t, 1.0);
+    };
+  };
+
+  SCENES.atom = (g, s) => {
+    // Bohr-style atom: a nucleus of protons (amber) and neutrons (blue-grey), electrons circling on tilted shells.
+    const head = heading(g, s.title), narrow = W < 1300;
+    const size = narrow ? Math.min(W - 80, 880) : Math.min(H - 330, 760);
+    const x = narrow ? (W - size) / 2 : 130, y = narrow ? 290 : 235;
+    const v = view3(g, x, y, size, size), scene3 = new THREE.Scene();
+    const cam = new THREE.PerspectiveCamera(34, 1, 0.1, 100); cam.position.set(0, 0, 11.2); lights(scene3);
+    const nuc = new THREE.Group(); scene3.add(nuc);
+    const np = Math.min(s.protons || 6, 14), nn = Math.min(s.neutrons ?? s.protons ?? 6, 14), R = rng(3);
+    const mp = new THREE.MeshStandardMaterial({ color: 0xffbe28, roughness: 0.35, emissive: 0x6a3a00, emissiveIntensity: 0.6 }), mn = new THREE.MeshStandardMaterial({ color: 0x8fa6d8, roughness: 0.4, emissive: 0x16224a, emissiveIntensity: 0.6 });
+    const pr = 0.3 + Math.cbrt(np + nn) * 0.0, spread = 0.34 * Math.cbrt(np + nn);
+    for (let i = 0; i < np + nn; i++) {
+      const phi = Math.acos(1 - 2 * ((i + 0.5) / (np + nn))), th = Math.PI * (1 + Math.sqrt(5)) * i, r = spread * (0.35 + 0.65 * Math.cbrt((i + 1) / (np + nn)));
+      const m = new THREE.Mesh(new THREE.SphereGeometry(0.34, 32, 24), i % 2 === 0 ? (i / 2 < np ? mp : mn) : (Math.floor(i / 2) < nn ? mn : mp));
+      m.position.set(r * Math.sin(phi) * Math.cos(th), r * Math.sin(phi) * Math.sin(th), r * Math.cos(phi)); nuc.add(m);
+    }
+    const shells = (s.shells || [2, 4]).map((n, k) => {
+      const rad = 1.9 + k * 1.15, grp = new THREE.Group(); grp.rotation.set(0.9 * (k % 2 ? 1 : -1) + k * 0.25, 0.4 * k, 0.5 * k); scene3.add(grp);
+      const pts = []; for (let i = 0; i <= 128; i++) pts.push(new THREE.Vector3(Math.cos((i / 128) * 6.2832) * rad, Math.sin((i / 128) * 6.2832) * rad, 0));
+      grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9cc4ff, transparent: true, opacity: 0.45 })));
+      const els = []; for (let i = 0; i < n; i++) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.17, 24, 16), new THREE.MeshBasicMaterial({ color: 0xffffff })); grp.add(e); els.push(e);
+        const halo = new THREE.Mesh(new THREE.SphereGeometry(0.3, 24, 16), new THREE.MeshBasicMaterial({ color: 0x9cc4ff, transparent: true, opacity: 0.25 })); e.add(halo); }
+      return { rad, els, n, speed: (0.9 - k * 0.2) * (k % 2 ? -1 : 1) };
+    });
+    const sym = g.append("text").attr("class", "num").attr("font-size", narrow ? 120 : 150).attr("fill", C.volt).text(s.symbol || "");
+    const facts = factsPanel(g, s.facts, narrow ? 120 : x + size + 110, narrow ? y + size + 150 : 470, narrow ? W - 240 : W - (x + size + 110) - 130, narrow);
+    if (narrow) sym.attr("x", W / 2).attr("y", y + size + 90).attr("text-anchor", "middle"); else sym.attr("x", x + size + 110).attr("y", 390);
+    const src = source(g, s.source);
+    return (t) => {
+      head(t); src(t);
+      const grow = E.out(prog(t, 0.2, 0.9));
+      scene3.scale.setScalar(0.6 + 0.4 * grow); nuc.rotation.y = t * 0.8; nuc.rotation.x = t * 0.35;
+      shells.forEach((sh, k) => sh.els.forEach((e, i) => { const a = t * sh.speed * 2.2 + (i / sh.n) * 6.2832 + k; e.position.set(Math.cos(a) * sh.rad, Math.sin(a) * sh.rad, 0); }));
+      v.r.render(scene3, cam); v.show();
+      sym.attr("opacity", prog(t, 0.6, 0.5)); facts(t, 1.0);
+    };
+  };
+
+  SCENES.globe = (g, s) => {
+    // A spinning globe (orthographic, no WebGL): the highlighted countries glow and the globe turns to face the first one.
+    const head = heading(g, s.title), narrow = W < 1300, topo = window.__topo.world;
+    const feats = topojson.feature(topo, topo.objects.countries).features;
+    const size = narrow ? Math.min(W - 100, 860) : Math.min(H - 330, 760), cx = narrow ? W / 2 : 130 + size / 2, cy = (narrow ? 290 : 235) + size / 2;
+    const proj = d3.geoOrthographic().translate([cx, cy]).scale(size / 2 - 6).clipAngle(90), path = d3.geoPath(proj);
+    const hl = new Set((s.highlight || []).map((n) => n.toLowerCase()));
+    const marked = feats.filter((f) => hl.has(f.properties.name.toLowerCase()));
+    const target = marked.length ? d3.geoCentroid(marked[0]) : [10, 20];
+    const gid = "gb" + rid(), grad = svg.select("defs").append("radialGradient").attr("id", gid).attr("cx", "35%").attr("cy", "30%").attr("r", "75%");
+    [[0, C.deep], [0.6, C.mid], [1, C.bg]].forEach(([o, c]) => grad.append("stop").attr("offset", o).attr("stop-color", c));
+    g.append("circle").attr("cx", cx).attr("cy", cy).attr("r", size / 2 + 26).attr("fill", C.cyan).attr("opacity", 0.07);
+    g.append("circle").attr("cx", cx).attr("cy", cy).attr("r", size / 2 - 6).attr("fill", `url(#${gid})`);
+    const grat = g.append("path").attr("fill", "none").attr("stroke", C.faint).attr("stroke-width", 1).attr("opacity", 0.6);
+    const land = g.append("g"), paths = feats.map((f) => ({ f, on: hl.has(f.properties.name.toLowerCase()), el: land.append("path").attr("stroke", C.bg).attr("stroke-width", 0.6) }));
+    const land0 = d3.interpolateRgb(C.nofill, C.cyan)(0.28);
+    const pulse = g.append("circle").attr("fill", "none").attr("stroke", C.volt).attr("stroke-width", 4);
+    const rim = g.append("circle").attr("cx", cx).attr("cy", cy).attr("r", size / 2 - 6).attr("fill", "none").attr("stroke", C.cyan).attr("stroke-width", 2).attr("opacity", 0.5);
+    const facts = factsPanel(g, s.facts, narrow ? 120 : 130 + size + 110, narrow ? cy + size / 2 + 60 : 330, narrow ? W - 240 : W - (130 + size + 110) - 130, narrow);
+    const src = source(g, s.source), lab = g.append("text").attr("class", "num").attr("font-size", narrow ? 70 : 84).attr("fill", C.volt).text((s.highlight || []).slice(0, 1).join(""));
+    if (narrow) lab.attr("x", W / 2).attr("y", cy + size / 2 + 20).attr("text-anchor", "middle"); else lab.attr("x", 130 + size + 110).attr("y", 260);
+    return (t) => {
+      head(t); src(t);
+      const turn = E.inOut(prog(t, 0.0, Math.min(4.5, s.duration * 0.8)));                // spin in, slowing onto the target
+      const lon = -target[0] + (1 - turn) * 200 + Math.sin(t * 0.4) * 3, lat = -target[1] * 0.8 * turn - 8 * (1 - turn);
+      proj.rotate([lon, lat]);
+      grat.attr("d", path(d3.geoGraticule10()));
+      const glow = 0.55 + 0.45 * Math.sin(t * 3);
+      paths.forEach((p) => p.el.attr("d", path(p.f)).attr("fill", p.on ? d3.interpolateRgb(land0, C.volt)(E.out(prog(t, 1.2, 0.8)) * (0.78 + 0.22 * glow)) : land0));
+      const at = proj(target), vis = marked.length && at && d3.geoDistance(target, [-lon, -lat]) < 1.4, k = (t * 0.8) % 1;
+      pulse.attr("cx", at ? at[0] : 0).attr("cy", at ? at[1] : 0).attr("r", 14 + 70 * k).attr("opacity", vis ? 0.9 * (1 - k) * prog(t, 1.6, 0.4) : 0);
+      lab.attr("opacity", prog(t, 1.0, 0.5)); facts(t, 1.4);
+    };
+  };
+
   // ---- public API -----------------------------------------------------------------------------------------------------
   window.load = async (spec, topo) => {
     if (topo) window.__topo = topo;
@@ -954,5 +1117,5 @@
     scene(0);
     return true;
   };
-  window.seek = (t) => { scene(t); return true; };
+  window.seek = async (t) => { scene(t); if (pending.length) await Promise.all(pending.splice(0)); return true; };
 })();

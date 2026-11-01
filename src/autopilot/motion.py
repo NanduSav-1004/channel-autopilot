@@ -49,7 +49,7 @@ def _encode(out: Path, w: int, h: int, fps: int) -> subprocess.Popen:
 
 def _render_frames(page, spec: dict, first: int, last: int, out: Path, fps: int) -> None:
     w, h = spec.get("canvas") or (spec.get("width", 1920), spec.get("height", 1080))
-    page.evaluate("([s, t]) => window.load(s, t)", [spec, _topo() if spec["type"] in ("map", "world_map") else None])
+    page.evaluate("([s, t]) => window.load(s, t)", [spec, _topo() if spec["type"] in ("map", "world_map", "globe") else None])
     ff = _encode(out, w, h, fps)
     try:
         for i in range(first, last):
@@ -143,7 +143,7 @@ class Browser:
 
         self._pw = sync_playwright().start()
         exe = _chrome()
-        args = ["--force-color-profile=srgb", "--hide-scrollbars"]
+        args = ["--force-color-profile=srgb", "--hide-scrollbars", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"]
         self._b = self._pw.chromium.launch(executable_path=exe, args=args) if exe else self._pw.chromium.launch(args=args)
         self._pages: dict = {}
         return self

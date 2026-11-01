@@ -283,3 +283,31 @@ def test_decorate_rotates_effects_without_touching_the_input():
     assert any(entered) and not all(entered)
     assert all(not (a and b) for a, b in itertools.pairwise(entered))
     assert plotline.decorate(specs) == out
+
+
+def test_new_motion_scenes_render_a_frame_in_chrome(tmp_path):
+    """The 3D and globe scenes, the timeline and the entry effects must load and draw without a page error (skipped without Chrome)."""
+    import shutil
+
+    import pytest
+
+    from autopilot import motion
+
+    if not any(shutil.which(n) for n in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser")):
+        pytest.skip("needs Chrome")
+    base = {"theme": "brightwork", "duration": 3.0}
+    specs = [
+        {**base, "type": "planet", "title": "t", "name": "Mars", "look": "mars", "facts": [{"k": "Day", "v": "24.6 hours"}]},
+        {**base, "type": "atom", "title": "t", "symbol": "C", "protons": 6, "neutrons": 6, "shells": [2, 4], "enter": "glitch"},
+        {**base, "type": "globe", "title": "t", "highlight": ["Japan"], "enter": "flash"},
+        {**base, "type": "timeline", "title": "t", "events": [{"year": 1903, "label": "a"}, {"year": 1969, "label": "b"}], "enter": "zoom"},
+    ]
+    errors = []
+    with motion.Browser() as b:
+        for spec in specs:
+            page = b.page(spec)
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.evaluate("([s, t]) => window.load(s, t)", [spec, motion._topo()])
+            page.evaluate("window.seek(1.0)")
+            assert len(page.screenshot(type="jpeg")) > 5000
+    assert not errors
