@@ -72,3 +72,46 @@ def test_title_must_keep_the_topics_words_or_is_rewritten():
     assert "does NOT answer" in note and script["title"] == "How Big Jupiter Really Is"          # honest title, and the warning is logged
     keep = {"title": "What if Jupiter Collided With Earth?", "sections": []}
     assert fit_title(keep, topic, gen=lambda p: 1 / 0) is None                                   # nothing to do, the model is never asked
+
+
+def test_a_section_far_over_its_budget_is_tightened_once():
+    from autopilot.script import MAX_OVER, _write_section
+
+    long = "Jupiter is huge. " * 60                      # 180 words against a budget of 100
+    short = "Jupiter is huge. " * 40                      # 120 words
+    prompts = []
+
+    def gen(prompt):
+        prompts.append(prompt)
+        return {"narration": short if "Rewrite this narration shorter" in prompt else long, "claims": ["c"]}
+
+    script = {"title": "T", "sections": [{"heading": "a", "key_points": []}, {"heading": "b", "key_points": []}]}
+    out = _write_section(script, 1, {"title": "S", "text": "x"}, "style", 100, gen)
+    assert len(out["narration"].split()) == 120 and sum("Rewrite this narration shorter" in p for p in prompts) == 1
+    assert 180 > 100 * MAX_OVER                          # that draft really was over the limit
+    near = _write_section(script, 1, {"title": "S", "text": "x"}, "style", 130, lambda p: {"narration": long, "claims": []})
+    assert len(near["narration"].split()) == 180          # within 1.5x of its budget: left alone
+
+
+def test_a_model_answer_that_is_a_list_does_not_crash_the_script():
+    from autopilot.script import _d, _write_section
+
+    assert _d({"a": 1}) == {"a": 1} and _d([{"narration": "x"}]) == {"narration": "x"} and _d([]) == {} and _d("text") == {} and _d(None) == {}
+    script = {"title": "T", "sections": [{"heading": "a", "key_points": []}, {"heading": "b", "key_points": []}]}
+    out = _write_section(script, 1, {"title": "S", "text": "x"}, "style", 20, lambda p: [{"narration": "One two three. " * 12, "claims": []}])
+    assert out["narration"].startswith("One two three.")
+
+
+def test_repaired_sections_keep_to_the_section_budget():
+    from autopilot.script import repair_sections
+
+    big = "word " * 400
+    script = {"title": "T", "per": 150, "series": "", "sections": [{"heading": "a", "key_points": [], "narration": big, "claims": []}]}
+    seen = []
+
+    def gen(prompt):
+        seen.append(prompt)
+        return {"narration": "ok " * 100, "claims": []}
+
+    repair_sections(script, {"title": "S", "text": "x"}, [0], ["bad"], gen)
+    assert "AT LEAST 180 spoken words" in seen[0]                         # 1.2 x the budget of 150, not the 400 it had grown to

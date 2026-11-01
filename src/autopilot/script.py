@@ -47,9 +47,24 @@ HOOK_RULE = ("- The FIRST sentence is the hook: AT MOST 12 words; a startling fa
              "question that grabs attention within 3 seconds. No throat-clearing.")
 
 COLD_OPEN_RULE = """- THIS IS THE COLD OPEN, the part that decides whether the viewer stays past the first minute.
-  Sentence 1 is the hook. Sentences 2-3 TEASE THE ANSWER this video delivers, in plain words (the most surprising thing the SOURCE says), and
+  Sentence 1 is the hook, AT MOST 12 words. Sentences 2-3 TEASE THE ANSWER this video delivers, in plain words (the most surprising thing the SOURCE says), and
   promise it will be explained. Then paint ONE vivid picture or comparison. Use AT MOST ONE number in the first 150 words: no lists of sizes,
   dates or statistics (they come later in the video)."""
+
+MAX_OVER = 1.5          # a section more than this many times its word budget is tightened once
+
+TRIM_PROMPT = """Rewrite this narration shorter: about {words} words, never fewer than {floor}. Keep the sentences with the most striking facts and
+the ending that makes the viewer want the next part; cut repetition, side details and padding. Same punchy spoken style, short sentences, and
+ONLY facts from the SOURCE.
+
+Return JSON: {{"narration": str, "claims": [str]}}  // claims: each factual claim you now make, one per item
+
+DRAFT:
+{draft}
+
+SOURCE ({source_title}):
+{source_text}
+"""
 
 COLD_WORDS, COLD_MAX_NUMBERS = 150, 2
 NUM_RE = re.compile(r"\d[\d,\.]*")
@@ -182,6 +197,14 @@ SOURCE ({source_title}) for checking facts:
 """
 
 
+def _d(x) -> dict:
+    """A model answer as an object: a one-element list of an object is unwrapped, anything else that is not an object becomes {}
+    (on 1 Nov a list instead of an object crashed a script attempt with "'list' object has no attribute 'get'")."""
+    if isinstance(x, dict):
+        return x
+    return x[0] if isinstance(x, list) and x and isinstance(x[0], dict) else {}
+
+
 def _words(text: str) -> int:
     return len(text.split())
 
@@ -208,24 +231,30 @@ def _write_section(
     if avoid:
         prompt += ("\nThe fact-checker judged these claims UNSUPPORTED by the SOURCE. Do not state them or anything "
                    "like them:\n" + "\n".join(f"- {c}" for c in avoid))
-    out = gen(prompt)
+    out = _d(gen(prompt))
     if _words(out.get("narration", "")) < per * 0.8:  # one targeted retry for an undershoot
-        out = gen(prompt + f"\nYour last draft had only {_words(out.get('narration', ''))} words. Write at least {per}.")
+        out = _d(gen(prompt + f"\nYour last draft had only {_words(out.get('narration', ''))} words. Write at least {per}."))
     narration, claims = out.get("narration", "").strip(), out.get("claims", [])
     if narration and needs_punch(narration, first=(i == 0)):  # prompts alone drift back to long sentences: measure, fix once
         before = style_stats(narration)
-        fixed = gen(PUNCH_PROMPT.format(
+        fixed = _d(gen(PUNCH_PROMPT.format(
             avg=before["avg"], longest=before["longest"], style=STYLE_RULES, hook=(HOOK_RULE if i == 0 else ""),
             hook_note=(f"; the opening sentence is {before['hook']} words (limit 12)" if i == 0 else ""),
             min_words=round(_words(narration) * 0.85), draft=narration, source_title=source["title"],
-            source_text=relevant_excerpt(source["text"], narration)))
+            source_text=relevant_excerpt(source["text"], narration))))
         better = fixed.get("narration", "").strip()
         if better and style_stats(better)["avg"] < before["avg"] and _words(better) >= _words(narration) * 0.8:
             narration, claims = better, fixed.get("claims") or claims
+    if narration and _words(narration) > per * MAX_OVER:       # first drafts sometimes run to twice the budget: tighten once
+        fixed = _d(gen(TRIM_PROMPT.format(words=round(per * 1.25), floor=round(per * 0.9), draft=narration, source_title=source["title"],
+                                          source_text=relevant_excerpt(source["text"], narration))))
+        better = fixed.get("narration", "").strip()
+        if better and per * 0.85 <= _words(better) < _words(narration):
+            narration, claims = better, fixed.get("claims") or claims
     if narration and i == 0 and not cold_open_ok(narration):  # the opening must not be a numbers dump: rewrite it once
-        fixed = gen(COLD_PROMPT.format(
+        fixed = _d(gen(COLD_PROMPT.format(
             title=script["title"], rule=COLD_OPEN_RULE, min_words=round(_words(narration) * 0.8), draft=narration,
-            source_title=source["title"], source_text=relevant_excerpt(source["text"], narration)))
+            source_title=source["title"], source_text=relevant_excerpt(source["text"], narration))))
         better = fixed.get("narration", "").strip()
         if better and cold_open_ok(better) and _words(better) >= _words(narration) * 0.7:
             narration, claims = better, fixed.get("claims") or claims
@@ -253,12 +282,12 @@ def generate_script(
     )
     if feedback:
         outline_prompt += "\nA previous attempt was rejected. Fix these problems:\n" + "\n".join(f"- {f}" for f in feedback)
-    script = gen(outline_prompt)
+    script = _d(gen(outline_prompt))
     per = round(words / len(script["sections"]))
     for i in range(len(script["sections"])):
         script["sections"][i] = _write_section(script, i, source, style, per, gen)
         # later sections read the earlier narration for continuity, so write strictly in order
-    script.update({"claims": _collect_claims(script), "series": series, "source_url": source["url"]})
+    script.update({"claims": _collect_claims(script), "series": series, "source_url": source["url"], "per": per})
     return script
 
 
@@ -268,8 +297,9 @@ def repair_sections(
 ) -> dict:
     """Rewrite only the given sections, telling the writer which claims to avoid."""
     style = SERIES.get(script.get("series", ""), "")
-    for i in indexes:
-        per = max(150, _words(script["sections"][i]["narration"]))
+    budget = script.get("per") or 150
+    for i in indexes:                          # a repaired section keeps to the section budget (it once re-grew to 356 words against a budget of 167)
+        per = min(max(120, _words(script["sections"][i]["narration"])), round(budget * 1.2))
         script["sections"][i] = _write_section(script, i, source, style, per, gen, avoid=bad_claims)
     script["claims"] = _collect_claims(script)
     return script
@@ -295,9 +325,9 @@ SOURCE ({source_title}):
 def repair_metadata(
     script: dict, source: dict, bad_claims: list[str], gen: Callable[[str], dict] = llm.generate_json,
 ) -> dict:
-    out = gen(METADATA_PROMPT.format(
+    out = _d(gen(METADATA_PROMPT.format(
         topic=script.get("title", ""), bad="\n".join(f"- {c}" for c in bad_claims), title=script.get("title", ""),
-        description=script.get("description", ""), source_title=source["title"], source_text=source["text"]))
+        description=script.get("description", ""), source_title=source["title"], source_text=source["text"])))
     if out.get("title"):
         script["title"] = out["title"].strip()
     if out.get("description"):

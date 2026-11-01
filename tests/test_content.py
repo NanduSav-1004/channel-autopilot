@@ -227,7 +227,7 @@ def test_long_winded_section_gets_one_punch_up_pass_and_the_better_version_is_ke
             return {"narration": SNAPPY * 20, "claims": ["rewritten claim"]}
         return {"narration": LONG_WINDED, "claims": ["original claim"]}
 
-    out = _write_section(script, 0, SOURCE, "", 100, gen)
+    out = _write_section(script, 0, SOURCE, "", 160, gen)
     assert sum("Rewrite this narration" in p for p in prompts) == 1
     assert out["narration"].startswith("Light bounces") and out["claims"] == ["rewritten claim"]  # claims follow the new text
     assert "SOURCE (Laser) for checking facts" in prompts[-1]
@@ -238,13 +238,13 @@ def test_punch_up_is_skipped_when_text_is_already_punchy_and_ignored_when_it_mak
 
     script = {"title": "T", "sections": [{"heading": "A", "key_points": ["k"], "visual_query": "q", "narration": ""}]}
     calls = []
-    out = _write_section(script, 0, SOURCE, "", 100, lambda p: calls.append(p) or {"narration": SNAPPY * 20, "claims": ["c"]})
+    out = _write_section(script, 0, SOURCE, "", 160, lambda p: calls.append(p) or {"narration": SNAPPY * 20, "claims": ["c"]})
     assert len(calls) == 1 and out["claims"] == ["c"]                                  # nothing to fix: no extra call
 
     def worse(prompt):
         return {"narration": LONG_WINDED * 2 if "Rewrite this narration" in prompt else LONG_WINDED, "claims": ["c"]}
 
-    kept = _write_section(script, 0, SOURCE, "", 100, worse)
+    kept = _write_section(script, 0, SOURCE, "", 160, worse)
     assert kept["narration"] == LONG_WINDED.strip()                                    # the rewrite was not better: keep the draft
 
 

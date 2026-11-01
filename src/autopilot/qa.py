@@ -116,6 +116,7 @@ def check_script(
         return issues
     claims = "\n".join(f"- {c}" for c in script.get("claims", []) + metadata_claims(script))
     verdict = gen(FACTCHECK_PROMPT.format(source=source["text"], claims=claims))
+    verdict = verdict if isinstance(verdict, dict) else (verdict[0] if isinstance(verdict, list) and verdict and isinstance(verdict[0], dict) else {})
     issues += [f"unsupported claim: {c}" for c in verdict.get("unsupported", [])]
     issues += [i for i in comparison_issues(script, source, gen) if i not in issues]
     if verdict.get("advice_given"):
