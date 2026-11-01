@@ -52,7 +52,7 @@ def test_a_comment_question_closing_is_remembered_for_the_first_comment_and_the_
     from autopilot import closing
 
     script = {"title": "T", "sections": [{"heading": "h", "narration": "That is how it works."}]}
-    gen = lambda p: {"question": "Which part would you have guessed?", "onscreen": "Which would you guess?", "comment": "Which part would you have guessed?"}  # noqa: E731
+    gen = lambda p: {"question": "Which part would you have guessed?", "onscreen": "Which would you guess?", "comment": "Which part would you have guessed?"}
     out = closing.add_closing(script, 0, gen, question=True)
     assert out["engage"]["kind"] == "pick" and out["engage"]["onscreen"] == "WHICH WOULD YOU GUESS"
     assert out["sections"][-1]["narration"].endswith("Which part would you have guessed? Tell us in the comments. Subscribe if you want tomorrow's.")
