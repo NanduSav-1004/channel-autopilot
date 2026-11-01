@@ -333,3 +333,13 @@ def test_scene_pads_respect_a_shorts_length_limit_and_never_raise(monkeypatch):
     assert plotline.scene_pads([scene] * 30, {}, log=lambda m: None, cap=2.0, limit=54.0) == [0.0] * 30     # already over the limit
     monkeypatch.setattr(plotline, "compile_visual", lambda *a: (_ for _ in ()).throw(ValueError("boom")))
     assert plotline.scene_pads([scene] * 2, {}, log=lambda m: None) == [0.0, 0.0]
+
+
+def test_plotline_remembers_its_comment_question_or_adds_a_plain_one():
+    plan = {"title": "Are We Working More?"}
+    has = {"scenes": [{"narration": "The trend fell."}, {"narration": "Where does your state rank? Tell us in the comments. Subscribe for more."}]}
+    out = plotline.add_question(has, plan)
+    assert out["engage"]["question"] == "Where does your state rank?" and out["engage"]["onscreen"] == "WHERE DOES YOUR STATE RANK"
+    none = plotline.add_question({"scenes": [{"narration": "The trend fell."}, {"narration": "Subscribe for more."}]}, plan)
+    assert none["engage"]["question"].endswith("?") and none["scenes"][-1]["narration"].endswith("Tell us in the comments.")
+    assert plotline.add_question({"scenes": []}, plan) == {"scenes": []}

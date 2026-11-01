@@ -274,6 +274,7 @@ def _render_stock_clip(src: Path, frames: int, out: Path, offset: float = 0.0) -
 def render_photo_video(
     script, timings, images, plan, narration: Path, out_mp4: Path, work: Path, music: Path | None = None,
     look: dict = LONG_CAPTIONS, mascot: str | None = None, data_shots: list[dict] | None = None, xfade: bool = False,
+    cta: str | None = None,
 ) -> None:
     """Ken Burns over gathered images; sections without images fall back to title cards."""
     from concurrent.futures import ThreadPoolExecutor
@@ -322,6 +323,9 @@ def render_photo_video(
     files = _joined(jobs, planned, styles, work)
     (work / "clips.txt").write_text("".join(f"file '{p.resolve()}'\n" for p in files))
     write_ass_words(timings, work / "captions.ass", look)
+    if cta:                                        # the closing question on screen while it is spoken (about the last 5 s)
+        end = timings[-1]["end"] + 0.4
+        add_cta_tag(work / "captions.ass", cta, max(0.0, end - 5.0), end, look.get("fontname", "Lato"), 40, 70)
     _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music,
                 (work, False, mascot) if mascot else None)
 
@@ -554,10 +558,10 @@ def _render_vstock(src: Path, frames: int, out: Path, offset: float = 0.0) -> No
     )
 
 
-def add_cta_tag(ass: Path, text: str, start: float, end: float, fontname: str, size: int = 62) -> None:
+def add_cta_tag(ass: Path, text: str, start: float, end: float, fontname: str, size: int = 62, margin_v: int = 330) -> None:
     """A tag near the top of a Short (amber box, dark text) for the last couple of seconds: "full video on the channel"."""
     src = ass.read_text(encoding="utf-8").split("\n")
-    style = f"Style: Cta,{fontname},{size},&H00351A0A,&H00351A0A,&H0047B5FF,&H0047B5FF,1,3,16,0,8,60,60,330"
+    style = f"Style: Cta,{fontname},{size},&H00351A0A,&H00351A0A,&H0047B5FF,&H0047B5FF,1,3,16,0,8,60,60,{margin_v}"
     last_style = max(i for i, ln in enumerate(src) if ln.startswith("Style:"))
     src.insert(last_style + 1, style)
     src.append(f"Dialogue: 1,{_ass_time(start)},{_ass_time(end)},Cta,{{\\fad(350,300)}}{text.replace('{', '(').replace('}', ')')}")

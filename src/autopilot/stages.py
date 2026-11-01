@@ -12,6 +12,7 @@ from autopilot import (
     closing,
     datashots,
     db,
+    engage,
     metadata,
     music,
     qa,
@@ -60,6 +61,12 @@ class StageError(RuntimeError):
 
 def slugify(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:40] or "video"
+
+
+def _engage_extra(script: dict) -> dict:
+    """What the video's map should remember about its comment question (kind and text, and the first comment to post)."""
+    e = script.get("engage") or {}
+    return {"engage_kind": e["kind"], "question": e["question"], "comment": e["comment"]} if e.get("question") else {}
 
 
 def _read(path: Path):
@@ -215,10 +222,12 @@ class Stages:
         if (d / "timings.json").exists() and (d / "narration.wav").exists():
             return
         if cta_on(self.cfg, "long_closing"):          # a varied closing line, written before the voice is made (once per script)
-            script = closing.add_closing(_read(d / "script.json"), job["id"])
+            script = closing.add_closing(_read(d / "script.json"), job["id"], question=cta_on(self.cfg, "comment_question"))
             _write(d / "script.json", script)
             if script.get("closing"):
                 print(f"[job {job['id']}] closing line: {script['closing']}", flush=True)
+            if script.get("engage"):
+                print(f"[job {job['id']}] comment question ({script['engage']['kind']}): {script['engage']['question']}", flush=True)
         _write(d / "timings.json", tts.synthesize_script(_read(d / "script.json"), d / "narration.wav",
                                                                  self.engine(job), self.fallback_engine()))
 
@@ -258,7 +267,8 @@ class Stages:
                                        render=shot_renderer(self.cfg), allow_3d=shot_engine(self.cfg) == "html")
         render_photo_video(script, timings, items, shots.plan_cuts(timings, [len(s) for s in items]), d / "narration.wav",
                            d / "final.mp4", wd, music=music, data_shots=data or None,
-                           mascot=mascot_style(self.cfg, short=False), xfade=transitions_on(self.cfg, short=False))
+                           mascot=mascot_style(self.cfg, short=False), xfade=transitions_on(self.cfg, short=False),
+                           cta=(script.get("engage") or {}).get("onscreen") if cta_on(self.cfg, "comment_question") else None)
         images = [i["path"] for sec in items for i in sec if i["kind"] == "image"]
         thumbnail.make_thumbnail(script, images, d / "thumbnail.jpg", pick=thumbnail.pick_with_vision)
         shutil.rmtree(wd, ignore_errors=True)
@@ -285,7 +295,7 @@ class Stages:
             self.conn.execute("UPDATE jobs SET video_id = ?, publish_at = ? WHERE id = ?",
                               (video_id, publish_at, job["id"]))
             self.conn.commit()
-            retention.record("long", script["title"], timings, video_id, VIDEO_MAPS)
+            retention.record("long", script["title"], timings, video_id, VIDEO_MAPS, extra=_engage_extra(script))
             if publish_at:
                 print(f"[job {job['id']}] scheduled to go public at {publish_at}", flush=True)
         self.set_thumbnail(job["id"], video_id, d / "thumbnail.jpg")
@@ -428,9 +438,20 @@ class Stages:
             data = datashots.shots_for([{"heading": s["title"], "narration": s["narration"], "sentences": timings[0]["sentences"]}],
                                        (1080, 1920), wd, render=shot_renderer(self.cfg), allow_3d=shot_engine(self.cfg) == "html")
         render_short(s, timings, items, d / "narration.wav", d / "final.mp4", wd, music=music, data_shots=data or None,
-                     mascot=mascot_style(self.cfg, short=True), cta=closing.SHORT_TAG["en"] if cta_on(self.cfg, "short_tag") else None,
+                     mascot=mascot_style(self.cfg, short=True), cta=self.short_tag(job, s),
                      xfade=transitions_on(self.cfg, short=True))
         shutil.rmtree(wd, ignore_errors=True)
+
+    def short_tag(self, job, s: dict) -> str | None:
+        """The on-screen tag for the end of a Short: "full video on the channel", or on every second Short the Short's own comment question."""
+        tag = closing.SHORT_TAG["en"] if cta_on(self.cfg, "short_tag") else None
+        if cta_on(self.cfg, "comment_question") and (job["short_idx"] or 0) % 2 == 1:
+            eng = engage.make_question(s["title"], s["narration"], job["id"])
+            s["engage"] = eng
+            _write(self.dir(job) / "script.json", s)
+            print(f"[job {job['id']}] Short comment question ({eng['kind']}): {eng['question']}", flush=True)
+            return eng["onscreen"]
+        return tag
 
     def short_upload(self, job) -> None:
         d = self.dir(job)
@@ -461,4 +482,4 @@ class Stages:
         self.conn.execute("UPDATE jobs SET video_id = ? WHERE id = ?", (video_id, job["id"]))
         self.conn.commit()
         if (d / "timings.json").exists():
-            retention.record("short", s["title"], _read(d / "timings.json"), video_id, VIDEO_MAPS)
+            retention.record("short", s["title"], _read(d / "timings.json"), video_id, VIDEO_MAPS, extra=_engage_extra(s))

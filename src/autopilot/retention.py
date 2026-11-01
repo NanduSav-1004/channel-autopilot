@@ -41,10 +41,10 @@ def save_map(vmap: dict, video_id: str, folder) -> None:
         print(f"[retention] could not save the video map ({type(exc).__name__}: {exc})", flush=True)
 
 
-def record(kind: str, title: str, timings: list[dict], video_id: str, folder, labels: list[str] | None = None) -> None:
+def record(kind: str, title: str, timings: list[dict], video_id: str, folder, labels: list[str] | None = None, extra: dict | None = None) -> None:
     """Build the map from the video's timings and save it. Never raises: this is an extra and must not fail an upload."""
     try:
-        save_map(video_map(kind, title, timings, labels), video_id, folder)
+        save_map({**video_map(kind, title, timings, labels), **(extra or {})}, video_id, folder)
     except Exception as exc:  # noqa: BLE001
         print(f"[retention] no video map for {video_id} ({type(exc).__name__}: {exc})", flush=True)
 

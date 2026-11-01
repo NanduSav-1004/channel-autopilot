@@ -16,7 +16,7 @@ import subprocess
 from contextlib import contextmanager
 from pathlib import Path
 
-from autopilot import datasets, llm, motion
+from autopilot import datasets, engage, llm, motion
 
 MODELS = "gemini-3.5-flash,gemini-3.6-flash,gemini-3.8-flash,gemini-3.1-flash-lite"   # 3.8 is often overloaded
 TARGET_WORDS = (650, 900)           # about 5 to 7 minutes of narration (numbers are spoken out in words, which lengthens it: 981 words ran 8:47)
@@ -364,15 +364,22 @@ def write_script(plan: dict, bundle: dict, gen=None, tries: int = 3, log=print, 
         raise ValueError("the outline has too few acts")
     texts: list[list[dict]] = []
     for n, act in enumerate(acts, 1):
-        extra = "Start with a hook in the first two sentences. " if n == 1 else \
-                "Mention the source naturally once (for example \"according to the Bureau of Labor Statistics\"). " if n == 2 else \
-                "End with a clear takeaway and ask viewers to subscribe for more data stories. " if n == len(acts) else ""
+        if n == 1:
+            extra = "Start with a hook in the first two sentences. "
+        elif n == 2:
+            extra = "Mention the source naturally once (for example \"according to the Bureau of Labor Statistics\"). "
+        elif n == len(acts):
+            extra = ("End with a clear takeaway. Then ask viewers ONE short question to answer in the comments: "
+                     f"{engage.KIND_TEXT[engage.pick_kind(len(plan['title']))]}. The question has no numbers in it, ends with a question mark and is "
+                     "followed by the words \"Tell us in the comments.\" Last of all, a brief invitation to subscribe for more data stories. ")
+        else:
+            extra = ""
         texts.append(_write_act(gen, plan, act, n, len(acts), facts, [s for part in texts for s in part], extra, ids))
     script = {**{k: outline.get(k) for k in ("title", "description", "tags", "thumbnail")}, "scenes": [s for part in texts for s in part]}
     script["title"] = script.get("title") or plan["title"]
     if script["scenes"]:                                  # the opening scene is always the title card
         script["scenes"][0]["visual"] = {"type": "title", "text": script["title"], "highlight": []}
-    return fix_script(script, plan, bundle, facts, ids, gen, tries, log, draft_path)
+    return add_question(fix_script(script, plan, bundle, facts, ids, gen, tries, log, draft_path), plan)
 
 
 RARE = ("kpi", "waffle", "gauge", "donut", "heatmap", "race", "world_map", "map", "scatter", "stacked")      # striking charts: twice per video at most
@@ -902,6 +909,22 @@ def reading_pads(specs: list[dict], narrations: list[str], cap: float = 2.0) -> 
         est = len(text.split()) / SPEECH_WPS + tts.SECTION_PAUSE
         pads.append(round(min(cap, max(0.0, reading_need(sp) - (est - SCENE_OVERHEAD))), 1))
     return pads
+
+
+def add_question(script: dict, plan: dict) -> dict:
+    """Remember the comment question the final act asks (for the on-screen text and the first comment). If the repair steps dropped it, or it
+    is not clean, a plain question of the day's kind is added to the last scene. Never raises."""
+    try:
+        kind = engage.pick_kind(len(plan.get("title", "")))
+        last = script["scenes"][-1]
+        q = engage.extract_question(" ".join(sc["narration"] for sc in script["scenes"][-2:]))
+        if not q:
+            q = engage.FALLBACK_DATA[kind]
+            last["narration"] = last["narration"].rstrip() + f" {q} Tell us in the comments."
+        script["engage"] = {"kind": kind, "question": q, "onscreen": q.rstrip("?").upper(), "comment": q}
+    except (KeyError, IndexError, TypeError, AttributeError):
+        pass
+    return script
 
 
 def scene_pads(scenes: list[dict], bundle: dict, log=print, cap: float = 2.0, limit: float | None = None) -> list[float]:

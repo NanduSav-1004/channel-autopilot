@@ -6,7 +6,7 @@ and no numbers, so the fact-check has nothing to check. A Short gets no spoken a
 video is on the channel."""
 import re
 
-from autopilot import llm
+from autopilot import engage, llm
 
 STYLES = [
     "a plain, curious question about what is worth understanding next",
@@ -51,12 +51,18 @@ def make_closing(title: str, last: str, seed: int, gen=llm.generate_json) -> str
     return FALLBACKS[seed % len(FALLBACKS)]
 
 
-def add_closing(script: dict, seed: int, gen=llm.generate_json) -> dict:
-    """Append the closing line to the last section's narration, once (the script remembers it)."""
+def add_closing(script: dict, seed: int, gen=llm.generate_json, question: bool = False) -> dict:
+    """Append the closing line to the last section's narration, once (the script remembers it). With `question`, the closing is a comment
+    question (engage.py) plus a short subscribe clause, and the script remembers the question for the first comment and the end card."""
     if script.get("closing") or not script.get("sections"):
         return script
     last = script["sections"][-1]
-    line = make_closing(script.get("title", ""), last["narration"], seed, gen)
+    if question:
+        eng = engage.make_question(script.get("title", ""), last["narration"], seed, gen)
+        script["engage"] = eng
+        line = engage.closing_line(eng, seed)
+    else:
+        line = make_closing(script.get("title", ""), last["narration"], seed, gen)
     last["narration"] = last["narration"].rstrip() + " " + line
     script["closing"] = line
     return script

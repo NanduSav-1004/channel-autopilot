@@ -46,3 +46,17 @@ def test_short_tag_is_added_to_the_caption_file(tmp_path):
     text = ass.read_text(encoding="utf-8")
     assert "Style: Cta,Lato" in text and "Dialogue: 1,0:00:26.00,0:00:28.70,Cta," in text and "FULL VIDEO ON THE CHANNEL" in text
     assert text.index("Style: Cta") < text.index("[Events]")
+
+
+def test_a_comment_question_closing_is_remembered_for_the_first_comment_and_the_end_card():
+    from autopilot import closing
+
+    script = {"title": "T", "sections": [{"heading": "h", "narration": "That is how it works."}]}
+    gen = lambda p: {"question": "Which part would you have guessed?", "onscreen": "Which would you guess?", "comment": "Which part would you have guessed?"}  # noqa: E731
+    out = closing.add_closing(script, 0, gen, question=True)
+    assert out["engage"]["kind"] == "pick" and out["engage"]["onscreen"] == "WHICH WOULD YOU GUESS"
+    assert out["sections"][-1]["narration"].endswith("Which part would you have guessed? Tell us in the comments. Subscribe if you want tomorrow's.")
+    again = closing.add_closing(out, 1, gen, question=True)                     # once only
+    assert again["sections"][-1]["narration"].count("Tell us in the comments") == 1
+    plain = closing.add_closing({"title": "T", "sections": [{"heading": "h", "narration": "x."}]}, 0, lambda p: {"closing": "x"})
+    assert "engage" not in plain

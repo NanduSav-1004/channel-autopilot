@@ -124,7 +124,8 @@ def run(live: bool, privacy: str, now: datetime | None = None) -> str:
                 save_state(state)
                 try:                                              # where each scene starts and what it says, for the retention report
                     labels = [f"scene {i + 1} ({sc['visual'].get('type', '?')})" for i, sc in enumerate(script["scenes"])]
-                    retention.record("long", script["title"], json.loads((work / "timings.json").read_text()), vid, STATE / "video_maps", labels)
+                    retention.record("long", script["title"], json.loads((work / "timings.json").read_text()), vid, STATE / "video_maps", labels,
+                                     extra={"engage_kind": e["kind"], "question": e["question"], "comment": e["comment"]} if (e := script.get("engage")) else None)
                 except Exception as exc:  # noqa: BLE001
                     log(f"[plotline] no retention map saved ({exc})")
                 log(f"[plotline] uploaded https://youtu.be/{vid} (goes public {publish or 'now'})")
