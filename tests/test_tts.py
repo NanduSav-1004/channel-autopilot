@@ -110,3 +110,25 @@ def test_a_broken_whisper_refinement_falls_back_to_an_even_spread(tmp_path):
     tts.add_word_times(wav, timings, whisper=lambda b: late)           # Whisper "heard" every word in the last instants
     words = timings[0]["sentences"][0]["words"]
     assert not tts.words_look_wrong(words, 0.0, 6.0) and words[0]["s"] < 0.5 and words[-1]["e"] <= 6.0
+
+
+def test_a_section_pad_adds_silence_after_the_section(tmp_path):
+    import wave
+
+    from autopilot import tts
+
+    class Quiet:
+        name = "quiet"
+
+        def synth(self, text):
+            return b"\x00\x00" * 2400, 24000            # 0.1 s
+
+    def length(pad):
+        out = tmp_path / f"o{pad}.wav"
+        t = tts.synthesize_script({"sections": [{"heading": "a", "narration": "One.", "pad": pad}]}, out, Quiet())
+        with wave.open(str(out)) as w:
+            return t[0]["end"], w.getnframes() / w.getframerate()
+
+    base, base_len = length(0)
+    padded, padded_len = length(1.5)
+    assert abs((padded - base) - 1.5) < 0.01 and abs((padded_len - base_len) - 1.5) < 0.01

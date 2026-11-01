@@ -538,6 +538,10 @@ def _synthesize(script: dict, out_wav: str | Path, engine) -> list[dict]:
             if getattr(engine, "whole_section", False):
                 silence(SECTION_PAUSE)
                 t += SECTION_PAUSE
+            pad = min(3.0, max(0.0, float(section.get("pad") or 0.0)))        # extra silence so on-screen text can be read (plotline.reading_pads)
+            if pad:
+                silence(pad)
+                t += pad
             sec["end"] = t
             timings.append(sec)
     return timings

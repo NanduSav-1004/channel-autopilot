@@ -311,3 +311,25 @@ def test_new_motion_scenes_render_a_frame_in_chrome(tmp_path):
             page.evaluate("window.seek(1.0)")
             assert len(page.screenshot(type="jpeg")) > 5000
     assert not errors
+
+
+def test_reading_time_rule_pads_only_short_scenes_with_long_text():
+    card = {"type": "title", "title": "Structural shifts defined our modern work life.", "duration": 4.0}
+    need = plotline.reading_need(card)
+    assert abs(need - (len("Structuralshiftsdefinedourmodernworklife.") / 15 + 1.5)) < 1e-6
+    assert plotline.reading_short([card, {**card, "duration": 9.0}]) == [(0, need, 4.0 - plotline.SCENE_OVERHEAD)]
+    assert plotline.reading_need({"type": "bars"}) == 0.0
+    long_narration = "word " * 24                                 # about 9 s: plenty
+    short_narration = "word " * 5                                  # about 2.5 s: not enough for a 47-character card
+    pads = plotline.reading_pads([card, card], [long_narration, short_narration], cap=2.0)
+    assert pads[0] == 0.0 and 0.0 < pads[1] <= 2.0
+    assert plotline.reading_pads([card], [short_narration], cap=0.5) == [0.5]
+
+
+def test_scene_pads_respect_a_shorts_length_limit_and_never_raise(monkeypatch):
+    scene = {"visual": {"type": "title", "text": "A fairly long card that needs time"}, "narration": "word " * 5}
+    monkeypatch.setattr(plotline, "compile_visual", lambda v, b, d: {"type": "title", "title": v["text"], "duration": d})
+    assert any(plotline.scene_pads([scene] * 3, {}, log=lambda m: None, cap=2.0))
+    assert plotline.scene_pads([scene] * 30, {}, log=lambda m: None, cap=2.0, limit=54.0) == [0.0] * 30     # already over the limit
+    monkeypatch.setattr(plotline, "compile_visual", lambda *a: (_ for _ in ()).throw(ValueError("boom")))
+    assert plotline.scene_pads([scene] * 2, {}, log=lambda m: None) == [0.0, 0.0]

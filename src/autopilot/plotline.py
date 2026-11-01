@@ -875,6 +875,61 @@ def decorate(specs: list[dict]) -> list[dict]:
     return out
 
 
+READ_CPS, READ_PAD, SCENE_OVERHEAD = 15.0, 1.5, 1.2   # on-screen text needs chars/15 + 1.5 s to read (the rule of lemo-opuscar's readcheck);
+# the scene's entrance (about 0.75 s) and exit (0.45 s) do not count as reading time
+SPEECH_WPS = 2.6                                          # narration speed used to estimate a scene's length before it is spoken
+
+
+def reading_need(spec: dict) -> float:
+    """Seconds the scene's main on-screen text needs to be readable: its heading or card text, and a counter's label and caption."""
+    chars = sum(len(str(spec.get(k) or "").replace(" ", "")) for k in ("title", "label", "sub"))
+    return chars / READ_CPS + READ_PAD if chars else 0.0
+
+
+def reading_short(specs: list[dict]) -> list[tuple[int, float, float]]:
+    """(scene index, seconds needed, seconds available) for every scene whose text stays up too briefly."""
+    return [(i, need, sp["duration"] - SCENE_OVERHEAD) for i, sp in enumerate(specs)
+            if (need := reading_need(sp)) > sp["duration"] - SCENE_OVERHEAD + 0.05]
+
+
+def reading_pads(specs: list[dict], narrations: list[str], cap: float = 2.0) -> list[float]:
+    """Extra silence (seconds) to leave after each scene's narration so its text can be read; estimated BEFORE the voice is made, from
+    word counts. Zero for most scenes: only a short scene with a long text gets a pause, so the video grows by a few seconds at most."""
+    from autopilot import tts
+
+    pads = []
+    for sp, text in zip(specs, narrations, strict=True):
+        est = len(text.split()) / SPEECH_WPS + tts.SECTION_PAUSE
+        pads.append(round(min(cap, max(0.0, reading_need(sp) - (est - SCENE_OVERHEAD))), 1))
+    return pads
+
+
+def scene_pads(scenes: list[dict], bundle: dict, log=print, cap: float = 2.0, limit: float | None = None) -> list[float]:
+    """Pauses (seconds) after each scene's narration so its on-screen text can be read. Any problem means no pauses: this is an extra."""
+    try:
+        narrations = [sc["narration"] for sc in scenes]
+        specs = [compile_visual(sc["visual"], bundle, len(n.split()) / SPEECH_WPS) for sc, n in zip(scenes, narrations, strict=True)]
+        pads = reading_pads(specs, narrations, cap)
+        if limit is not None:                                         # a Short must stay under its length limit: no pauses if they would not fit
+            from autopilot import tts
+
+            est = sum(len(n.split()) / SPEECH_WPS + tts.SECTION_PAUSE for n in narrations)
+            if est + sum(pads) > limit:
+                pads = [0.0] * len(pads) if est >= limit else [round(p * (limit - est) / max(0.1, sum(pads)), 1) for p in pads]
+        if any(pads):
+            log(f"[readcheck] pauses added so text can be read: {[(i + 1, p) for i, p in enumerate(pads) if p]}")
+        return pads
+    except Exception as exc:  # noqa: BLE001
+        log(f"[readcheck] no pauses added ({type(exc).__name__}: {exc})")
+        return [0.0] * len(scenes)
+
+
+def log_reading(specs: list[dict], log=print) -> None:
+    short = reading_short(specs)
+    log(f"[readcheck] {len(specs) - len(short)}/{len(specs)} scenes keep their text up long enough to read" + (
+        "; short: " + ", ".join(f"scene {i + 1} needs {need:.1f}s has {have:.1f}s" for i, need, have in short[:8]) if short else ""))
+
+
 def make_video(script: dict, bundle: dict, out_dir: Path, log=print) -> Path:
     from autopilot import render, tts
 
@@ -884,7 +939,8 @@ def make_video(script: dict, bundle: dict, out_dir: Path, log=print) -> Path:
     timings_path = out_dir / "timings.json"
     if not timings_path.exists():
         engine = tts.build_engine(VOICE)
-        timings = tts.synthesize_script({"sections": [{"heading": f"scene {i + 1}", "narration": s["narration"]}
+        pads = scene_pads(scenes, bundle, log)
+        timings = tts.synthesize_script({"sections": [{"heading": f"scene {i + 1}", "narration": s["narration"], "pad": pads[i]}
                                                       for i, s in enumerate(scenes)]}, narration, engine)
         timings_path.write_text(json.dumps(timings))
     timings = json.loads(timings_path.read_text())
@@ -895,6 +951,7 @@ def make_video(script: dict, bundle: dict, out_dir: Path, log=print) -> Path:
         end = timings[i + 1]["start"] if i + 1 < len(timings) else total
         specs.append(compile_visual(sc["visual"], bundle, end - start))
         starts.append(start)
+    log_reading(specs, log)
     specs = decorate(specs)
     log(f"[plotline] {len(specs)} scenes, {total / 60:.1f} min; rendering charts")
     files = render_cached(specs, out_dir / "scenes")
@@ -906,6 +963,7 @@ def make_video(script: dict, bundle: dict, out_dir: Path, log=print) -> Path:
     mixed = out_dir / "mix.wav"
     log(f"[mix] audio: {render.mix_audio(narration, beat, mixed)}")
     mixed = add_effects(specs, starts, total, mixed, out_dir, log)
+    mixed = master(mixed, out_dir, log)
     final = out_dir / "final.mp4"
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(video), "-i", str(mixed), "-filter_complex", "[1:a]apad[a]", "-map", "0:v",
                     "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", f"{total:.3f}", str(final)], check=True)
@@ -927,6 +985,16 @@ def add_effects(specs: list[dict], starts: list[float], total: float, mixed: Pat
     except Exception as exc:  # noqa: BLE001
         log(f"[sfx] skipped ({type(exc).__name__}: {exc})")
         return mixed
+
+
+def master(mixed: Path, out_dir: Path, log=print) -> Path:
+    """The finished mix brought to the channel loudness (render.master_loudness). Works on a copy, so the cached mix files stay as they were."""
+    from autopilot import render
+
+    out = out_dir / "mix_master.wav"
+    shutil.copy(mixed, out)
+    render.master_loudness(out, log)
+    return out
 
 
 def render_cached(specs: list[dict], folder: Path) -> list[Path]:
@@ -1130,7 +1198,8 @@ def make_short(short: dict, bundle: dict, out_dir: Path, log=print) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     narration, timings_path = out_dir / "narration.wav", out_dir / "timings.json"
     if not timings_path.exists():
-        timings = tts.synthesize_script({"sections": [{"heading": f"scene {i + 1}", "narration": s["narration"]}
+        pads = scene_pads(short["scenes"], bundle, log, cap=0.8, limit=54.0)
+        timings = tts.synthesize_script({"sections": [{"heading": f"scene {i + 1}", "narration": s["narration"], "pad": pads[i]}
                                                       for i, s in enumerate(short["scenes"])]}, narration, tts.build_engine(VOICE))
         timings_path.write_text(json.dumps(timings))
     timings = json.loads(timings_path.read_text())
@@ -1144,6 +1213,7 @@ def make_short(short: dict, bundle: dict, out_dir: Path, log=print) -> Path:
         if spec["type"] == "map":                           # a map is too small in a vertical frame: show the ranking instead
             spec = compile_visual({"type": "states_bars", "order": "top", "n": 8}, bundle, end - start)
         specs.append({**spec, **SHORT_FRAME})
+    log_reading(specs, log)
     specs = decorate(specs)
     files = render_cached(specs, out_dir.parent / "scenes")
     listing = out_dir / "scenes.txt"
@@ -1156,6 +1226,7 @@ def make_short(short: dict, bundle: dict, out_dir: Path, log=print) -> Path:
     mixed = out_dir / "mix.wav"
     log(f"[mix] Short audio: {render.mix_audio(narration, beat, mixed)}")
     mixed = add_effects(specs, starts, total, mixed, out_dir, log)
+    mixed = master(mixed, out_dir, log)
     final = out_dir / "final.mp4"
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(charts), "-i", str(mixed), "-filter_complex", f"[0:v]ass={ass}[v];[1:a]apad[a]",
                     "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p", "-c:a", "aac",

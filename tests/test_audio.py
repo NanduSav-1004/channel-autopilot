@@ -1,6 +1,8 @@
+import shutil
 import wave
 
 import numpy as np
+import pytest
 
 from autopilot.audio import RATE, generate_ambient
 
@@ -50,3 +52,43 @@ def test_mood_is_picked_from_the_topic_and_can_be_switched_off():
     assert [audio.mood_for_theme(t) for t in ("housing", "food", "uk", None)] == ["mysterious", "curious", "plain", "plain"]
     on = Config(niche="n", audience="a", formats={}, audio={"music_moods": True})
     assert music_mood(on, "space") == "mysterious" and music_mood(Config(niche="n", audience="a", formats={}), "space") == "plain"
+
+
+def _tone(path, seconds, amp):
+    import wave
+
+    import numpy as np
+
+    t = np.arange(int(48000 * seconds)) / 48000
+    x = amp * (np.sin(2 * np.pi * 220 * t) + 0.5 * np.sin(2 * np.pi * 1330 * t)) * (0.6 + 0.4 * np.sin(2 * np.pi * 0.7 * t))
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(48000)
+        w.writeframes((np.clip(x, -1, 1) * 32767).astype("<i2").tobytes())
+
+
+@pytest.mark.skipif(not shutil.which("ffmpeg"), reason="needs ffmpeg")
+def test_master_loudness_brings_a_quiet_or_a_hot_mix_to_the_target_and_never_clips(tmp_path):
+    from autopilot import render
+
+    for name, amp in (("quiet", 0.04), ("hot", 0.95)):
+        wav = tmp_path / f"{name}.wav"
+        _tone(wav, 20, amp)
+        assert render.master_loudness(wav, log=lambda m: None)
+        m = render.measure_loudness(wav)
+        assert abs(float(m["input_i"]) - render.FINAL_LUFS) <= 1.2, (name, m)
+        assert float(m["input_tp"]) <= render.FINAL_TP + 0.3, (name, m)
+
+
+@pytest.mark.skipif(not shutil.which("ffmpeg"), reason="needs ffmpeg")
+def test_master_loudness_leaves_silence_and_broken_files_alone(tmp_path):
+    from autopilot import render
+
+    silent = tmp_path / "s.wav"
+    _tone(silent, 5, 0.0)
+    before = silent.read_bytes()
+    assert render.master_loudness(silent, log=lambda m: None) is False and silent.read_bytes() == before
+    bad = tmp_path / "bad.wav"
+    bad.write_bytes(b"not audio")
+    assert render.master_loudness(bad, log=lambda m: None) is False and bad.read_bytes() == b"not audio"

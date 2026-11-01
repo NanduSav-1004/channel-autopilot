@@ -388,6 +388,47 @@ def mix_audio(narration: Path, music: Path | None, out_wav: Path) -> str:
     return "voice only"
 
 
+FINAL_LUFS, FINAL_TP = -14.0, -1.5      # YouTube plays louder videos down to about -14 LUFS but never turns quiet ones up
+
+
+def measure_loudness(wav: Path) -> dict:
+    """Integrated loudness (LUFS) and true peak (dBTP) of an audio file, from ffmpeg's loudnorm analysis pass."""
+    import json
+    import re
+
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(wav), "-af", f"loudnorm=I={FINAL_LUFS}:TP={FINAL_TP}:LRA=11:print_format=json",
+                        "-f", "null", "-"], capture_output=True, text=True, check=True)
+    return json.loads(re.search(r"\{[^{}]*\"input_i\"[^{}]*\}", r.stderr, re.DOTALL).group(0))
+
+
+def master_loudness(wav: Path, log=print) -> bool:
+    """Bring the finished mix (voice, music, effects) to FINAL_LUFS with a FINAL_TP true-peak ceiling, in place: two passes (measure, then a
+    linear gain, so the sound is not squashed; if the peaks do not allow the full gain it stops at the true-peak ceiling). VERIFIED afterwards; if anything is off the original file is kept. Never raises."""
+    import shutil
+
+    tmp = wav.with_suffix(".mastered.wav")
+    try:
+        m = measure_loudness(wav)
+        if float(m["input_i"]) < -60:
+            return False                                                   # silence: nothing to normalise
+        flt = (f"loudnorm=I={FINAL_LUFS}:TP={FINAL_TP}:LRA=11:measured_I={m['input_i']}:measured_TP={m['input_tp']}:measured_LRA={m['input_lra']}"
+               f":measured_thresh={m['input_thresh']}:offset={m['target_offset']}:linear=true")
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(wav), "-af", flt, "-ar", "48000", "-ac", "1", str(tmp)], check=True)
+        after = measure_loudness(tmp)
+        got, peak = float(after["input_i"]), float(after["input_tp"])
+        if abs(got - FINAL_LUFS) > 1.2 or peak > FINAL_TP + 0.3:
+            log(f"[master] kept the original mix (result {got:.1f} LUFS, {peak:.1f} dBTP was off target)")
+            return False
+        shutil.move(str(tmp), str(wav))
+        log(f"[master] loudness {float(m['input_i']):.1f} -> {got:.1f} LUFS, true peak {float(m['input_tp']):.1f} -> {peak:.1f} dBTP")
+        return True
+    except Exception as exc:  # noqa: BLE001 - a quieter mix is far better than a failed video
+        log(f"[master] skipped ({type(exc).__name__}: {exc})")
+        return False
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
 def _mux(clips: Path, mixed: Path, ass: Path, out_mp4: Path, mascot: tuple[Path, int, int] | None) -> None:
     cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(clips), "-i", str(mixed)]
     if mascot:
@@ -410,6 +451,7 @@ def _final_pass(clips: Path, narration: Path, ass: Path, out_mp4: Path, music: P
     mixed = out_mp4.with_suffix(".mix.wav")
     how = mix_audio(narration, music, mixed)
     print(f"[mix] audio: {how}", flush=True)
+    master_loudness(mixed, log=lambda m: print(m, flush=True))
     if mascot:
         from autopilot import mascot as mascot_art
 
