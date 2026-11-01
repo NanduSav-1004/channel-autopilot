@@ -51,5 +51,6 @@ render:
   mascot: shorts                 # a talking character in the corner: false | shorts | all (approved for Shorts only, 2026-10-27)
   data_shots: all               # animated number, bar, timeline and line-chart shots at the moment the figures are spoken: false | shorts | all
   shot_engine: html             # how data shots are drawn: html (the new D3 engine, falls back to pillow if it fails) | pillow (the classic one)
+  transitions: all              # cross-transitions (fade, slide, wipe, dissolve, circle) on every second cut between photos and clips, via ffmpeg xfade; length never changes: false | shorts | all
   mascot_style: bulb             # bulb ("Beam", chosen) | atom ("Orbit")
 dry_run: true   # no public upload until the upload spike passes and this is set to false

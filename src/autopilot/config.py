@@ -51,6 +51,12 @@ def data_shots_on(cfg: Config, short: bool) -> bool:
     return where is True or where == "all" or (where == "shorts" and short)
 
 
+def transitions_on(cfg: Config, short: bool) -> bool:
+    """Are cross-transitions (xfade) used between cuts? render.transitions is false, "shorts" or "all"."""
+    where = (cfg.render or {}).get("transitions")
+    return where is True or where == "all" or (where == "shorts" and short)
+
+
 def shot_engine(cfg: Config) -> str:
     """Which engine draws data shots: "pillow" (the classic one, default) or "html" (the HTML/D3 motion engine, with a fallback to pillow)."""
     return "html" if (cfg.render or {}).get("shot_engine") == "html" else "pillow"

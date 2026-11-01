@@ -211,6 +211,22 @@ def _render_clip(img: Path, frames: int, variant: int, out: Path, cycle: int = 0
     )
 
 
+def _with_transitions(jobs: list[tuple], xfade: bool) -> tuple[list[tuple], list[int], list]:
+    """Jobs with the clips before a transition made N frames longer; also the planned lengths and the transition styles."""
+    from autopilot import transitions
+
+    planned = [j[2] for j in jobs]
+    styles = transitions.plan([j[0] for j in jobs], planned) if xfade else [None] * len(jobs)
+    longer = transitions.lengths(planned, styles)
+    return [(j[0], j[1], n, j[3], j[4]) for j, n in zip(jobs, longer, strict=True)], planned, styles
+
+
+def _joined(jobs: list[tuple], planned: list[int], styles: list, work: Path) -> list[Path]:
+    from autopilot import transitions
+
+    return transitions.apply([j[4] for j in jobs], planned, styles, work)
+
+
 def _cut_datashot(src: Path, frames: int, out: Path, offset: float = 0.0) -> None:
     """Take `frames` frames of a data-shot clip from `offset` seconds, holding its last picture if the span outlasts it."""
     subprocess.run(
@@ -257,7 +273,7 @@ def _render_stock_clip(src: Path, frames: int, out: Path, offset: float = 0.0) -
 
 def render_photo_video(
     script, timings, images, plan, narration: Path, out_mp4: Path, work: Path, music: Path | None = None,
-    look: dict = LONG_CAPTIONS, mascot: str | None = None, data_shots: list[dict] | None = None,
+    look: dict = LONG_CAPTIONS, mascot: str | None = None, data_shots: list[dict] | None = None, xfade: bool = False,
 ) -> None:
     """Ken Burns over gathered images; sections without images fall back to title cards."""
     from concurrent.futures import ThreadPoolExecutor
@@ -300,9 +316,11 @@ def render_photo_video(
         else:
             _render_clip(src, frames, extra[0], out, extra[1])
 
+    jobs, planned, styles = _with_transitions(jobs, xfade)
     with ThreadPoolExecutor(max_workers=2) as ex:
         list(ex.map(run, jobs))
-    (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
+    files = _joined(jobs, planned, styles, work)
+    (work / "clips.txt").write_text("".join(f"file '{p.resolve()}'\n" for p in files))
     write_ass_words(timings, work / "captions.ass", look)
     _final_pass(work / "clips.txt", narration, work / "captions.ass", out_mp4, music,
                 (work, False, mascot) if mascot else None)
@@ -506,7 +524,7 @@ def add_cta_tag(ass: Path, text: str, start: float, end: float, fontname: str, s
 
 def render_short(script: dict, timings: list[dict], items: list[dict], narration: Path,
                  out_mp4: Path, work: Path, music: Path | None = None, look: dict = SHORT_CAPTIONS,
-                 mascot: str | None = None, data_shots: list[dict] | None = None, cta: str | None = None) -> None:
+                 mascot: str | None = None, data_shots: list[dict] | None = None, cta: str | None = None, xfade: bool = False) -> None:
     """script: {"title"}; timings: one section with timed sentences; items: [{"kind","path"}]."""
     from concurrent.futures import ThreadPoolExecutor
 
@@ -545,9 +563,11 @@ def render_short(script: dict, timings: list[dict], items: list[dict], narration
         else:
             _render_vclip(src, frames, extra, out)
 
+    jobs, planned, styles = _with_transitions(jobs, xfade)
     with ThreadPoolExecutor(max_workers=2) as ex:
         list(ex.map(run, jobs))
-    (work / "clips.txt").write_text("".join(f"file '{j[4].name}'\n" for j in jobs))
+    files = _joined(jobs, planned, styles, work)
+    (work / "clips.txt").write_text("".join(f"file '{p.resolve()}'\n" for p in files))
     write_ass_words(timings, work / "captions.ass", look)
     if cta:
         end = timings[-1]["end"] + 0.4

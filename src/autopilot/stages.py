@@ -23,7 +23,15 @@ from autopilot import (
     tts,
     wiki,
 )
-from autopilot.config import Config, cta_on, data_shots_on, mascot_style, music_mood, shot_engine
+from autopilot.config import (
+    Config,
+    cta_on,
+    data_shots_on,
+    mascot_style,
+    music_mood,
+    shot_engine,
+    transitions_on,
+)
 from autopilot.errors import RestartJob, TransientError
 from autopilot.render import render_photo_video, render_short
 from autopilot.script import (
@@ -247,7 +255,7 @@ class Stages:
                                        render=shot_renderer(self.cfg))
         render_photo_video(script, timings, items, shots.plan_cuts(timings, [len(s) for s in items]), d / "narration.wav",
                            d / "final.mp4", wd, music=music, data_shots=data or None,
-                           mascot=mascot_style(self.cfg, short=False))
+                           mascot=mascot_style(self.cfg, short=False), xfade=transitions_on(self.cfg, short=False))
         images = [i["path"] for sec in items for i in sec if i["kind"] == "image"]
         thumbnail.make_thumbnail(script, images, d / "thumbnail.jpg", pick=thumbnail.pick_with_vision)
         shutil.rmtree(wd, ignore_errors=True)
@@ -416,7 +424,8 @@ class Stages:
             data = datashots.shots_for([{"heading": s["title"], "narration": s["narration"], "sentences": timings[0]["sentences"]}],
                                        (1080, 1920), wd, render=shot_renderer(self.cfg))
         render_short(s, timings, items, d / "narration.wav", d / "final.mp4", wd, music=music, data_shots=data or None,
-                     mascot=mascot_style(self.cfg, short=True), cta=closing.SHORT_TAG["en"] if cta_on(self.cfg, "short_tag") else None)
+                     mascot=mascot_style(self.cfg, short=True), cta=closing.SHORT_TAG["en"] if cta_on(self.cfg, "short_tag") else None,
+                     xfade=transitions_on(self.cfg, short=True))
         shutil.rmtree(wd, ignore_errors=True)
 
     def short_upload(self, job) -> None:

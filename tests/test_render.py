@@ -113,6 +113,41 @@ def test_render_photo_video_cuts_fast_and_reuses_media_end_to_end(tmp_path):
     assert "width=1280" in info and 13.5 < float(info.split("duration=")[1]) < 14.6
 
 
+@pytest.mark.skipif(not (shutil.which("ffmpeg") and shutil.which("ffprobe")), reason="needs ffmpeg")
+def test_render_photo_video_with_transitions_keeps_its_exact_length(tmp_path):
+    import wave
+
+    import numpy as np
+    from PIL import Image
+
+    from autopilot.render import render_photo_video
+    from autopilot.shots import plan_cuts
+
+    imgs = []
+    for i, colour in enumerate(((200, 40, 40), (40, 200, 40))):
+        p = tmp_path / f"i{i}.jpg"
+        Image.new("RGB", (1280, 720), colour).save(p)
+        imgs.append({"kind": "image", "path": p})
+    nar = tmp_path / "n.wav"
+    with wave.open(str(nar), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(22050)
+        w.writeframes(np.zeros(22050 * 14, dtype="<i2").tobytes())
+    words = [{"w": "word", "s": 0.5 + k * 1.0, "e": 0.9 + k * 1.0} for k in range(12)]
+    timings = [{"heading": "A", "start": 0.0, "end": 14.0, "sentences": [{"text": "word " * 12, "start": 0.4, "end": 13.0, "words": words}]}]
+    plan = plan_cuts(timings, [2])
+    assert len(plan[0]) == 4                       # 14 s at one cut per 3.5 s, with 2 images each used twice
+    out = tmp_path / "v.mp4"
+    render_photo_video({"title": "T"}, timings, [imgs], plan, nar, out, tmp_path / "w")
+    plain = tmp_path / "plain.mp4"
+    render_photo_video({"title": "T"}, timings, [imgs], plan, nar, plain, tmp_path / "w2", xfade=True)
+    assert (tmp_path / "w2" / "xfade").exists() and any((tmp_path / "w2" / "xfade").glob("t*.mp4"))
+    from autopilot.transitions import frame_count
+    assert frame_count(plain) == frame_count(out)
+    info = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=width,height:format=duration", "-of", "default=nw=1", str(out)],
+                          capture_output=True, text=True, check=True).stdout
+    assert "width=1280" in info and 13.5 < float(info.split("duration=")[1]) < 14.6
+
+
 def test_caption_groups_keep_every_word_exactly_once_in_order():
     from autopilot.render import caption_groups
 
@@ -193,3 +228,15 @@ def test_caption_events_never_overlap_even_when_a_word_is_very_short(tmp_path):
 
     spans = [(secs(ln.split(",")[1]), secs(ln.split(",")[2])) for ln in p.read_text().splitlines() if ln.startswith("Dialogue")]
     assert all(b[0] >= a[1] - 1e-9 for a, b in itertools.pairwise(spans)) and all(e - s >= 0.039 for s, e in spans)
+
+
+def test_transition_plan_skips_data_shots_and_short_clips_and_alternates():
+    from autopilot import transitions as t
+
+    kinds = ["image", "image", "datashot", "image", "image", "image", "image"]
+    frames = [80, 80, 80, 80, 80, 14, 80]
+    styles = t.plan(kinds, frames)
+    assert styles[2] is None and styles[3] is None and styles[5] is None and styles[6] is None
+    assert styles[1] is not None
+    assert sum(t.lengths(frames, styles)) == sum(frames) + 10 * sum(1 for x in styles if x)
+    assert not any(a and b for a, b in itertools.pairwise(styles))
