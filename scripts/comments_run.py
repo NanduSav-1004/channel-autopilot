@@ -75,11 +75,12 @@ def main() -> None:
     fetch()
     ledger = load_ledger()
     send = (lambda t: print("[dry-run] would send:", t)) if dry else notify.send
+    yts: dict = {}
     for prof, (name, ref, folder) in CHANNELS.items():
         if not configured(prof):
             print(f"[comments] {name}: no login, skipped")
             continue
-        yt = build("youtube", "v3", credentials=load_credentials(prof))
+        yt = yts[prof] = build("youtube", "v3", credentials=load_credentials(prof))
         maps = load_maps(ref, folder) if ref else {}
         try:
             if dry:
@@ -89,6 +90,11 @@ def main() -> None:
         except Exception as exc:  # noqa: BLE001 - one channel's problem must not stop the others
             print(f"[comments] {name}: {type(exc).__name__}: {str(exc)[:200]}")
     if not dry:
+        try:                                                              # the owner's answers to the draft replies (ok N, skip N, N: own words)
+            comments.process_approvals(notify.updates(ledger.get("tg_offset")), ledger, yts, os.environ.get("TELEGRAM_CHAT_ID", ""), send)
+            comments.expire_pending(ledger)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[comments] approvals: {type(exc).__name__}: {str(exc)[:200]}")
         save_ledger(ledger)
 
 

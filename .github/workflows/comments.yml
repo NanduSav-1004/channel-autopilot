@@ -1,10 +1,10 @@
 name: Comments
 
-# Hourly: posts the channel's own first comment (the video's comment question) on each video once it is public, and sends new viewer comments
-# to Telegram. It never replies to anyone. Its ledger lives on the `state-comments` branch.
+# Every 15 minutes: posts the channel's own first comment (the video's comment question) on each video once it is public, and sends new viewer comments
+# to Telegram with a numbered draft reply; it posts a reply ONLY after the owner answers that Telegram message (ok N / skip N / N: own words). Its ledger lives on the `state-comments` branch.
 on:
   schedule:
-    - cron: "9 * * * *"
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 concurrency:
@@ -25,6 +25,8 @@ jobs:
       YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
       YOUTUBE_REFRESH_TOKEN_ML: ${{ secrets.YOUTUBE_REFRESH_TOKEN_ML }}
       YOUTUBE_REFRESH_TOKEN_DATA: ${{ secrets.YOUTUBE_REFRESH_TOKEN_DATA }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     steps:

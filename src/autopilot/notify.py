@@ -20,3 +20,18 @@ def send(text: str) -> bool:
             return bool(json.load(r).get("ok"))
     except (OSError, ValueError):
         return False
+
+
+def updates(offset: int | None = None) -> list[dict]:
+    """New messages sent TO the bot, as [{"update_id", "chat_id", "text"}], oldest first. Only text messages. Empty on any problem."""
+    if not configured():
+        return []
+    token = os.environ["TELEGRAM_BOT_TOKEN"]
+    url = f"https://api.telegram.org/bot{token}/getUpdates?timeout=0" + (f"&offset={offset}" if offset is not None else "")
+    try:
+        with urllib.request.urlopen(url, timeout=20) as r:
+            res = json.load(r).get("result", [])
+    except (OSError, ValueError):
+        return []
+    return [{"update_id": u["update_id"], "chat_id": str(u["message"]["chat"]["id"]), "text": u["message"].get("text", "")}
+            for u in res if "message" in u]
