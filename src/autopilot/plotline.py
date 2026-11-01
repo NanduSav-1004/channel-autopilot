@@ -19,7 +19,7 @@ from pathlib import Path
 from autopilot import datasets, llm, motion
 
 MODELS = "gemini-3.5-flash,gemini-3.6-flash,gemini-3.8-flash,gemini-3.1-flash-lite"   # 3.8 is often overloaded
-TARGET_WORDS = (750, 1050)          # about 5 to 7 minutes of narration
+TARGET_WORDS = (650, 900)           # about 5 to 7 minutes of narration (numbers are spoken out in words, which lengthens it: 981 words ran 8:47)
 VOICE = {"engine": "kokoro", "name": "am_michael", "speed": 1.08}
 SFX = True                  # soft sound effects on the animated charts (sfx.py): switched on 2026-10-31 after the user heard the sample
 MUSIC_STYLE = "ambient"     # the soft pad the user prefers (as on Brightwork); "lofi", "upbeat" or "pulse" are beat styles from music.py
@@ -255,7 +255,7 @@ Data ids you may use: {ids}
 
 Return JSON {{"scenes": [{{"narration": str, "visual": {{...}}}}]}}"""
 
-ACT_WORDS = (175, 7)          # words and scenes per act: 6 acts make about 1,000 words
+ACT_WORDS = (145, 7)          # words and scenes per act: 6 acts make about 870 words
 
 
 NUM_RE = re.compile(r"(?<![\w.])\d[\d,]*(?:\.\d+)?")
@@ -343,8 +343,9 @@ def check_script(script: dict, bundle: dict, min_words: int | None = None) -> li
     for k, where in kinds.items():
         cap = RARE_CAP if k in RARE else COMMON_CAP if k in COMMON else max(4, math.ceil(0.22 * charts))
         if len(where) > cap and charts >= 10:
-            problems.append(f"scene {where[cap]}: chart type '{k}' is already used {cap} times; pick a different type from the menu "
-                            "(multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)")
+            for n in where[cap:]:                 # ALL the excess scenes at once: one round of rewrites must be enough
+                problems.append(f"scene {n}: chart type '{k}' is already used {cap} times; pick a different type from the menu "
+                                "(multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)")
     for where in shown.values():
         if len(where) > 2:
             problems.append(f"scene {where[2]}: the same chart is already shown in scenes {where[:2]}; use a different chart, series or period")

@@ -27,9 +27,12 @@ case "${1:-}" in
     mkdir -p "$tmp/data"
     # keep the last 60 days only
     cp -r "$DIR" "$tmp/data/"
-    ls -d "$tmp/$DIR"/20* 2>/dev/null | sort | head -n -60 | xargs -r rm -rf
+    [ -f data/plotline_last_work_run.log ] && cp data/plotline_last_work_run.log "$tmp/data/"
+    { ls -d "$tmp/$DIR"/20* 2>/dev/null || true; } | sort | head -n -60 | xargs -r rm -rf     # no dated folders yet is fine
     if [ -f plotline_run.log ]; then
       tail -n 400 plotline_run.log | sed -E 's/(AIza[0-9A-Za-z_-]{20,}|AQ\.[0-9A-Za-z_-]{20,}|gsk_[0-9A-Za-z]{16,}|GOCSPX-[0-9A-Za-z_-]{8,}|ya29\.[0-9A-Za-z_-]{20,}|1\/\/[0-9A-Za-z_-]{20,})/***/g' > "$tmp/data/plotline_last_run.log"
+      # a run that only found "nothing to do" must not hide the log of the run that made the video (the same rule as Brightwork's state)
+      grep -q "nothing to do" plotline_run.log || cp "$tmp/data/plotline_last_run.log" "$tmp/data/plotline_last_work_run.log"
     fi
     cd "$tmp"
     git init -q && git checkout -q -b "$BRANCH"
