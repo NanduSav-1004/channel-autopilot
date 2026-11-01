@@ -7,6 +7,10 @@ on:
     - cron: "47 7 * * *"
     - cron: "23 9 * * *"
     - cron: "13 11 * * *"
+    # GitHub started or dropped these by hours (31 Oct: about 6 h late; 1 Nov: none fired by 13:45 UTC), so two later backups; a run that finds
+    # the day done exits at once, and a late start still uploads before the 19:00 UTC go-live.
+    - cron: "41 12 * * *"
+    - cron: "27 14 * * *"
   workflow_dispatch:
     inputs:
       live:
