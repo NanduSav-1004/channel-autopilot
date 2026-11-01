@@ -193,6 +193,7 @@
     const arcGen = d3.arc().innerRadius(R - 7).outerRadius(R + 7).cornerRadius(7).startAngle(0);
     const label = g.append("text").attr("x", cx).attr("y", cy - 160).attr("text-anchor", "middle").attr("font-size", 38)
       .attr("font-weight", 500).attr("fill", C.muted).text(s.label.toUpperCase()).attr("letter-spacing", 4);
+    for (let fs = 38; label.node().getComputedTextLength() > R * 1.5 && fs > 22;) label.attr("font-size", --fs);   // a long label stays inside the ring
     const num = g.append("text").attr("class", "num").attr("x", cx).attr("y", cy + 70).attr("text-anchor", "middle").attr("font-size", 210);
     const sub = g.append("text").attr("class", "body").attr("x", cx).attr("y", cy + 150).attr("text-anchor", "middle").attr("font-size", 40)
       .attr("fill", C.ink).text(s.sub || "");
@@ -279,7 +280,7 @@
     const head = heading(g, s.title);
     const items = s.items.slice(0, 10), top = 260, rowH = (H - top - 130) / items.length;
     const lo = Math.min(0, d3.min(items, (d) => d.value)), hi = Math.max(0, d3.max(items, (d) => d.value));
-    const X0 = W < 1300 ? 470 : 620, X1 = W < 1300 ? W - 150 : W - 260;
+    const X0 = W < 1300 ? 470 : 620, X1 = W < 1300 ? W - 150 - ((s.suffix || "").length > 2 ? 60 : 0) : W - 260;
     const x = d3.scaleLinear().domain([lo, hi]).range([X0, X1]);
     const fit = (txt, size, maxW) => {                      // shrink a long label until it fits its column
       const el = g.append("text").attr("font-size", size).attr("font-weight", 600).text(txt);

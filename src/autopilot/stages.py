@@ -1,4 +1,5 @@
 """Pipeline stage handlers. Each stage reads/writes artifacts in output/<id>-<slug>/ and is idempotent."""
+import functools
 import json
 import re
 import shutil
@@ -22,7 +23,7 @@ from autopilot import (
     tts,
     wiki,
 )
-from autopilot.config import Config, cta_on, data_shots_on, mascot_style, music_mood
+from autopilot.config import Config, cta_on, data_shots_on, mascot_style, music_mood, shot_engine
 from autopilot.errors import RestartJob, TransientError
 from autopilot.render import render_photo_video, render_short
 from autopilot.script import (
@@ -35,6 +36,11 @@ from autopilot.script import (
     shorten_title,
     style_stats,
 )
+
+
+def shot_renderer(cfg: Config):
+    """The function that draws data shots: the engine from the config, the classic one as the fallback."""
+    return functools.partial(datashots.render_shot_any, engine=shot_engine(cfg))
 
 
 class StageError(RuntimeError):
@@ -237,7 +243,8 @@ class Stages:
         data = []
         if data_shots_on(self.cfg, short=False):
             data = datashots.shots_for([{"heading": sec["heading"], "narration": sec["narration"], "sentences": tm["sentences"]}
-                                        for sec, tm in zip(script["sections"], timings, strict=False)], (1280, 720), wd)
+                                        for sec, tm in zip(script["sections"], timings, strict=False)], (1280, 720), wd,
+                                       render=shot_renderer(self.cfg))
         render_photo_video(script, timings, items, shots.plan_cuts(timings, [len(s) for s in items]), d / "narration.wav",
                            d / "final.mp4", wd, music=music, data_shots=data or None,
                            mascot=mascot_style(self.cfg, short=False))
@@ -407,7 +414,7 @@ class Stages:
         data = []
         if data_shots_on(self.cfg, short=True):
             data = datashots.shots_for([{"heading": s["title"], "narration": s["narration"], "sentences": timings[0]["sentences"]}],
-                                       (1080, 1920), wd)
+                                       (1080, 1920), wd, render=shot_renderer(self.cfg))
         render_short(s, timings, items, d / "narration.wav", d / "final.mp4", wd, music=music, data_shots=data or None,
                      mascot=mascot_style(self.cfg, short=True), cta=closing.SHORT_TAG["en"] if cta_on(self.cfg, "short_tag") else None)
         shutil.rmtree(wd, ignore_errors=True)

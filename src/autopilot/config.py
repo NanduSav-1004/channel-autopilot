@@ -51,6 +51,11 @@ def data_shots_on(cfg: Config, short: bool) -> bool:
     return where is True or where == "all" or (where == "shorts" and short)
 
 
+def shot_engine(cfg: Config) -> str:
+    """Which engine draws data shots: "pillow" (the classic one, default) or "html" (the HTML/D3 motion engine, with a fallback to pillow)."""
+    return "html" if (cfg.render or {}).get("shot_engine") == "html" else "pillow"
+
+
 def cta_on(cfg: Config, what: str) -> bool:
     """Is this call-to-action on? what: "long_closing" (the spoken line ending a long video) or "short_tag" (the on-screen tag in a Short)."""
     return bool((cfg.cta or {}).get(what))

@@ -193,3 +193,36 @@ def test_when_the_model_is_out_of_quota_a_rule_based_shot_is_used_and_the_log_sa
     ds.shots_for([{**secs[0], "narration": "No figures here at all.", "sentences": secs[0]["sentences"]}], (1080, 1920),
                  __import__("pathlib").Path("/tmp/x"), gen=lambda p: {"shots": []}, render=lambda *a, **k: None, log=quiet.append)
     assert any("no shot for" in line for line in quiet)                    # silence is never the answer
+
+
+def test_shot_to_spec_covers_every_kind_in_both_layouts():
+    shots = {
+        "number": {"kind": "number", "title": "Seafloor mapped", "items": [{"label": "of the seafloor", "value": 26.1, "unit": "%"}]},
+        "bars": {"kind": "bars", "title": "Heat", "items": [{"label": "A", "value": 430, "unit": "°C"}, {"label": "B", "value": 15, "unit": "°C"}]},
+        "timeline": {"kind": "timeline", "title": "Moon", "items": [{"label": f"e{y}", "value": y, "unit": ""} for y in (1957, 1961, 1969)]},
+        "line": {"kind": "line", "title": "CO2", "items": [{"label": str(y), "value": v, "unit": "ppm"} for y, v in ((1960, 317), (1980, 338), (2020, 414))]},
+    }
+    wide = {k: ds.shot_to_spec(s, 6.0, vertical=False) for k, s in shots.items()}
+    assert [wide[k]["type"] for k in shots] == ["counter", "bars", "timeline", "line"]
+    assert wide["number"]["suffix"] == "%" and wide["number"]["decimals"] == 1 and wide["number"]["value"] == 26.1
+    assert wide["bars"]["highlight"] == 0 and wide["bars"]["suffix"] == " °C"
+    assert wide["timeline"]["events"][0] == {"year": 1957, "label": "e1957"}
+    assert wide["line"]["series"][0] == ["1960-01-01", 317] and wide["line"]["yearStep"] == 10
+    assert all(s["canvas"] == [1920, 1080] and s["height"] == 810 and s["duration"] == 6.0 for s in wide.values())
+    tall = ds.shot_to_spec(shots["bars"], 5.0, vertical=True)
+    assert tall["canvas"] == [1080, 1920] and tall["width"] == 1080 and tall["offset"] == 150
+
+
+def test_html_engine_failure_falls_back_to_the_classic_engine(monkeypatch, tmp_path):
+    shot = {"kind": "number", "title": "t", "items": [{"label": "x", "value": 5, "unit": ""}]}
+    calls, logs = [], []
+
+    def boom(*a, **k):
+        raise RuntimeError("no chrome")
+
+    monkeypatch.setattr(ds, "render_shot_html", boom)
+    monkeypatch.setattr(ds, "render_shot", lambda *a, **k: calls.append("classic") or tmp_path / "x.mp4")
+    ds.render_shot_any(shot, (1280, 720), tmp_path / "x.mp4", engine="html", log=logs.append)
+    assert calls == ["classic"] and "classic one" in logs[0]
+    ds.render_shot_any(shot, (1280, 720), tmp_path / "x.mp4", engine="pillow", log=logs.append)
+    assert calls == ["classic", "classic"] and len(logs) == 1

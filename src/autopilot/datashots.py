@@ -346,6 +346,66 @@ def render_shot(shot: dict, size: tuple[int, int], out: Path, seconds: float = 6
     return out
 
 
+def _decimals(*values: float) -> int:
+    """Decimal places needed to show every value as it was stated (at most 2)."""
+    return max((len(f"{v:.2f}".rstrip("0").split(".")[1]) for v in values), default=0)
+
+
+def shot_to_spec(shot: dict, seconds: float, vertical: bool) -> dict:
+    """The shot as a scene spec for the HTML motion engine (assets/motion/motion.js, theme "brightwork"). Same figures, same words."""
+    items, kind = shot["items"], shot["kind"]
+    base = {"theme": "brightwork", "duration": seconds, "title": shot["title"], "enter": "zoom"}
+    if vertical:
+        base |= {"canvas": [1080, 1920], "width": 1080, "height": 1100, "offset": 150}
+    else:
+        base |= {"canvas": [1920, 1080], "width": 1920, "height": 810, "offset": 0}   # the bottom quarter stays free for the captions
+    if kind == "number":
+        it = items[0]
+        pct = it["unit"].strip() in ("%", "percent")
+        return base | {"type": "counter", "label": shot["title"] or it["label"], "value": it["value"], "decimals": _decimals(it["value"]),
+                       "suffix": "%" if pct else "", "sub": (it["label"] if pct else f"{it['unit']} {it['label']}".strip())}
+    unit = items[0]["unit"].strip()
+    if kind == "bars":
+        pct = unit in ("%", "percent")
+        top = max(range(len(items)), key=lambda i: items[i]["value"])
+        return base | {"type": "bars", "items": [{"label": i["label"], "value": i["value"]} for i in items], "highlight": top,
+                       "suffix": "%" if pct else (f" {unit}" if unit else ""), "prefix": "", "decimals": _decimals(*(i["value"] for i in items))}
+    if kind == "timeline":
+        return base | {"type": "timeline", "events": [{"year": int(i["value"]), "label": i["label"]} for i in items]}
+    pct = unit in ("%", "percent")
+    years = [int(float(re.sub(r"[^0-9.]", "", i["label"]))) for i in items]
+    step = next((k for k in (1, 2, 5, 10, 20, 25, 50, 100, 200) if (max(years) - min(years)) / k <= 6), 500)
+    return base | {"type": "line", "series": [[f"{y}-01-01", i["value"]] for y, i in zip(years, items, strict=True)],
+                   "suffix": "%" if pct else (f" {unit}" if unit else ""), "prefix": "", "decimals": _decimals(*(i["value"] for i in items)),
+                   "yearStep": step}
+
+
+def render_shot_html(shot: dict, size: tuple[int, int], out: Path, seconds: float = 6.0, fps: int = FPS) -> Path:
+    """The same clip drawn by the HTML engine (smoother, richer). Raises if anything goes wrong; render_shot_any falls back then."""
+    import tempfile
+
+    from autopilot import motion
+
+    spec = shot_to_spec(shot, seconds, vertical=size[1] > size[0])
+    with tempfile.TemporaryDirectory() as tmp:
+        raw = motion.render_scene(spec, Path(tmp) / "raw.mp4", fps=fps)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(raw), "-vf", f"scale={size[0]}:{size[1]}:flags=lanczos,fps={fps}",
+                        "-t", f"{seconds:.3f}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", str(out)], check=True)
+    return out
+
+
+def render_shot_any(shot: dict, size: tuple[int, int], out: Path, seconds: float = 6.0, fps: int = FPS, engine: str = "pillow",
+                    log: Callable[[str], None] = print) -> Path:
+    """Render with the engine named by the config (render.shot_engine: html | pillow, default pillow); if the HTML one fails for any reason, the classic one."""
+    if engine == "html":
+        try:
+            return render_shot_html(shot, size, out, seconds, fps)
+        except Exception as exc:  # noqa: BLE001
+            log(f"[datashot] html engine failed ({type(exc).__name__}: {exc}), used the classic one")
+    return render_shot(shot, size, out, seconds, fps)
+
+
 def place_shot(shot: dict, sentences: list[dict], hold: float = 6.0) -> dict | None:
     """When to show a shot: from just before the narrator says its first figure. Returns {"start", "seconds"} (video seconds) or None."""
     first = shot["items"][0]
@@ -368,7 +428,7 @@ def shots_for(sections: list[dict], size: tuple[int, int], work: Path, gen: Call
     from autopilot import llm
 
     gen = gen or llm.generate_json
-    render = render or render_shot
+    render = render or render_shot_any
     out: list[dict] = []
     for i, sec in enumerate(sections):
         try:
