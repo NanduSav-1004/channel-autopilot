@@ -4,7 +4,20 @@
   "use strict";
 
   const C = { bg: "#0b0d17", bg2: "#151a2e", ink: "#f5f3ee", muted: "#8a8fa8", faint: "#2a3048",
-              volt: "#d4ff3a", coral: "#ff5c7a", cyan: "#39d2ff", amber: "#ffb547" };
+              volt: "#d4ff3a", coral: "#ff5c7a", cyan: "#39d2ff", amber: "#ffb547",
+              deep: "#2b6cff", voltDark: "#9be22a", mapLow: "#1d2a6b", mid: "#161b30", nofill: "#20263d" };
+  const DEFAULT_C = { ...C };
+  // "signal" is Plotline's look. "brightwork" is the science channel's navy and amber, used for its animated shots.
+  const THEMES = {
+    brightwork: { bg: "#0e1b3d", bg2: "#17285c", ink: "#ffffff", muted: "#a9bde6", faint: "#2d4179", volt: "#ffbe28", voltDark: "#e08a00",
+                  coral: "#ff7a5c", cyan: "#9cc4ff", amber: "#ffd166", deep: "#3a6fe0", mapLow: "#17285c", mid: "#1a2b61", nofill: "#233570" },
+  };
+  function applyTheme(name) {
+    Object.assign(C, DEFAULT_C, THEMES[name] || {});
+    const root = document.documentElement.style;
+    root.setProperty("--bg", C.bg); root.setProperty("--ink", C.ink); root.setProperty("--muted", C.muted); root.setProperty("--faint", C.faint);
+    PAL.splice(0, 4, C.volt, C.cyan, C.coral, C.amber);
+  }
   const FIPS = { "01": "AL", "02": "AK", "04": "AZ", "05": "AR", "06": "CA", "08": "CO", "09": "CT", "10": "DE", "11": "DC", "12": "FL",
     "13": "GA", "15": "HI", "16": "ID", "17": "IL", "18": "IN", "19": "IA", "20": "KS", "21": "KY", "22": "LA", "23": "ME", "24": "MD",
     "25": "MA", "26": "MI", "27": "MN", "28": "MS", "29": "MO", "30": "MT", "31": "NE", "32": "NV", "33": "NH", "34": "NJ", "35": "NM",
@@ -50,10 +63,10 @@
     area.append("stop").attr("offset", "0%").attr("stop-color", C.volt).attr("stop-opacity", 0.32);
     area.append("stop").attr("offset", "100%").attr("stop-color", C.volt).attr("stop-opacity", 0);
     const bar = d.append("linearGradient").attr("id", "bar").attr("x1", 0).attr("x2", 1);
-    bar.append("stop").attr("offset", "0%").attr("stop-color", "#2b6cff");
+    bar.append("stop").attr("offset", "0%").attr("stop-color", C.deep);
     bar.append("stop").attr("offset", "100%").attr("stop-color", C.cyan);
     const hot = d.append("linearGradient").attr("id", "hot").attr("x1", 0).attr("x2", 1);
-    hot.append("stop").attr("offset", "0%").attr("stop-color", "#9be22a");
+    hot.append("stop").attr("offset", "0%").attr("stop-color", C.voltDark);
     hot.append("stop").attr("offset", "100%").attr("stop-color", C.volt);
     return d;
   }
@@ -98,7 +111,7 @@
         const hl = opts.highlight && opts.highlight.some((h) => w.toLowerCase().replace(/[^a-z0-9$%]/g, "").startsWith(h));
         const el = g.append("text").attr("font-size", size).attr("font-weight", opts.weight || 700).text(w)
           .attr("fill", hl ? C.volt : (opts.fill || C.ink));
-        out.push({ el, x: cx, y: top + li * lh, w: ww, line: li });
+        out.push({ el, x: cx, y: top + li * lh, w: ww, line: li, size, base: hl ? C.volt : (opts.fill || C.ink) });
         cx += ww + space;
       }
     });
@@ -153,13 +166,28 @@
       if (k) { const p = E.back(prog(t, 0, 0.5)); k.g.attr("transform", `translate(${W / 2},${ws.top - 150}) scale(${p})`); }
       revealWords(ws, t, 0.2, 0.08, 80);
       const n = ws.list.length * 0.08 + 0.5;
+      if (s.anim === "blur") {           // words rise through a blur, then a lime shimmer passes over them one by one
+        ws.list.forEach((w, i) => {
+          const p = E.out(prog(t, 0.2 + i * 0.08, 0.7));
+          w.el.style("filter", p < 1 ? `blur(${(1 - p) * 16}px)` : null);
+          const sh = Math.sin(Math.PI * prog(t, n + 0.25 + i * 0.07, 0.5));
+          w.el.attr("fill", d3.interpolateRgb(w.base, C.volt)(Math.max(0, sh)));
+        });
+      } else if (s.anim === "wave") {    // after they land, each word pops in turn (a wave runs along the line)
+        ws.list.forEach((w, i) => {
+          const q = prog(t, n + 0.15 + i * 0.1, 0.55), sc = 1 + 0.08 * Math.sin(Math.PI * q);
+          const cx = w.x + w.w / 2, cy = w.y - w.size * 0.3;
+          w.el.attr("transform", `translate(${cx},${cy}) scale(${sc}) translate(${-cx},${-cy})`);
+          w.el.attr("fill", d3.interpolateRgb(w.base, C.volt)(Math.max(0, Math.sin(Math.PI * q) * 0.9)));
+        });
+      }
       under.attr("width", uw * E.inOut(prog(t, n, 0.6)));
       if (sub) sub.attr("opacity", prog(t, n + 0.3, 0.6)).attr("y", uy + 110 + 20 * (1 - E.out(prog(t, n + 0.3, 0.6))));
     };
   };
 
   SCENES.counter = (g, s) => {
-    const cx = W / 2, cy = H / 2 + 30, R = Math.min(390, W * 0.34);
+    const cx = W / 2, cy = H / 2 + 30, R = Math.min(390, W * 0.34, (H - 130) / 2);
     const ring = g.append("circle").attr("cx", cx).attr("cy", cy).attr("r", R).attr("fill", "none").attr("stroke", C.faint).attr("stroke-width", 14);
     const arc = g.append("path").attr("transform", `translate(${cx},${cy})`).attr("fill", C.volt).attr("filter", "url(#glow)");
     const arcGen = d3.arc().innerRadius(R - 7).outerRadius(R + 7).cornerRadius(7).startAngle(0);
@@ -292,7 +320,7 @@
     const topo = window.__topo.states;
     const feats = topojson.feature(topo, topo.objects.states).features.filter((f) => FIPS[f.id]);
     const vals = Object.values(s.values);
-    const color = d3.scaleSequential().domain(d3.extent(vals)).interpolator(d3.interpolateRgbBasis(["#1d2a6b", "#2b6cff", C.cyan, C.volt]));
+    const color = d3.scaleSequential().domain(d3.extent(vals)).interpolator(d3.interpolateRgbBasis([C.mapLow, C.deep, C.cyan, C.volt]));
     const narrow = W < 1300;
     const k = narrow ? (W - 80) / 975 : 1.05, ox = narrow ? 40 : (W - 975 * k) / 2 - 120, oy = narrow ? 300 : 250;
     const cardX = narrow ? 120 : W - 330, cardY = narrow ? oy + 610 * k + 120 : 330;
@@ -307,7 +335,7 @@
     const lg = g.append("g").attr("transform", narrow ? `translate(${W - 400},${oy + 610 * k + 60})` : `translate(${W - 420},${H - 360})`);
     const gid = "lg" + Math.random().toString(36).slice(2);
     const lgd = svg.select("defs").append("linearGradient").attr("id", gid);
-    ["#1d2a6b", "#2b6cff", C.cyan, C.volt].forEach((c, i) => lgd.append("stop").attr("offset", `${(i / 3) * 100}%`).attr("stop-color", c));
+    [C.mapLow, C.deep, C.cyan, C.volt].forEach((c, i) => lgd.append("stop").attr("offset", `${(i / 3) * 100}%`).attr("stop-color", c));
     lg.append("text").attr("class", "body").attr("font-size", 24).attr("fill", C.muted).text(s.legend || "");
     lg.append("rect").attr("y", 20).attr("width", 300).attr("height", 18).attr("rx", 9).attr("fill", `url(#${gid})`);
     lg.append("text").attr("class", "num").attr("y", 74).attr("font-size", 26).text(fmt(d3.min(vals), s));
@@ -648,7 +676,7 @@
     const narrow = W < 1300, rows = s.rows, n = rows.length;
     const m = narrow ? { l: 130, r: 60, t: 360, b: 170 } : { l: 230, r: 190, t: 300, b: 190 };
     const cw = (W - m.l - m.r) / 12, chh = Math.min(76, (H - m.t - m.b) / n);
-    const vmax = s.vmax, color = d3.scaleDiverging().domain([-vmax, 0, vmax]).interpolator(d3.interpolateRgbBasis([C.cyan, "#161b30", C.coral])).clamp(true);
+    const vmax = s.vmax, color = d3.scaleDiverging().domain([-vmax, 0, vmax]).interpolator(d3.interpolateRgbBasis([C.cyan, C.mid, C.coral])).clamp(true);
     const months = "JFMAMJJASOND";
     for (let k = 0; k < 12; k++) g.append("text").attr("class", "body").attr("x", m.l + k * cw + cw / 2).attr("y", m.t - 22).attr("text-anchor", "middle")
       .attr("font-size", 28).attr("fill", C.muted).text(narrow ? months[k] : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][k]);
@@ -685,7 +713,7 @@
     const feats = topojson.feature(topo, topo.objects.countries).features.filter((f) => f.properties.name !== "Antarctica");
     const vals = Object.values(s.values);
     const lo = d3.quantile(vals.sort(d3.ascending), 0.03), hi = d3.quantile(vals, 0.97);
-    const color = d3.scaleSequential().domain([lo, hi]).interpolator(d3.interpolateRgbBasis(["#1d2a6b", "#2b6cff", C.cyan, C.volt])).clamp(true);
+    const color = d3.scaleSequential().domain([lo, hi]).interpolator(d3.interpolateRgbBasis([C.mapLow, C.deep, C.cyan, C.volt])).clamp(true);
     const area = narrow ? { x: 30, y: 320, w: W - 60, h: 700 } : { x: 120, y: 250, w: W - 240, h: H - 400 };
     const proj = d3.geoNaturalEarth1().fitExtent([[area.x, area.y], [area.x + area.w, area.y + area.h]], { type: "FeatureCollection", features: feats });
     const path = d3.geoPath(proj), mapG = g.append("g");
@@ -695,7 +723,7 @@
     const hi_ = shapes.find((sh) => sh.name === s.highlight);
     const out = hi_ ? mapG.append("path").attr("d", path(hi_.f)).attr("fill", "none").attr("stroke", C.ink).attr("stroke-width", 3).attr("filter", "url(#glow)") : null;
     const lgid = "wl" + rid(), lgd = svg.select("defs").append("linearGradient").attr("id", lgid);
-    ["#1d2a6b", "#2b6cff", C.cyan, C.volt].forEach((c, i) => lgd.append("stop").attr("offset", `${(i / 3) * 100}%`).attr("stop-color", c));
+    [C.mapLow, C.deep, C.cyan, C.volt].forEach((c, i) => lgd.append("stop").attr("offset", `${(i / 3) * 100}%`).attr("stop-color", c));
     const lg = g.append("g").attr("transform", narrow ? `translate(60,${mapBottom + 40})` : `translate(160,${H - 120})`);
     lg.append("text").attr("class", "body").attr("font-size", 24).attr("fill", C.muted).text(s.legend || "");
     lg.append("rect").attr("y", 18).attr("width", 400).attr("height", 18).attr("rx", 9).attr("fill", `url(#${lgid})`);
@@ -713,7 +741,7 @@
       head(t); src(t);
       shapes.forEach((sh) => {
         const p = E.out(prog(t, 0.4 + sh.at * 1.8, 0.7)), v = s.values[sh.name];
-        sh.el.attr("fill", v == null ? "#20263d" : d3.interpolateRgb("#20263d", color(v))(p));
+        sh.el.attr("fill", v == null ? C.nofill : d3.interpolateRgb(C.nofill, color(v))(p));
       });
       lg.attr("opacity", prog(t, 1.8, 0.5));
       if (out) out.attr("opacity", prog(t, 2.6, 0.4));
@@ -833,6 +861,45 @@
     };
   };
 
+
+  // ---- timeline: dated events along a line --------------------------------------------------------------------------------------------
+  SCENES.timeline = (g, s) => {
+    const head = heading(g, s.title);
+    const narrow = W < 1300, ev = s.events, n = ev.length;
+    const lo = d3.min(ev, (e) => e.year), hi = d3.max(ev, (e) => e.year);
+    const along = d3.scaleLinear().domain([lo, hi === lo ? lo + 1 : hi]).range(narrow ? [H * 0.28, H * 0.85] : [200, W - 200]);
+    const mid = narrow ? W * 0.30 : H * 0.55;
+    const axis = g.append("line").attr("stroke", C.faint).attr("stroke-width", 6).attr("stroke-linecap", "round");
+    const items = ev.map((e, i) => {
+      const up = i % 2 === 0, pos = along(e.year), col = PAL[i % PAL.length];
+      const x = narrow ? mid : pos, y = narrow ? pos : mid;
+      const grp = g.append("g");
+      const dot = grp.append("circle").attr("cx", x).attr("cy", y).attr("r", 15).attr("fill", col).attr("filter", "url(#glow)");
+      const yr = grp.append("text").attr("class", "num").attr("font-size", narrow ? 52 : 60).attr("fill", col);
+      const lb = grp.append("text").attr("font-size", narrow ? 32 : 34).attr("font-weight", 600).text(e.label);
+      if (narrow) {                                              // vertical: years to the left of the line, labels to the right
+        yr.attr("x", x - 40).attr("y", y + 18).attr("text-anchor", "end").text(e.year);
+        lb.attr("x", x + 40).attr("y", y + 12);
+      } else {                                                   // horizontal: above and below, alternately
+        yr.attr("x", x).attr("y", y + (up ? -62 : 105)).attr("text-anchor", "middle").text(e.year);
+        lb.attr("x", x).attr("y", y + (up ? -128 : 155)).attr("text-anchor", "middle");
+      }
+      return { grp, dot, i };
+    });
+    const src = source(g, s.source);
+    return (t) => {
+      head(t); src(t);
+      const p = E.inOut(prog(t, 0.4, 0.9));
+      if (narrow) axis.attr("x1", mid).attr("x2", mid).attr("y1", along.range()[0]).attr("y2", lerp(along.range()[0], along.range()[1], p));
+      else axis.attr("y1", mid).attr("y2", mid).attr("x1", along.range()[0]).attr("x2", lerp(along.range()[0], along.range()[1], p));
+      items.forEach(({ grp, dot, i }) => {
+        const a = E.back(prog(t, 0.7 + i * (1.6 / Math.max(1, n)), 0.5));
+        grp.attr("opacity", clamp(a, 0, 1));
+        dot.attr("r", 15 * clamp(a, 0, 1.2));
+      });
+    };
+  };
+
   // ---- public API -----------------------------------------------------------------------------------------------------
   window.load = async (spec, topo) => {
     if (topo) window.__topo = topo;
@@ -840,18 +907,46 @@
     const [CW, CH] = spec.canvas || [spec.width || 1920, spec.height || 1080];   // the whole picture
     svg = d3.select("#stage").attr("width", CW).attr("height", CH).attr("viewBox", `0 0 ${CW} ${CH}`);
     svg.selectAll("*").remove();
+    applyTheme(spec.theme);
     W = CW; H = CH;
     defs();
+    // a glitch for the first instants of a scene: horizontal slices shift sideways, red and blue split apart
+    const gf = svg.select("defs").append("filter").attr("id", "glitchfx").attr("x", "-10%").attr("y", "-5%").attr("width", "120%").attr("height", "110%")
+      .attr("color-interpolation-filters", "sRGB");
+    const gturb = gf.append("feTurbulence").attr("type", "fractalNoise").attr("baseFrequency", "0.0015 0.06").attr("numOctaves", 1).attr("result", "n");
+    const gdisp = gf.append("feDisplacementMap").attr("in", "SourceGraphic").attr("in2", "n").attr("scale", 0).attr("xChannelSelector", "R").attr("yChannelSelector", "G").attr("result", "d");
+    gf.append("feColorMatrix").attr("in", "d").attr("type", "matrix").attr("values", "1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0").attr("result", "r");
+    gf.append("feColorMatrix").attr("in", "d").attr("type", "matrix").attr("values", "0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0").attr("result", "gr");
+    gf.append("feColorMatrix").attr("in", "d").attr("type", "matrix").attr("values", "0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0").attr("result", "b");
+    const goffR = gf.append("feOffset").attr("in", "r").attr("dx", 0).attr("result", "ro");
+    const goffB = gf.append("feOffset").attr("in", "b").attr("dx", 0).attr("result", "bo");
+    gf.append("feBlend").attr("in", "ro").attr("in2", "gr").attr("mode", "screen").attr("result", "rg");
+    gf.append("feBlend").attr("in", "rg").attr("in2", "bo").attr("mode", "screen");
     const bg = background(svg);                                                  // the background fills the whole picture
     W = spec.width || CW; H = spec.height || CH;                                 // the scene lays itself out in its own area
     const cam = svg.append("g").attr("transform", `translate(0,${spec.offset || 0})`).append("g"), body = cam.append("g");
     const upd = SCENES[spec.type](body, spec);
-    const dur = spec.duration;
+    const dur = spec.duration, enter = spec.enter || null;
+    const flash = svg.append("rect").attr("width", CW).attr("height", CH).attr("fill", "#ffffff").attr("opacity", 0);
     scene = (t) => {
       bg(t);
       const out = E.inOut(prog(t, dur - 0.45, 0.45));                   // every scene leaves the same way: up and fade
-      const z = 1 + 0.025 * (t / dur);                                     // a slow push-in keeps still moments alive
-      cam.attr("transform", `translate(${W / 2},${H / 2 - out * 60}) scale(${z}) translate(${-W / 2},${-H / 2})`).attr("opacity", 1 - out);
+      let z = 1 + 0.025 * (t / dur);                                       // a slow push-in keeps still moments alive
+      let op = 1 - out, blur = 0, fx = null, flashOp = 0;
+      if (enter === "zoom") {                                              // a cinematic zoom: starts close and soft, settles sharp
+        const p = E.out(prog(t, 0, 0.65));
+        z *= 1.2 - 0.2 * p; blur = (1 - p) * 12; op *= clamp(t / 0.22);
+      } else if (enter === "flash") {                                      // a flash through white
+        const p = E.out(prog(t, 0, 0.5));
+        flashOp = 0.96 * (1 - p); z *= 1.06 - 0.06 * p; op *= clamp(0.35 + t / 0.2);
+      } else if (enter === "glitch" && t < 0.34) {                         // a glitch, in three steps
+        const step = Math.floor(t * 30), amp = [1, 0.7, 0.4, 0.55, 0.25, 0.1, 0.05, 0, 0, 0, 0][Math.min(10, step)] || 0;
+        gturb.attr("seed", 3 + step * 7); gdisp.attr("scale", 150 * amp); goffR.attr("dx", 14 * amp); goffB.attr("dx", -14 * amp);
+        fx = "url(#glitchfx)";
+      }
+      cam.attr("transform", `translate(${W / 2},${H / 2 - out * 60}) scale(${z}) translate(${-W / 2},${-H / 2})`).attr("opacity", op)
+        .style("filter", fx || (blur > 0.2 ? `blur(${blur}px)` : null));
+      flash.attr("opacity", flashOp);
       upd(t);
     };
     await document.fonts.ready;

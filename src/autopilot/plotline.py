@@ -847,6 +847,34 @@ def _js_fmt(f: dict) -> dict:
 
 
 # ---- 4. video -----------------------------------------------------------------------------------------------------------
+ENTER_CYCLE = ["zoom", None, "flash", None, "zoom", None, "glitch", None]   # scene-entry effects: about half the chart scenes, a glitch only now and then
+ANIM_CYCLE = ["blur", None, "wave"]                                          # text-card animations (None = the plain rise)
+
+
+def decorate(specs: list[dict]) -> list[dict]:
+    """Add entry effects to chart scenes and a text animation to title/statement cards, in a fixed rotation (same input, same output).
+    The first scene never gets an entry effect and neither does a scene right after another that has one."""
+    out, k, a, prev = [], 0, 0, True
+    for sp in specs:
+        sp = dict(sp)
+        if sp["type"] in ("title", "statement"):
+            an = ANIM_CYCLE[a % len(ANIM_CYCLE)]
+            a += 1
+            if an:
+                sp["anim"] = an
+            prev = False
+        elif not prev and sp["type"] != "timeline":
+            fx = ENTER_CYCLE[k % len(ENTER_CYCLE)]
+            k += 1
+            if fx:
+                sp["enter"] = fx
+            prev = bool(fx)
+        else:
+            prev = False
+        out.append(sp)
+    return out
+
+
 def make_video(script: dict, bundle: dict, out_dir: Path, log=print) -> Path:
     from autopilot import render, tts
 
@@ -867,6 +895,7 @@ def make_video(script: dict, bundle: dict, out_dir: Path, log=print) -> Path:
         end = timings[i + 1]["start"] if i + 1 < len(timings) else total
         specs.append(compile_visual(sc["visual"], bundle, end - start))
         starts.append(start)
+    specs = decorate(specs)
     log(f"[plotline] {len(specs)} scenes, {total / 60:.1f} min; rendering charts")
     files = render_cached(specs, out_dir / "scenes")
     listing = out_dir / "scenes.txt"
@@ -1115,6 +1144,7 @@ def make_short(short: dict, bundle: dict, out_dir: Path, log=print) -> Path:
         if spec["type"] == "map":                           # a map is too small in a vertical frame: show the ranking instead
             spec = compile_visual({"type": "states_bars", "order": "top", "n": 8}, bundle, end - start)
         specs.append({**spec, **SHORT_FRAME})
+    specs = decorate(specs)
     files = render_cached(specs, out_dir.parent / "scenes")
     listing = out_dir / "scenes.txt"
     listing.write_text("".join(f"file '{p.resolve()}'\n" for p in files))

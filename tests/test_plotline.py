@@ -1,3 +1,5 @@
+import itertools
+
 from autopilot import datasets, plotline
 
 
@@ -269,3 +271,15 @@ def test_plotline_music_mood_follows_the_theme_of_its_data():
     assert plotline.bundle_mood(b) == "curious"
     assert plotline.bundle_mood({"series": {}, "states": {"theme": "jobs"}, "owid": None}) == "curious"
     assert plotline.bundle_mood({"series": {}, "states": None, "owid": None}) == "plain"
+
+
+def test_decorate_rotates_effects_without_touching_the_input():
+    specs = [{"type": "title", "duration": 5}] + [{"type": "counter", "duration": 5} for _ in range(8)] + [{"type": "title", "duration": 4}]
+    out = plotline.decorate(specs)
+    assert all("enter" not in s and "anim" not in s for s in specs)
+    assert out[0]["anim"] == "blur" and "enter" not in out[0]
+    entered = [s.get("enter") for s in out[1:9]]
+    assert entered[0] is None or entered[0] == "zoom"
+    assert any(entered) and not all(entered)
+    assert all(not (a and b) for a, b in itertools.pairwise(entered))
+    assert plotline.decorate(specs) == out
