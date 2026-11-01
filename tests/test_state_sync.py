@@ -24,6 +24,8 @@ def test_the_latest_videos_small_files_survive_a_fresh_runner(tmp_path):
     d.mkdir(parents=True)
     for name in ("script", "shorts", "credits", "source", "items", "timings"):
         (d / f"{name}.json").write_text(f'{{"{name}": 1}}')
+    (first / "data" / "video_maps").mkdir()
+    (first / "data" / "video_maps" / "abc123.json").write_text('{"segments": []}')
     run(first, "push")
 
     second = tmp_path / "run2"                                         # a fresh runner: no output folder at all
@@ -32,6 +34,7 @@ def test_the_latest_videos_small_files_survive_a_fresh_runner(tmp_path):
     run(second, "pull")
     restored = sorted(p.name for p in (second / "output" / "0012-gps").iterdir())
     assert restored == ["credits.json", "script.json", "shorts.json", "source.json"]      # small files only, not the media lists
+    assert (second / "data" / "video_maps" / "abc123.json").exists()                      # the retention maps accumulate across runs
 
     (second / "run.log").write_text("today's video is already uploaded; nothing to do\n")
     run(second, "push")                                                 # a no-op run keeps them for the next one
@@ -40,6 +43,7 @@ def test_the_latest_videos_small_files_survive_a_fresh_runner(tmp_path):
     subprocess.run(["git", "init", "-q"], cwd=third, check=True)
     run(third, "pull")
     assert (third / "output" / "0012-gps" / "script.json").exists()
+    assert (third / "data" / "video_maps" / "abc123.json").exists()
 
 
 @pytest.mark.skipif(not shutil.which("git"), reason="needs git")

@@ -15,6 +15,7 @@ from autopilot import (
     metadata,
     music,
     qa,
+    retention,
     schedule,
     shorts,
     shots,
@@ -44,6 +45,8 @@ from autopilot.script import (
     shorten_title,
     style_stats,
 )
+
+VIDEO_MAPS = Path("data/video_maps")      # one small file per uploaded video: where each part starts and what is said (see retention.py)
 
 
 def shot_renderer(cfg: Config):
@@ -282,6 +285,7 @@ class Stages:
             self.conn.execute("UPDATE jobs SET video_id = ?, publish_at = ? WHERE id = ?",
                               (video_id, publish_at, job["id"]))
             self.conn.commit()
+            retention.record("long", script["title"], timings, video_id, VIDEO_MAPS)
             if publish_at:
                 print(f"[job {job['id']}] scheduled to go public at {publish_at}", flush=True)
         self.set_thumbnail(job["id"], video_id, d / "thumbnail.jpg")
@@ -456,3 +460,5 @@ class Stages:
                                        ["shorts", "science", "explained"], privacy=self.privacy, publish_at=publish_at)
         self.conn.execute("UPDATE jobs SET video_id = ? WHERE id = ?", (video_id, job["id"]))
         self.conn.commit()
+        if (d / "timings.json").exists():
+            retention.record("short", s["title"], _read(d / "timings.json"), video_id, VIDEO_MAPS)

@@ -20,6 +20,8 @@ Rules for every Short:
   superlatives ("the only way", "fundamentally changes", "revolutionary"). State what is known and stop.
 - No advice.
 - It must make sense on its own, and end on a clear payoff sentence.
+- Make it loop: the last sentence should end on the same subject the hook opened with, so that when the Short replays, the hook
+  reads like the natural next line after the payoff. Use only facts already in the script; add nothing new for this.
 - title: under 60 characters, curiosity-driven and honest.
 
 Sections:

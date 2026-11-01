@@ -14,6 +14,11 @@ case "${1:-}" in
       git show "FETCH_HEAD:$DB" > "$DB"
       git show "FETCH_HEAD:data/last_work_run.log" > data/last_work_run.log 2>/dev/null || rm -f data/last_work_run.log
       git show "FETCH_HEAD:data/last_failed_run.log" > data/last_failed_run.log 2>/dev/null || rm -f data/last_failed_run.log
+      # one small map per uploaded video (where each part starts, what is said): the retention report reads them
+      git ls-tree -r --name-only FETCH_HEAD data/video_maps 2>/dev/null | while read -r f; do
+        mkdir -p "$(dirname "$f")"
+        git show "FETCH_HEAD:$f" > "$f"
+      done
       # the latest video's small files (scripts, Short scripts, credits): enough to rebuild its Malayalam edition later
       git ls-tree -r --name-only FETCH_HEAD data/last_job 2>/dev/null | while read -r f; do
         mkdir -p "output/$(dirname "${f#data/last_job/}")"
@@ -37,6 +42,7 @@ case "${1:-}" in
     elif [ -f data/last_work_run.log ]; then
       cp data/last_work_run.log "$tmp/data/last_work_run.log"
     fi
+    [ -d data/video_maps ] && cp -r data/video_maps "$tmp/data/" || true
     latest="$(ls -d output/[0-9][0-9][0-9][0-9]-* 2>/dev/null | sort | tail -1 || true)"
     if [ -n "$latest" ]; then
       mkdir -p "$tmp/data/last_job/$(basename "$latest")"
