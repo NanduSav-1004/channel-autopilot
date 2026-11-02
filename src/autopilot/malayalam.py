@@ -14,7 +14,7 @@ from pathlib import Path
 
 import numpy as np
 
-from autopilot import closing, engage, llm, retention, tts
+from autopilot import closing, engage, llm, qa_video, retention, tts
 from autopilot.config import cta_on, mascot_style, music_mood
 from autopilot.shots import estimate_timings as shots_estimate_timings
 
@@ -761,6 +761,7 @@ def build_edition(src_dir: Path, out_dir: Path, work: Path, voice: dict, transla
     plan = shots.plan_cuts(timings, [len(s) for s in items], cut_seconds=cut)   # longer audio, same number of shots
     render_photo_video(ml, timings, items, plan, wav, final, work,
                        music=music, look=ML_CAPTIONS, mascot=mascot)
+    qa_video.gate(final, "long", (1280, 720), log=lambda m: print(f"[ml] {m}", flush=True))
     images = [i["path"] for sec in items for i in sec if i["kind"] == "image"]
     thumbnail.make_thumbnail(ml, images, out_dir / "thumbnail.jpg", lang="ml")
     return final
@@ -807,6 +808,7 @@ def build_short(short_dir: Path, long_items: list[list[dict]], out_dir: Path, wo
     music = audio.generate_ambient(timings[-1]["end"] + 3, out_dir / "music.wav", seed=int(short.get("section_index", 0)) + 1000, mood=mood)
     final = out_dir / "final.mp4"
     render_short(ml, timings, items, wav, final, work, music=music, look=ML_SHORT_CAPTIONS, mascot=mascot, cta=cta)
+    qa_video.gate(final, "short", (1080, 1920), log=lambda m: print(f"[ml] {m}", flush=True))
     return final
 
 

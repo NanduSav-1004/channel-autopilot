@@ -16,6 +16,7 @@ from autopilot import (
     metadata,
     music,
     qa,
+    qa_video,
     retention,
     schedule,
     shorts,
@@ -269,6 +270,7 @@ class Stages:
                            d / "final.mp4", wd, music=music, data_shots=data or None,
                            mascot=mascot_style(self.cfg, short=False), xfade=transitions_on(self.cfg, short=False),
                            cta=(script.get("engage") or {}).get("onscreen") if cta_on(self.cfg, "comment_question") else None)
+        qa_video.gate(d / "final.mp4", "long", (1280, 720), log=lambda m: print(f"[job {job['id']}] {m}", flush=True))
         images = [i["path"] for sec in items for i in sec if i["kind"] == "image"]
         thumbnail.make_thumbnail(script, images, d / "thumbnail.jpg", pick=thumbnail.pick_with_vision)
         shutil.rmtree(wd, ignore_errors=True)
@@ -440,6 +442,7 @@ class Stages:
         render_short(s, timings, items, d / "narration.wav", d / "final.mp4", wd, music=music, data_shots=data or None,
                      mascot=mascot_style(self.cfg, short=True), cta=self.short_tag(job, s),
                      xfade=transitions_on(self.cfg, short=True))
+        qa_video.gate(d / "final.mp4", "short", (1080, 1920), log=lambda m: print(f"[job {job['id']}] {m}", flush=True))
         shutil.rmtree(wd, ignore_errors=True)
 
     def short_tag(self, job, s: dict) -> str | None:

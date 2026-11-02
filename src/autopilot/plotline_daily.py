@@ -10,7 +10,7 @@ import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from autopilot import env, plotline, retention, schedule
+from autopilot import env, plotline, qa_video, retention, schedule
 
 STATE = Path("data/plotline")
 WORK = Path("output/plotline")
@@ -81,6 +81,21 @@ def retry_thumbnails(state: dict, live: bool) -> None:
         save_state(state)
 
 
+def checked(make, work: Path, kind: str, size: tuple[int, int], log):
+    """Make a video and check the file (qa_video). If the check finds a real fault, the cached chart scenes are cleared and the video is made
+    ONE more time (a re-render usually fixes a glitch); a second failure raises and stops the upload."""
+    video = make()
+    try:
+        qa_video.gate(video, kind, size, log)
+    except qa_video.VideoCheckError as exc:
+        log(f"[qa-video] {exc}; making it once more from scratch")
+        for scenes in (work / "scenes", work.parent / "scenes"):       # a long video's own scenes, or the folder the day's Shorts share
+            shutil.rmtree(scenes, ignore_errors=True)
+        video = make()
+        qa_video.gate(video, kind, size, log)
+    return video
+
+
 def run(live: bool, privacy: str, now: datetime | None = None) -> str:
     now = now or datetime.now(timezone.utc)
     day = now.strftime("%Y-%m-%d")
@@ -111,7 +126,7 @@ def run(live: bool, privacy: str, now: datetime | None = None) -> str:
 
         # the long video
         if not entry.get("video_id"):
-            video = plotline.make_video(script, bundle, work, log=log)
+            video = checked(lambda: plotline.make_video(script, bundle, work, log=log), work, "long", (1920, 1080), log)
             thumb = plotline.make_thumbnail(script, bundle, work / "thumbnail.jpg")
             shutil.copy(thumb, d / "thumbnail.jpg")          # kept with the state, so a refused upload can be retried later
             if live:
@@ -148,7 +163,7 @@ def run(live: bool, privacy: str, now: datetime | None = None) -> str:
     for i, sh in enumerate(shorts):
         if i < len(records) and records[i].get("video_id"):
             continue
-        video = plotline.make_short(sh, bundle, work / f"short{i}", log=log)
+        video = checked(lambda sh=sh, i=i: plotline.make_short(sh, bundle, work / f"short{i}", log=log), work / f"short{i}", "short", (1080, 1920), log)
         if not live:
             log(f"[dry_run] would upload Short {video}")
             continue

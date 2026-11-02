@@ -305,6 +305,23 @@ def scene_problems(sc: dict, bundle: dict, ok: set[float] | None = None) -> list
     return out
 
 
+MAX_RUN = 2        # at most two scenes of the same type in a row (idea from OpenMontage's variation checker; written from scratch)
+
+
+def same_type_runs(scenes: list[dict]) -> list[str]:
+    """One problem for every scene that would be the THIRD (or later) of the same chart type in a row. Counting from the first of the run, so
+    five in a row gives two problems (scenes 3 and 5 are not both needed: every second one after the limit is asked to change)."""
+    out, run, prev = [], 0, None
+    for i, sc in enumerate(scenes, 1):
+        k = (sc.get("visual") or {}).get("type")
+        run = run + 1 if k is not None and k == prev else 1
+        prev = k
+        if run > MAX_RUN:
+            out.append(f"scene {i}: a '{k}' scene is already used {run - 1} times in a row; pick a different type for this scene")
+            prev, run = None, 0                          # asking to change this one breaks the run: do not also flag the next
+    return out
+
+
 def check_script(script: dict, bundle: dict, min_words: int | None = None) -> list[str]:
     problems = []
     ok = allowed_numbers(bundle)
@@ -349,6 +366,7 @@ def check_script(script: dict, bundle: dict, min_words: int | None = None) -> li
     for where in shown.values():
         if len(where) > 2:
             problems.append(f"scene {where[2]}: the same chart is already shown in scenes {where[:2]}; use a different chart, series or period")
+    problems += same_type_runs(scenes)
     return problems
 
 
@@ -385,7 +403,7 @@ def write_script(plan: dict, bundle: dict, gen=None, tries: int = 3, log=print, 
 RARE = ("kpi", "waffle", "gauge", "donut", "heatmap", "race", "world_map", "map", "scatter", "stacked")      # striking charts: twice per video at most
 COMMON_CAP, RARE_CAP = 3, 2
 COMMON = ("multiline", "slope", "compare", "bars", "states_bars", "countries_bars")
-SOFT = ("is repeated", "the same chart", "chart type")        # style problems: worth a rewrite, never worth losing the video
+SOFT = ("is repeated", "the same chart", "chart type", "in a row")        # style problems: worth a rewrite, never worth losing the video
 SENT_RE = re.compile(r"(?<=[.!?])\s+")
 
 

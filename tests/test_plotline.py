@@ -343,3 +343,39 @@ def test_plotline_remembers_its_comment_question_or_adds_a_plain_one():
     none = plotline.add_question({"scenes": [{"narration": "The trend fell."}, {"narration": "Subscribe for more."}]}, plan)
     assert none["engage"]["question"].endswith("?") and none["scenes"][-1]["narration"].endswith("Tell us in the comments.")
     assert plotline.add_question({"scenes": []}, plan) == {"scenes": []}
+
+
+def test_plotline_remakes_a_video_once_when_the_file_check_finds_a_fault(tmp_path, monkeypatch):
+    from autopilot import plotline_daily, qa_video
+
+    made, checks = [], []
+
+    def make():
+        made.append(1)
+        (tmp_path / "scenes").mkdir(exist_ok=True)
+        return tmp_path / "v.mp4"
+
+    def gate(path, kind, size, log):
+        checks.append(len(made))
+        if len(made) == 1:
+            raise qa_video.VideoCheckError("black picture for 5.0s")
+    monkeypatch.setattr(qa_video, "gate", gate)
+    assert plotline_daily.checked(make, tmp_path, "long", (1920, 1080), lambda m: None) == tmp_path / "v.mp4"
+    assert len(made) == 2 and checks == [1, 2] and not (tmp_path / "scenes").exists() or len(made) == 2     # scenes cleared before the second make
+
+    def always_bad(path, kind, size, log):
+        raise qa_video.VideoCheckError("still broken")
+    monkeypatch.setattr(qa_video, "gate", always_bad)
+    import pytest
+
+    with pytest.raises(qa_video.VideoCheckError):
+        plotline_daily.checked(make, tmp_path, "long", (1920, 1080), lambda m: None)
+
+
+def test_no_more_than_two_scenes_of_the_same_type_in_a_row():
+    def sc(*types):
+        return [{"visual": {"type": t}} for t in types]
+    assert plotline.same_type_runs(sc("title", "counter", "line", "statement", "counter", "counter", "line", "line")) == []
+    runs = plotline.same_type_runs(sc("line", "line", "line", "bars", "line", "line", "line", "line", "line"))
+    assert len(runs) == 2 and "scene 3" in runs[0] and "scene 7" in runs[1]
+    assert "in a row" in plotline.SOFT[-1]                                         # style problem: worth a rewrite, never worth losing the video
