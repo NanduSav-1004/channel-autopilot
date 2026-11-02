@@ -488,3 +488,20 @@ def test_the_reviewer_is_told_the_indian_numbering_system():
     for prompt in (ml.CHECK_PROMPT, ml.SHORT_CHECK_PROMPT, ml.VERIFY_PROMPT):
         assert "ലക്ഷം കോടി" in prompt and "TRILLION" in prompt
     assert "Western scale words" in ml.SECTION_PROMPT and "Western scale words" in ml.SENTENCE_PROMPT
+
+
+def test_the_malayalam_voice_never_uses_the_oldest_model_and_waits_for_quota_instead(monkeypatch):
+    from autopilot import llm, malayalam, tts
+
+    monkeypatch.setenv("GEMINI_API_KEY_ML", "k")
+    eng = malayalam.MalayalamGeminiEngine("Charon")
+    assert eng.models and not any("2.5" in m for m in eng.models) and set(eng.models) < set(tts.GEMINI_TTS_MODELS)
+    assert all(len(v.models) == 1 for v in eng.variants())
+
+    def out_of_quota(*a, **k):
+        raise OSError("no gemini model could speak the whole narration (all Gemini TTS models failed (x HTTP 429))")
+    monkeypatch.setattr(tts, "synthesize_script", out_of_quota)
+    import pytest
+
+    with pytest.raises(llm.LLMUnavailable):                    # a kind of failure the later runs retry
+        malayalam.make_voice({"sections": []}, "x.wav", {"name": "Charon"})

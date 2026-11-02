@@ -79,3 +79,9 @@ def extract_question(narration: str) -> str | None:
     qs = [s.strip() for s in re.findall(r"[^.?!]*\?", narration)]
     qs = [q for q in qs if valid(q, 22)]
     return qs[-1] if qs else None
+
+
+def last_question(text: str, max_words: int = 30) -> str | None:
+    """The last question in a narration in ANY language (used for the Malayalam edition, where the English word checks do not apply)."""
+    qs = [q.strip() for q in re.findall(r"[^.?!\n]*\?", text) if 3 <= len(q.split()) <= max_words]
+    return qs[-1] if qs else None

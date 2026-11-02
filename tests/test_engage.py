@@ -24,3 +24,8 @@ def test_the_spoken_closing_and_extracting_a_question_from_a_narration():
     assert engage.extract_question("The trend reversed. Where does your state rank? Subscribe for more.") == "Where does your state rank?"
     assert engage.extract_question("Nothing to ask here. Subscribe.") is None
     assert engage.extract_question("Is it 5 or 6? Where do you live?") == "Where do you live?"
+
+
+def test_last_question_works_in_any_language():
+    assert engage.last_question("ഒന്ന്. നമ്മൾ എന്തെങ്കിലും വിട്ടുപോയോ? കമന്റിൽ പറയൂ.") == "നമ്മൾ എന്തെങ്കിലും വിട്ടുപോയോ?"
+    assert engage.last_question("No question here.") is None and engage.last_question("Why? Because. And you, is it really so?") == "And you, is it really so?"

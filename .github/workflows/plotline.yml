@@ -2,9 +2,10 @@ name: Plotline Data
 
 on:
   schedule:
-    # After the free model quotas reset (07:00 UTC), and early enough that GitHub's late starts still finish before the 19:00 UTC
-    # go-live. A run skips itself when the day is done and continues an unfinished day where the last run stopped.
-    - cron: "47 7 * * *"
+    # After the free model quotas reset (midnight Pacific = 08:00 UTC from 1 Nov 2026 until March, 07:00 UTC in summer), and early enough that
+    # GitHub's late starts still finish before the 19:00 UTC go-live. The main trigger is an external timer (cron-job.org) calling workflow_dispatch.
+    # A run skips itself when the day is done and continues an unfinished day where the last run stopped.
+    - cron: "47 8 * * *"
     - cron: "23 9 * * *"
     - cron: "13 11 * * *"
     # GitHub started or dropped these by hours (31 Oct: about 6 h late; 1 Nov: none fired by 13:45 UTC), so two later backups; a run that finds

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import numpy as np
 
-from autopilot import closing, llm, tts
+from autopilot import closing, engage, llm, retention, tts
 from autopilot.config import cta_on, mascot_style, music_mood
 from autopilot.shots import estimate_timings as shots_estimate_timings
 
@@ -470,6 +470,11 @@ class MalayalamGeminiEngine(tts.GeminiEngine):
     such a direction aloud)."""
     key_env = "GEMINI_API_KEY_ML"
     style = ""
+
+    def __init__(self, voice: str = "Charon", models: list[str] | None = None):
+        # The oldest model (2.5 preview) is left out: on 2 Nov 2026 it was the only one with quota left and the Malayalam long video came out with
+        # several different voices. Better to wait for fresh quota (the failure below is retried by the later runs) than to publish that.
+        super().__init__(voice, models or [m for m in tts.GEMINI_TTS_MODELS if "2.5" not in m])
     estimate_words_only = True
     splitter = staticmethod(split_sentences_ml)
 
@@ -691,7 +696,12 @@ def pause_agreement(wav: Path, timings: list[dict], tol: float = 0.25) -> float:
 
 
 def make_voice(script_ml: dict, out_wav: Path, voice: dict) -> list[dict]:
-    timings = tts.synthesize_script(script_ml, out_wav, MalayalamGeminiEngine(voice["name"]), None)
+    try:
+        timings = tts.synthesize_script(script_ml, out_wav, MalayalamGeminiEngine(voice["name"]), None)
+    except OSError as exc:
+        if "Gemini" in str(exc) and ("HTTP 429" in str(exc) or "HTTP 503" in str(exc) or "could not speak" in str(exc)):
+            raise llm.LLMUnavailable(f"no Malayalam voice model has quota right now ({str(exc)[:160]})") from exc   # retried by the later runs
+        raise
     fixed = ml_add_word_times(out_wav, timings)
     make_monotone(timings)
     odd = pace_outliers(timings)
@@ -920,6 +930,9 @@ def upload_edition(conn, job, out_dir: Path, src_dir: Path, hour_utc: int | None
                               publish_at=publish_at, profile="ml", language="ml")
     conn.execute("UPDATE jobs SET ml_video_id = ?, ml_publish_at = ?, ml_status = 'done' WHERE id = ?", (vid, publish_at, job["id"]))
     conn.commit()                                   # saved at once so a retry can never upload it twice
+    question = engage.last_question(ml["sections"][-1]["narration"]) if ml.get("sections") else None
+    retention.record("long", ml["title"], timings, vid, Path("data/video_maps"),
+                     extra={"profile": "ml", **({"question": question, "comment": question, "engage_kind": "translated"} if question else {})})
     try:
         upload.set_thumbnail(vid, out_dir / "thumbnail.jpg", profile="ml")
     except Exception as exc:  # noqa: BLE001 - best effort, as for the English channel

@@ -2,12 +2,10 @@ name: Daily video
 
 on:
   schedule:
-    # GitHub's scheduler is best-effort: runs are delayed or dropped, most often on the hour. So: three off-peak
-    # attempts, after the free-tier quotas reset (07:00 UTC). The run skips itself if today's video is already up.
-    # Observed on 2026-10-22/23: GitHub started these 5+ hours late (or not at all), which can push the upload past the
-    # 18:00 UTC go-live slot. So two EARLY slots come first: a 5-hour delay from 02:17 still lands before 08:00 UTC.
-    - cron: "17 2 * * *"
-    - cron: "43 4 * * *"
+    # GitHub's scheduler is best-effort: runs are delayed or dropped. The main trigger is an EXTERNAL timer (cron-job.org, from 2 Nov 2026) calling
+    # workflow_dispatch; these are backups. The free Gemini quotas reset at midnight Pacific time: 07:00 UTC in summer, 08:00 UTC from the first
+    # Sunday of November (1 Nov 2026) until March. A run before the reset meets exhausted quotas (on 2 Nov the Malayalam voice fell back to the
+    # worst model), so no backup is earlier than 08:17 UTC. The run skips itself if today's video is already up.
     - cron: "17 8 * * *"
     - cron: "43 9 * * *"
     - cron: "11 11 * * *"

@@ -1,6 +1,6 @@
-"""Hourly job: post each new public video's first comment (the channel's own comment question) and send new viewer comments to Telegram.
+"""Post the first comment (the channel's own comment question) on each new LONG video once it is public. With --alerts it also sends new viewer comments to Telegram with draft replies (off: the owner replies by hand).
 Reads the video maps from the `state` and `state-plotline` branches, keeps its own ledger on the `state-comments` branch.
-Usage: python scripts/comments_run.py [--dry-run]   (needs the YouTube secrets and, to save the ledger, GITHUB_TOKEN + GITHUB_REPOSITORY)"""
+Usage: python scripts/comments_run.py [--dry-run] [--alerts]   (needs the YouTube secrets and, to save the ledger, GITHUB_TOKEN + GITHUB_REPOSITORY)"""
 import json
 import os
 import subprocess
@@ -17,7 +17,7 @@ from autopilot.youtube_auth import configured, load_credentials
 
 CHANNELS = {"en": ("Brightwork Science", "origin/state", "data/video_maps"),
             "data": ("Plotline Data", "origin/state-plotline", "data/plotline/video_maps"),
-            "ml": ("Brightwork Malayalam", None, None)}                 # Malayalam: only viewer-comment alerts for now
+            "ml": ("Brightwork Malayalam", "origin/state", "data/video_maps")}   # Malayalam long videos share the Brightwork state; their maps say profile "ml"
 
 
 def git(*args: str, cwd: Path = ROOT) -> str | None:
@@ -72,6 +72,7 @@ def save_ledger(ledger: dict) -> None:
 def main() -> None:
     env.load_env(ROOT / ".env")
     dry = "--dry-run" in sys.argv
+    alerts = "--alerts" in sys.argv                                    # the owner replies to comments by hand (2 Nov 2026), so alerts are off
     fetch()
     ledger = load_ledger()
     send = (lambda t: print("[dry-run] would send:", t)) if dry else notify.send
@@ -81,20 +82,25 @@ def main() -> None:
             print(f"[comments] {name}: no login, skipped")
             continue
         yt = yts[prof] = build("youtube", "v3", credentials=load_credentials(prof))
-        maps = load_maps(ref, folder) if ref else {}
+        maps = {v: m for v, m in (load_maps(ref, folder) if ref else {}).items()
+                if m.get("kind") == "long" and m.get("profile", "data" if prof == "data" else "en") == prof}      # first comments: long videos only
         try:
             if dry:
                 print(f"[dry-run] {name}: {len(comments.due(maps, ledger))} first comments waiting")
                 continue
-            comments.run_profile(yt, prof, name, maps, ledger, send)
+            if alerts:
+                comments.run_profile(yt, prof, name, maps, ledger, send)       # also viewer-comment alerts and draft replies (off by default)
+            else:
+                comments.post_first_comments(yt, maps, ledger)
         except Exception as exc:  # noqa: BLE001 - one channel's problem must not stop the others
             print(f"[comments] {name}: {type(exc).__name__}: {str(exc)[:200]}")
-    if not dry:
+    if not dry and alerts:
         try:                                                              # the owner's answers to the draft replies (ok N, skip N, N: own words)
             comments.process_approvals(notify.updates(ledger.get("tg_offset")), ledger, yts, os.environ.get("TELEGRAM_CHAT_ID", ""), send)
             comments.expire_pending(ledger)
         except Exception as exc:  # noqa: BLE001
             print(f"[comments] approvals: {type(exc).__name__}: {str(exc)[:200]}")
+    if not dry:
         save_ledger(ledger)
 
 

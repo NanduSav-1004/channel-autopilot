@@ -103,7 +103,7 @@ about 12:00 UTC, check the Actions tab and start it by hand (Run workflow, tick 
 
 ## Common problems
 **All models out of quota** (`all LLM models are out of quota or busy`). The job stays pending and is retried
-on the next run without using an attempt. Free quotas reset about 07:00 UTC (Gemini) and daily (Groq). Nothing to do.
+on the next run without using an attempt. Free Gemini quotas reset at midnight Pacific time (07:00 UTC in summer, 08:00 UTC from the first Sunday of November to March) and daily (Groq). Nothing to do.
 
 **A job shows `failed`** (3 real attempts). Look at its `error` with `autopilot status` (locally), then
 `autopilot retry` to reset failed jobs.
