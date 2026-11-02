@@ -15,10 +15,20 @@ STYLES = ["fade", "slideleft", "dissolve", "wipeleft", "smoothleft", "circleopen
 MIN_FRAMES = 2 * N + 6                  # both neighbours must be at least this long
 
 
+def parse_count(text: str) -> int:
+    """ffprobe prints the count as '58' for most files but '58,' (a trailing comma, from an empty extra field) for some: take the first integer."""
+    import re
+
+    m = re.search(r"\d+", text)
+    if not m:
+        raise ValueError(f"no frame count in {text!r}")
+    return int(m.group())
+
+
 def frame_count(path: Path) -> int:
     out = subprocess.run(["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries", "stream=nb_read_frames",
                           "-of", "csv=p=0", str(path)], check=True, capture_output=True, text=True).stdout.strip()
-    return int(out)
+    return parse_count(out)
 
 
 def plan(kinds: list[str], frames: list[int], every: int = EVERY) -> list[str | None]:

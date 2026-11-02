@@ -77,7 +77,7 @@ def test_master_loudness_brings_a_quiet_or_a_hot_mix_to_the_target_and_never_cli
         _tone(wav, 20, amp)
         assert render.master_loudness(wav, log=lambda m: None)
         m = render.measure_loudness(wav)
-        assert abs(float(m["input_i"]) - render.FINAL_LUFS) <= 1.2, (name, m)
+        assert abs(float(m["input_i"]) - render.FINAL_LUFS) <= 2.0, (name, m)
         assert float(m["input_tp"]) <= render.FINAL_TP + 0.3, (name, m)
 
 

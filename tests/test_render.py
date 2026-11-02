@@ -240,3 +240,11 @@ def test_transition_plan_skips_data_shots_and_short_clips_and_alternates():
     assert styles[1] is not None
     assert sum(t.lengths(frames, styles)) == sum(frames) + 10 * sum(1 for x in styles if x)
     assert not any(a and b for a, b in itertools.pairwise(styles))
+
+
+def test_frame_count_parsing_accepts_a_trailing_comma_from_ffprobe():
+    from autopilot import transitions as t
+
+    assert t.parse_count("58,") == 58 and t.parse_count("64\n") == 64 and t.parse_count("12,\n") == 12
+    with pytest.raises(ValueError):
+        t.parse_count("")

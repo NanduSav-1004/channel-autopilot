@@ -406,25 +406,28 @@ def measure_loudness(wav: Path) -> dict:
 
 
 def master_loudness(wav: Path, log=print) -> bool:
-    """Bring the finished mix (voice, music, effects) to FINAL_LUFS with a FINAL_TP true-peak ceiling, in place: two passes (measure, then a
-    linear gain, so the sound is not squashed; if the peaks do not allow the full gain it stops at the true-peak ceiling). VERIFIED afterwards; if anything is off the original file is kept. Never raises."""
+    """Bring the finished mix (voice, music, effects) towards FINAL_LUFS under a FINAL_TP true-peak ceiling, in place: two passes (measure, then
+    a linear gain, so nothing is squashed). The peaks of speech usually stop the gain 1 to 1.5 LU short of the target; that is accepted, because
+    heavier limiting was measured to gain nothing (it removes as much loudness as it adds). The result is kept only if the true peak is within
+    bounds and it is clearly closer to the target (0.5 LU or more) than the original; otherwise the original stays. Never raises."""
     import shutil
 
     tmp = wav.with_suffix(".mastered.wav")
     try:
         m = measure_loudness(wav)
-        if float(m["input_i"]) < -60:
+        before = float(m["input_i"])
+        if before < -60:
             return False                                                   # silence: nothing to normalise
         flt = (f"loudnorm=I={FINAL_LUFS}:TP={FINAL_TP}:LRA=11:measured_I={m['input_i']}:measured_TP={m['input_tp']}:measured_LRA={m['input_lra']}"
                f":measured_thresh={m['input_thresh']}:offset={m['target_offset']}:linear=true")
         subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(wav), "-af", flt, "-ar", "48000", "-ac", "1", str(tmp)], check=True)
         after = measure_loudness(tmp)
         got, peak = float(after["input_i"]), float(after["input_tp"])
-        if abs(got - FINAL_LUFS) > 1.2 or peak > FINAL_TP + 0.3:
-            log(f"[master] kept the original mix (result {got:.1f} LUFS, {peak:.1f} dBTP was off target)")
+        if peak > FINAL_TP + 0.3 or abs(before - FINAL_LUFS) - abs(got - FINAL_LUFS) < 0.5:
+            log(f"[master] kept the original mix ({before:.1f} LUFS; the result {got:.1f} LUFS, {peak:.1f} dBTP was no clear gain)")
             return False
         shutil.move(str(tmp), str(wav))
-        log(f"[master] loudness {float(m['input_i']):.1f} -> {got:.1f} LUFS, true peak {float(m['input_tp']):.1f} -> {peak:.1f} dBTP")
+        log(f"[master] loudness {before:.1f} -> {got:.1f} LUFS, true peak {float(m['input_tp']):.1f} -> {peak:.1f} dBTP")
         return True
     except Exception as exc:  # noqa: BLE001 - a quieter mix is far better than a failed video
         log(f"[master] skipped ({type(exc).__name__}: {exc})")
