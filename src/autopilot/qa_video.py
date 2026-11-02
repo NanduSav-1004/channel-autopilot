@@ -9,7 +9,7 @@ import re
 import subprocess
 from pathlib import Path
 
-LIMITS = {"long": (150.0, 1500.0), "short": (8.0, 61.0)}      # plausible length range in seconds
+LIMITS = {"long": (150.0, 1500.0), "short": (5.0, 61.0)}      # plausible length range in seconds
 EDGE = 1.2                                                    # black or silence this close to the start or end is a fade, not a fault
 
 
