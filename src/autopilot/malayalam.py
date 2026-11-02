@@ -1019,6 +1019,32 @@ def redo_shorts(conn, now=None) -> list[str]:
     return lines
 
 
+def redo_long(conn, now=None) -> list[str]:
+    """Today's Malayalam LONG video is to be made again (for example after a bad voice). It, and its Shorts (whose descriptions link to it), are
+    deleted from the Malayalam channel and cleared from the job list so the next step rebuilds everything, but ONLY while the long video is still
+    private and scheduled: once it is public nothing is touched. Returns what was done, one line per video."""
+    from datetime import datetime, timezone
+
+    from autopilot import schedule, upload
+
+    now = now or datetime.now(timezone.utc)
+    long_job = conn.execute("SELECT id, ml_video_id FROM jobs WHERE kind = 'long' AND ml_video_id IS NOT NULL AND date(created_at) = date('now') "
+                            "ORDER BY id DESC LIMIT 1").fetchone()
+    if not long_job:
+        return ["redo: no Malayalam long video today"]
+    items = upload._client("ml").videos().list(part="status", id=long_job["ml_video_id"]).execute().get("items", [])
+    st = items[0]["status"] if items else None
+    when = schedule.parse(st["publishAt"]) if st and st.get("publishAt") else None
+    if st is not None and not (st["privacyStatus"] == "private" and when and when > now):
+        return ["long: kept (already public or not scheduled), so nothing was deleted"]
+    lines = redo_shorts(conn, now)
+    if st is not None:
+        upload.delete_video(long_job["ml_video_id"], "ml")
+    conn.execute("UPDATE jobs SET ml_video_id = NULL, ml_publish_at = NULL, ml_status = NULL WHERE id = ?", (long_job["id"],))
+    conn.commit()
+    return ["long: old scheduled video deleted, will be rebuilt", *lines]
+
+
 def _only_shorts(conn, cfg, job, privacy: str, live: bool, build_only: bool, root: Path, ml_cfg: dict) -> str:
     """The Malayalam long video is up; make the Shorts that are still missing (a manual retry after a failure)."""
     src = next(iter(sorted(root.glob(f"{job['id']:04d}-*"))), None)

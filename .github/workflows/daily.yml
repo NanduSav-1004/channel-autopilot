@@ -23,6 +23,10 @@ on:
         description: "Remake today's English Shorts at these positions, e.g. 0,1 (deletes the old ones while still private and scheduled)"
         type: string
         default: ""
+      redo_ml_long:
+        description: "Delete today's still-private Malayalam long video AND its Shorts and make them again"
+        type: boolean
+        default: false
       redo_ml_shorts:
         description: "Delete today's still-private Malayalam Shorts and make them again"
         type: boolean
@@ -120,6 +124,7 @@ jobs:
           # a manual run retries a Malayalam edition that failed earlier today; the scheduled backups do not
           [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.scheduled }}" != "true" ] && ARGS="$ARGS --retry"
           [ "${{ inputs.redo_ml_shorts }}" = "true" ] && ARGS="$ARGS --redo-shorts"
+          [ "${{ inputs.redo_ml_long }}" = "true" ] && ARGS="$ARGS --redo-long"
           autopilot $ARGS 2>&1 | tee -a run.log
 
       - name: Keep the Malayalam edition for review (only when it was built but not uploaded)

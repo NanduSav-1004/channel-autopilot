@@ -105,6 +105,7 @@ def main() -> None:
     parser.add_argument("--redo-en-shorts", default="", help="daily: remake today's English Shorts at these positions (e.g. 0,1): deletes the "
                                                            "old ones while still private and scheduled")
     parser.add_argument("--redo-shorts", action="store_true", help="ml --auto: delete today's still-private Malayalam Shorts and rebuild them")
+    parser.add_argument("--redo-long", action="store_true", help="ml --auto: delete today's still-private Malayalam long video and its Shorts and rebuild them")
     parser.add_argument("--retry", action="store_true", help="ml --auto: also retry editions that failed earlier today")
     parser.add_argument("--voice", help="ml: Gemini voice name (default: rotates Charon, Achird, Sulafat)")
     args = parser.parse_args()
@@ -121,10 +122,13 @@ def main() -> None:
         if args.live:
             cfg.dry_run = False
         conn = db.connect()
-        if args.redo_shorts:
+        if args.redo_long:
+            for line in malayalam.redo_long(conn):
+                print(f"[ml] {line}", flush=True)
+        elif args.redo_shorts:
             for line in malayalam.redo_shorts(conn):
                 print(f"[ml] {line}", flush=True)
-        print(malayalam.run_daily_edition(conn, cfg, args.privacy, not cfg.dry_run, Path("output"), args.retry or args.redo_shorts),
+        print(malayalam.run_daily_edition(conn, cfg, args.privacy, not cfg.dry_run, Path("output"), args.retry or args.redo_shorts or args.redo_long),
               flush=True)
         return
     if args.command == "ml":

@@ -505,3 +505,36 @@ def test_the_malayalam_voice_never_uses_the_oldest_model_and_waits_for_quota_ins
 
     with pytest.raises(llm.LLMUnavailable):                    # a kind of failure the later runs retry
         malayalam.make_voice({"sections": []}, "x.wav", {"name": "Charon"})
+
+
+def test_redo_long_deletes_the_long_video_and_its_shorts_only_while_the_long_one_is_private_and_scheduled(tmp_path, monkeypatch):
+    from datetime import datetime, timezone
+
+    from autopilot import db, upload
+
+    def setup(status_long):
+        conn = db.connect(tmp_path / f"{status_long['privacyStatus']}.db")
+        long_id = db.add_job(conn, "t", "long")
+        conn.execute("UPDATE jobs SET video_id = 'V', ml_video_id = 'MLONG', ml_publish_at = 'x', ml_status = 'done' WHERE id = ?", (long_id,))
+        s = db.add_job(conn, "s0", "short", parent_id=long_id, short_idx=0)
+        conn.execute("UPDATE jobs SET video_id = 'E0', ml_video_id = 'MSHORT', ml_status = 'done' WHERE id = ?", (s,))
+        conn.commit()
+        status = {"MLONG": status_long, "MSHORT": {"privacyStatus": "private", "publishAt": "2026-10-30T02:00:00Z"}}
+
+        class Videos:
+            def list(self, part, id):
+                return types.SimpleNamespace(execute=lambda: {"items": [{"status": status[id]}]})
+        deleted = []
+        monkeypatch.setattr(upload, "_client", lambda profile="en": types.SimpleNamespace(videos=lambda: Videos()))
+        monkeypatch.setattr(upload, "delete_video", lambda vid, profile="en": deleted.append(vid))
+        return conn, long_id, deleted
+
+    now = datetime(2026, 10, 29, 12, 0, tzinfo=timezone.utc)
+    conn, long_id, deleted = setup({"privacyStatus": "private", "publishAt": "2026-10-29T16:00:00Z"})
+    lines = ml.redo_long(conn, now=now)
+    assert sorted(deleted) == ["MLONG", "MSHORT"] and "deleted" in lines[0]
+    rows = {r["id"]: r for r in conn.execute("SELECT * FROM jobs")}
+    assert rows[long_id]["ml_video_id"] is None and rows[long_id]["ml_status"] is None
+    assert all(r["ml_video_id"] is None for r in rows.values())
+    conn2, _, deleted2 = setup({"privacyStatus": "public"})
+    assert "kept" in ml.redo_long(conn2, now=now)[0] and deleted2 == []                  # public: nothing touched, not even the Shorts
