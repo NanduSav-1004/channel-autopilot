@@ -1,10 +1,9 @@
 name: Comments
 
-# Every 15 minutes: posts the channel's own first comment (the video's comment question) on each video once it is public, and sends new viewer comments
+# Manual only: posts the channel's own first comment (the video's comment question) on each video once it is public, and sends new viewer comments
 # to Telegram with a numbered draft reply; it posts a reply ONLY after the owner answers that Telegram message (ok N / skip N / N: own words). Its ledger lives on the `state-comments` branch.
 on:
-  schedule:
-    - cron: "*/15 * * * *"
+  # The 15-minute schedule was removed on 2026-11-02: the owner replies to comments by hand. Run it manually from the Actions tab if needed.
   workflow_dispatch:
 
 concurrency:

@@ -13,6 +13,10 @@ on:
     - cron: "11 11 * * *"
   workflow_dispatch:
     inputs:
+      scheduled:
+        description: "Run exactly like a scheduled run (live, privacy from UPLOAD_PRIVACY): this is what the external timer sends"
+        type: boolean
+        default: false
       live:
         description: "Really upload to YouTube (otherwise dry run)"
         type: boolean
@@ -93,7 +97,7 @@ jobs:
         shell: bash
         run: |
           # Scheduled runs upload for real. Privacy comes from the repo variable UPLOAD_PRIVACY (default public).
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.scheduled }}" != "true" ]; then
             LIVE="${{ inputs.live }}"; PRIVACY="${{ inputs.privacy }}"
           else
             LIVE="true"; PRIVACY="${{ vars.UPLOAD_PRIVACY || 'public' }}"
@@ -108,7 +112,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.scheduled }}" != "true" ]; then
             LIVE="${{ inputs.live }}"; PRIVACY="${{ inputs.privacy }}"
           else
             LIVE="true"; PRIVACY="${{ vars.UPLOAD_PRIVACY || 'public' }}"
@@ -116,7 +120,7 @@ jobs:
           ARGS="ml --auto --privacy $PRIVACY"
           [ "$LIVE" = "true" ] && ARGS="$ARGS --live"
           # a manual run retries a Malayalam edition that failed earlier today; the scheduled backups do not
-          [ "${{ github.event_name }}" = "workflow_dispatch" ] && ARGS="$ARGS --retry"
+          [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.scheduled }}" != "true" ] && ARGS="$ARGS --retry"
           [ "${{ inputs.redo_ml_shorts }}" = "true" ] && ARGS="$ARGS --redo-shorts"
           autopilot $ARGS 2>&1 | tee -a run.log
 

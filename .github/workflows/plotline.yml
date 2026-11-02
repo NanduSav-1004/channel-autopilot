@@ -13,6 +13,10 @@ on:
     - cron: "27 14 * * *"
   workflow_dispatch:
     inputs:
+      scheduled:
+        description: "Run exactly like a scheduled run (live, privacy from UPLOAD_PRIVACY): this is what the external timer sends"
+        type: boolean
+        default: false
       live:
         description: "Really upload to YouTube (otherwise only make the files)"
         type: boolean
@@ -81,7 +85,7 @@ jobs:
       - name: Make today's Plotline video and Shorts
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.scheduled }}" != "true" ]; then
             LIVE="${{ inputs.live }}"; PRIVACY="${{ inputs.privacy }}"
           else
             LIVE="true"; PRIVACY="${{ vars.UPLOAD_PRIVACY || 'public' }}"
