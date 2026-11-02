@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from googleapiclient.discovery import build
 
 from autopilot import comments, env, notify
-from autopilot.youtube_auth import configured, load_credentials
+from autopilot.youtube_auth import SCOPES_WITH_COMMENTS, configured, load_credentials
 
 CHANNELS = {"en": ("Brightwork Science", "origin/state", "data/video_maps"),
             "data": ("Plotline Data", "origin/state-plotline", "data/plotline/video_maps"),
@@ -81,7 +81,11 @@ def main() -> None:
         if not configured(prof):
             print(f"[comments] {name}: no login, skipped")
             continue
-        yt = yts[prof] = build("youtube", "v3", credentials=load_credentials(prof))
+        try:
+            creds = load_credentials(prof, SCOPES_WITH_COMMENTS)
+        except Exception:  # noqa: BLE001 - a login made before 2 Nov 2026 lacks the comment permission: Google refuses the refresh
+            creds = load_credentials(prof)                           # posting then fails with "insufficient scopes", which comments.py reports once
+        yt = yts[prof] = build("youtube", "v3", credentials=creds)
         maps = {v: m for v, m in (load_maps(ref, folder) if ref else {}).items()
                 if m.get("kind") == "long" and m.get("profile", "data" if prof == "data" else "en") == prof}      # first comments: long videos only
         try:
@@ -91,7 +95,7 @@ def main() -> None:
             if alerts:
                 comments.run_profile(yt, prof, name, maps, ledger, send)       # also viewer-comment alerts and draft replies (off by default)
             else:
-                comments.post_first_comments(yt, maps, ledger)
+                comments.post_first_comments(yt, maps, ledger, send=send)
         except Exception as exc:  # noqa: BLE001 - one channel's problem must not stop the others
             print(f"[comments] {name}: {type(exc).__name__}: {str(exc)[:200]}")
     if not dry and alerts:

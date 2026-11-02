@@ -166,3 +166,17 @@ def test_new_comments_get_numbered_drafts_and_old_pending_ones_expire():
     ledger["pending"]["1"]["at"] = "2026-10-01T00:00:00+00:00"
     comments.expire_pending(ledger)
     assert ledger["pending"] == {}
+
+
+def test_a_missing_comment_permission_does_not_use_up_tries_and_tells_the_owner_once():
+    class Denied(Fake):
+        def commentThreads(self):
+            class C:
+                def insert(self, part, body):
+                    return Call(boom=RuntimeError("Request had insufficient authentication scopes."))
+            return C()
+    maps, ledger, sent = {"a": {"comment": "Which part surprised you?"}}, comments.empty_ledger(), []
+    yt = Denied(public={"a"})
+    for _ in range(5):
+        assert comments.post_first_comments(yt, maps, ledger, log=lambda m: None, send=sent.append) == 0
+    assert ledger["failed"] == {} and len(sent) == 1 and "permission" in sent[0]                     # never gives up, one message only

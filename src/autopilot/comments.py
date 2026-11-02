@@ -35,7 +35,7 @@ def due(maps: dict[str, dict], ledger: dict) -> list[str]:
     return [vid for vid, m in maps.items() if m.get("comment") and vid not in ledger["posted"] and ledger["failed"].get(vid, 0) < MAX_TRIES]
 
 
-def post_first_comments(yt, maps: dict[str, dict], ledger: dict, log=print) -> int:
+def post_first_comments(yt, maps: dict[str, dict], ledger: dict, log=print, send=None) -> int:
     """Post the due first comments on videos that are public. Updates the ledger; returns how many were posted. Never raises for one video."""
     waiting = due(maps, ledger)
     if not waiting:
@@ -52,6 +52,14 @@ def post_first_comments(yt, maps: dict[str, dict], ledger: dict, log=print) -> i
             posted += 1
             log(f"[comments] first comment posted on https://youtu.be/{vid}: {text}")
         except Exception as exc:  # noqa: BLE001 - comments disabled, quota, a deleted video...
+            if "insufficient" in str(exc).lower() or "scope" in str(exc).lower():
+                # the login lacks the comment permission: not the video's fault, so it does not use up a try. The owner is told once.
+                log(f"[comments] {vid}: the YouTube login lacks the permission to comment ({str(exc)[:100]}); will retry")
+                if send and vid not in ledger.setdefault("notified", []):
+                    ledger["notified"].append(vid)
+                    send(f"The first comment on https://youtu.be/{vid} could not be posted: that channel's YouTube login lacks the comment permission. "
+                         "It will be tried again after the login is renewed.")
+                continue
             ledger["failed"][vid] = ledger["failed"].get(vid, 0) + 1
             log(f"[comments] could not comment on {vid} ({str(exc)[:120]}); try {ledger['failed'][vid]}/{MAX_TRIES}")
     return posted
