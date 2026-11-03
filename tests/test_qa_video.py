@@ -24,7 +24,10 @@ def test_black_frozen_and_silent_stretches_are_errors_only_when_long_and_not_at_
     fade_in_out = {**NONE, "black": [(0.0, 0.8), (299.0, 300.1)], "silence": [(298.0, 300.1)]}
     assert q.judge(OK_INFO, fade_in_out, None, "long", None)["errors"] == []                             # fades at the ends are normal
     assert q.judge(OK_INFO, {**NONE, "black": [(100.0, 100.7)]}, None, "long", None)["warnings"]
-    assert q.judge(OK_INFO, {**NONE, "black": [(100.0, 103.0)]}, None, "long", None)["errors"]
+    dark_scene = q.judge(OK_INFO, {**NONE, "black": [(132.0, 134.7), (200.0, 203.7)]}, None, "long", None)          # a bulb that begins to glow
+    assert dark_scene["warnings"] and not dark_scene["errors"]
+    assert q.judge(OK_INFO, {**NONE, "black": [(100.0, 109.0)]}, None, "long", None)["errors"]
+    assert q.judge({**OK_INFO, "v_dur": 40.0, "a_dur": 40.0, "dur": 40.0}, {**NONE, "black": [(10.0, 17.0)]}, None, "short", None)["errors"]
     assert q.judge(OK_INFO, {**NONE, "freeze": [(50.0, 58.0)]}, None, "long", None) ["warnings"] and not q.judge(OK_INFO, {**NONE, "freeze": [(50.0, 58.0)]}, None, "long", None)["errors"]
     assert q.judge(OK_INFO, {**NONE, "freeze": [(50.0, 70.0)]}, None, "long", None)["errors"]
     assert q.judge(OK_INFO, {**NONE, "silence": [(100.0, 104.0)]}, None, "long", None)["warnings"]

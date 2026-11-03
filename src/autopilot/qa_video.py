@@ -2,7 +2,7 @@
 
 One ffmpeg pass looks for black stretches, frozen picture and dead audio, and ffprobe checks the streams, the size and the length; a second
 pass measures the loudness. Findings are either WARNINGS (logged, so we learn what normal looks like) or ERRORS, which are only the clearly
-broken cases: no picture or no sound, picture and sound of very different lengths, a long black or frozen stretch, a long dead-silent stretch,
+broken cases: no picture or no sound, picture and sound of very different lengths, a very long black or frozen stretch, a long dead-silent stretch,
 the wrong frame size, an absurd length. An error stops the upload of that attempt; the stage is run again (a re-render usually fixes a glitch)."""
 import json
 import re
@@ -10,6 +10,7 @@ import subprocess
 from pathlib import Path
 
 LIMITS = {"long": (150.0, 1500.0), "short": (5.0, 61.0)}      # plausible length range in seconds
+BLACK_ERROR_TOTAL, BLACK_ERROR_ONE = 12.0, 8.0                # dark footage is normal (a bulb that begins to glow starts on black): only a very long black is a fault
 EDGE = 1.2                                                    # black or silence this close to the start or end is a fade, not a fault
 
 
@@ -71,7 +72,8 @@ def judge(info: dict, found: dict, loud: tuple[float, float] | None, kind: str, 
     inner_black = [(a, b) for a, b in found["black"] if a > EDGE and b < dur - EDGE + 0.01]
     black_total = sum(b - a for a, b in inner_black)
     where = ", ".join(f"{a:.0f}s for {b - a:.1f}s" for a, b in inner_black[:4])
-    if inner_black and (black_total >= 4.0 or max(b - a for a, b in inner_black) >= 2.5):
+    limit_total, limit_one = (BLACK_ERROR_TOTAL, BLACK_ERROR_ONE) if kind == "long" else (BLACK_ERROR_TOTAL / 2, BLACK_ERROR_ONE / 2)
+    if inner_black and (black_total >= limit_total or max(b - a for a, b in inner_black) >= limit_one):
         errors.append(f"black picture for {black_total:.1f}s in total ({where})")
     elif inner_black:
         warnings.append(f"black picture for {black_total:.1f}s in total ({where})")
