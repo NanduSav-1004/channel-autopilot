@@ -70,10 +70,11 @@ def judge(info: dict, found: dict, loud: tuple[float, float] | None, kind: str, 
         errors.append(f"length {dur:.0f}s is outside {lo:.0f} to {hi:.0f}s")
     inner_black = [(a, b) for a, b in found["black"] if a > EDGE and b < dur - EDGE + 0.01]
     black_total = sum(b - a for a, b in inner_black)
+    where = ", ".join(f"{a:.0f}s for {b - a:.1f}s" for a, b in inner_black[:4])
     if inner_black and (black_total >= 4.0 or max(b - a for a, b in inner_black) >= 2.5):
-        errors.append(f"black picture for {black_total:.1f}s (first at {inner_black[0][0]:.0f}s)")
+        errors.append(f"black picture for {black_total:.1f}s in total ({where})")
     elif inner_black:
-        warnings.append(f"black picture for {black_total:.1f}s (first at {inner_black[0][0]:.0f}s)")
+        warnings.append(f"black picture for {black_total:.1f}s in total ({where})")
     frozen = max(((b - a) for a, b in found["freeze"]), default=0.0)
     if frozen >= 15.0:
         errors.append(f"picture frozen for {frozen:.0f}s")
