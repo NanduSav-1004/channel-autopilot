@@ -6,10 +6,11 @@ Run it after renewing the logins (python -m autopilot.youtube_auth [--ml|--data]
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 repo = sys.argv[1] if len(sys.argv) > 1 else "NanduSav-1004/channel-autopilot"
 for name, path in (("YOUTUBE_REFRESH_TOKEN", "secrets/token.json"), ("YOUTUBE_REFRESH_TOKEN_ML", "secrets/token_ml.json"),
                    ("YOUTUBE_REFRESH_TOKEN_DATA", "secrets/token_data.json")):
-    token = json.load(open(path))["refresh_token"]
+    token = json.loads(Path(path).read_text())["refresh_token"]
     result = subprocess.run(["gh", "secret", "set", name, "--repo", repo], input=token.encode(), capture_output=True, check=False)
     print(f"{name}: " + ("set" if result.returncode == 0 else "FAILED " + result.stderr.decode()[:200]))
