@@ -7,6 +7,15 @@ REMOTE="${STATE_REMOTE:-https://x-access-token:${GITHUB_TOKEN}@github.com/${GITH
 BRANCH=state-plotline
 DIR=data/plotline
 
+push_with_retry() {   # a failed save loses the day's state (and risks a second upload), so: three tries, and the real error is printed
+  for wait in 0 8 25; do
+    sleep "$wait"
+    if out="$(git push -q -f "$REMOTE" "$1" 2>&1)"; then return 0; fi
+    echo "state push failed (waited ${wait}s): $(echo "$out" | sed -E 's#(x-access-token:)[^@]*@#\1***@#' | tail -n 6)" >&2
+  done
+  return 1
+}
+
 case "${1:-}" in
   pull)
     mkdir -p "$DIR"
@@ -38,7 +47,7 @@ case "${1:-}" in
     git init -q && git checkout -q -b "$BRANCH"
     git -c user.name=autopilot -c user.email=autopilot@users.noreply.github.com add -A
     git -c user.name=autopilot -c user.email=autopilot@users.noreply.github.com commit -q -m "plotline state $(date -u +%FT%TZ)"
-    git push -q -f "$REMOTE" "$BRANCH"
+    push_with_retry "$BRANCH"
     echo "plotline state saved"
     ;;
   *) echo "usage: $0 pull|push"; exit 2 ;;

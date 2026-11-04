@@ -430,7 +430,10 @@ class Stages:
                 _write(parent_dir / "credits.json", credits)
             print(f"[job {job['id']}] media found again for this Short", flush=True)
         sections = _read(parent_dir / "items.json")
-        pool = shots.short_media_pool(sections, s["section_index"])  # this section's media, then its neighbours'
+        plans = _read(parent_dir / "shorts.json") if (parent_dir / "shorts.json").exists() else []
+        pool = (shots.distinct_short_pool(sections, [p["section_index"] for p in plans], job["short_idx"])   # sibling Shorts must not look alike
+                if len(plans) > 1 and job["short_idx"] is not None and job["short_idx"] < len(plans)
+                else shots.short_media_pool(sections, s["section_index"]))
         items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]
         music = self.make_music(d / "music.wav", timings[-1]["end"] + 3, job["id"] + 1000, self.mood(job))
         wd = self.work / f"{self.dir(self._parent(job)).name}-{d.name}"

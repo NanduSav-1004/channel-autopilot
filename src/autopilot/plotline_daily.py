@@ -81,6 +81,39 @@ def retry_thumbnails(state: dict, live: bool) -> None:
         save_state(state)
 
 
+def adopt_from_channel(entry: dict, day: str, yt=None, log=print) -> bool:
+    """Self-heal after a failed state save: if the channel already holds today's long video (scheduled for today's go-live hour), record it and its
+    Shorts in `entry` so the run does not make a SECOND video for the same day. Returns True if it adopted one. Never raises."""
+    import re
+
+    try:
+        if yt is None:
+            from autopilot import upload
+
+            yt = upload._client("data")
+        slot = datetime.fromisoformat(day).replace(hour=PUBLISH_HOUR_UTC, tzinfo=timezone.utc)
+        up = yt.channels().list(part="contentDetails", mine=True).execute()["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+        ids = [i["contentDetails"]["videoId"] for i in yt.playlistItems().list(part="contentDetails", playlistId=up, maxResults=12).execute()["items"]]
+        videos = yt.videos().list(part="snippet,contentDetails,status", id=",".join(ids)).execute()["items"]
+        found = []
+        for v in videos:
+            m = re.fullmatch(r"PT(?:(\d+)M)?(?:(\d+)S)?", v["contentDetails"]["duration"])
+            secs = int(m.group(1) or 0) * 60 + int(m.group(2) or 0) if m else 0
+            when = schedule.parse(v["status"].get("publishAt") or v["snippet"]["publishedAt"])
+            found.append((when, secs, v))
+        long = next(((w, v) for w, secs, v in found if secs > 90 and abs((w - slot).total_seconds()) < 120), None)
+        if not long:
+            return False
+        shorts = sorted(((w, v) for w, secs, v in found if secs <= 62 and timedelta(hours=1) <= w - slot <= timedelta(hours=16)), key=lambda x: x[0])
+        entry |= {"title": long[1]["snippet"]["title"], "video_id": long[1]["id"], "publish_at": schedule.rfc3339(long[0]), "thumbnail_set": True,
+                  "shorts": [{"title": v["snippet"]["title"].replace(" #Shorts", ""), "video_id": v["id"], "publish_at": schedule.rfc3339(w)} for w, v in shorts[:3]]}
+        log(f"[plotline] today's video {entry['video_id']} and {len(entry['shorts'])} Short(s) were already on the channel (the state save had failed): adopted them")
+        return True
+    except Exception as exc:  # noqa: BLE001
+        log(f"[plotline] could not look for an existing upload ({type(exc).__name__}: {str(exc)[:100]})")
+        return False
+
+
 def checked(make, work: Path, kind: str, size: tuple[int, int], log):
     """Make a video and check the file (qa_video). If the check finds a real fault, the cached chart scenes are cleared and the video is made
     ONE more time (a re-render usually fixes a glitch); a second failure raises and stops the upload."""
@@ -102,6 +135,8 @@ def run(live: bool, privacy: str, now: datetime | None = None) -> str:
     state = load_state()
     retry_thumbnails(state, live)
     entry = state["days"].setdefault(day, {})
+    if live and not entry.get("video_id") and adopt_from_channel(entry, day):
+        save_state(state)
     shorts_done = [s for s in entry.get("shorts", []) if s.get("video_id")]
     if entry.get("video_id") and len(shorts_done) >= SHORTS_PER_DAY:
         return "today's Plotline video and Shorts are already up; nothing to do"

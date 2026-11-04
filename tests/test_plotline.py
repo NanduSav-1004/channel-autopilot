@@ -379,3 +379,31 @@ def test_no_more_than_two_scenes_of_the_same_type_in_a_row():
     runs = plotline.same_type_runs(sc("line", "line", "line", "bars", "line", "line", "line", "line", "line"))
     assert len(runs) == 2 and "scene 3" in runs[0] and "scene 7" in runs[1]
     assert "in a row" in plotline.SOFT[-1]                                         # style problem: worth a rewrite, never worth losing the video
+
+
+def test_plotline_adopts_an_upload_that_the_state_forgot(monkeypatch):
+    from autopilot import plotline_daily as pd
+
+    def vid(i, dur, publish_at, title):
+        return {"id": i, "snippet": {"title": title, "publishedAt": "2026-11-04T09:53:00Z"}, "contentDetails": {"duration": dur},
+                "status": {"publishAt": publish_at, "privacyStatus": "private"}}
+    videos = [vid("S3", "PT26S", "2026-11-05T09:00:00Z", "C #Shorts"), vid("S2", "PT24S", "2026-11-05T03:00:00Z", "B #Shorts"),
+              vid("S1", "PT22S", "2026-11-04T22:00:00Z", "A #Shorts"), vid("L", "PT6M15S", "2026-11-04T19:00:00Z", "Used cars"),
+              vid("OLD", "PT5M52S", "2026-11-03T19:00:00Z", "yesterday")]
+
+    class Yt:
+        def channels(self):
+            return type("C", (), {"list": lambda s, **k: type("E", (), {"execute": lambda s: {"items": [{"contentDetails": {"relatedPlaylists": {"uploads": "U"}}}]}})()})()
+
+        def playlistItems(self):
+            return type("P", (), {"list": lambda s, **k: type("E", (), {"execute": lambda s: {"items": [{"contentDetails": {"videoId": v["id"]}} for v in videos]}})()})()
+
+        def videos(self):
+            return type("V", (), {"list": lambda s, **k: type("E", (), {"execute": lambda s: {"items": videos}})()})()
+    entry = {}
+    assert pd.adopt_from_channel(entry, "2026-11-04", Yt(), log=lambda m: None) is True
+    assert entry["video_id"] == "L" and entry["title"] == "Used cars" and [s["video_id"] for s in entry["shorts"]] == ["S1", "S2", "S3"]
+    assert entry["shorts"][0]["title"] == "A" and entry["publish_at"] == "2026-11-04T19:00:00Z"
+    other = {}
+    assert pd.adopt_from_channel(other, "2026-11-06", Yt(), log=lambda m: None) is False and other == {}          # nothing for that day
+    assert pd.adopt_from_channel({}, "2026-11-04", object(), log=lambda m: None) is False                          # a broken client never raises

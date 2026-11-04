@@ -803,7 +803,12 @@ def build_short(short_dir: Path, long_items: list[list[dict]], out_dir: Path, wo
         sp.write_text(json.dumps(ml, ensure_ascii=False, indent=1))
         tp.write_text(json.dumps(timings, ensure_ascii=False))
     ml, timings = json.loads(sp.read_text()), json.loads(tp.read_text())
-    pool = shots.short_media_pool(long_items, ml.get("section_index", short.get("section_index", 0)))
+    plans_path = short_dir.parent / "shorts.json"
+    plans = json.loads(plans_path.read_text()) if plans_path.exists() else []
+    k = int(short_dir.name.removeprefix("short")) if short_dir.name.startswith("short") and short_dir.name[5:].isdigit() else None
+    pool = (shots.distinct_short_pool(long_items, [p["section_index"] for p in plans], k)
+            if len(plans) > 1 and k is not None and k < len(plans)
+            else shots.short_media_pool(long_items, ml.get("section_index", short.get("section_index", 0))))
     items = [{"kind": i["kind"], "path": Path(i["path"])} for i in pool if Path(i["path"]).exists()]
     music = audio.generate_ambient(timings[-1]["end"] + 3, out_dir / "music.wav", seed=int(short.get("section_index", 0)) + 1000, mood=mood)
     final = out_dir / "final.mp4"

@@ -180,11 +180,14 @@ def _search_pool(queries: list[str], search: Callable, limit: int, seen: set[str
 
 
 NASA_CANDIDATES = 8
+PHOTO_CANDIDATES = 6     # Pixabay photos per section, on top of Commons and stock video: a topic with few Commons pictures was left with 3 images and 9 clips
 
 
 def _thumb(item: dict, cache: Path) -> Path:
     if item.get("source") == "nasa":
         path = nasa.download_thumb(item, cache)
+    elif item.get("source") == "pixabay_photo":
+        path = stock.download_photo_thumb(item, cache)
     else:
         path = commons.download(item, cache) if item["kind"] == "image" else stock.download_thumb(item, cache)
     try:                                   # a source once handed over a subtitle file instead of a picture: never let that reach the rating
@@ -206,7 +209,8 @@ def gather_images(
     pools: list[tuple[list[dict], list[Path]]] = []
     for qs in queries:
         pool = (_search_pool(qs["commons"], commons.search, COMMONS_CANDIDATES, seen)
-                + _search_pool(qs["stock"], stock.search, STOCK_CANDIDATES, seen))
+                + _search_pool(qs["stock"], stock.search, STOCK_CANDIDATES, seen)
+                + _search_pool(qs["stock"], stock.search_picture_candidates, PHOTO_CANDIDATES, seen))
         if use_nasa:       # space topics: NASA's public-domain pictures and footage, found with the same specific queries
             pool += (_search_pool(qs["commons"], nasa.search_images, NASA_CANDIDATES, seen)
                      + _search_pool(qs["commons"], nasa.search_videos, 3, seen))
@@ -232,11 +236,14 @@ def gather_images(
             try:
                 if item.get("source") == "nasa":
                     path = nasa.download_image(item, cache) if item["kind"] == "image" else nasa.download_video(item, cache)
+                elif item.get("source") == "pixabay_photo":
+                    path = stock.download_photo(item, cache)
                 else:
                     path = files[ok.index(item)] if item["kind"] == "image" else stock.download_video(item, cache)
             except OSError:
                 continue
             credits.append(nasa.credit_line(item) if item.get("source") == "nasa" else
+                           stock.credit_line_photo(item) if item.get("source") == "pixabay_photo" else
                            commons.credit_line(item) if item["kind"] == "image" else stock.credit_line(item))
             chosen.append({"kind": item["kind"], "path": path})
         per_section.append(chosen)
@@ -253,6 +260,31 @@ def short_media_pool(sections: list[list[dict]], idx: int, want: int = 12) -> li
         if len(pool) >= want:
             break
     return pool
+
+
+def distinct_short_pool(sections: list[list[dict]], indexes: list[int], k: int, want: int = 12, min_exclusive: int = 4) -> list[dict]:
+    """Media for Short number `k` of a video whose Shorts come from the sections `indexes`, so that sibling Shorts do not look alike: the
+    Shorts take turns claiming their own share of the pictures (nearest sections first), and Short k starts with the ones it claimed. It is
+    topped up with a couple of the others, so a video with little media cuts a bit slower instead of repeating the same pictures."""
+    total = len({m["path"] for sec in sections for m in sec})
+    share = max(min_exclusive, total // max(1, len(indexes)))
+    claimed: set[str] = set()
+    for n, idx in enumerate(indexes):
+        order = [idx] + [j for _, j in sorted((abs(j - idx), j) for j in range(len(sections)) if j != idx)]
+        mine: list[dict] = []
+        for j in order:
+            for m in sections[j]:
+                if len(mine) < share and m["path"] not in claimed and all(m["path"] != x["path"] for x in mine):
+                    mine.append(m)
+        claimed |= {m["path"] for m in mine}
+        if n == k:
+            pool = list(mine)
+            for j in order:
+                for m in sections[j]:
+                    if len(pool) < min(want, share + 2) and all(m["path"] != x["path"] for x in pool):
+                        pool.append(m)
+            return pool
+    return short_media_pool(sections, indexes[k] if k < len(indexes) else 0, want)
 
 
 MIN_SECTION_MEDIA = 5

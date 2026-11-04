@@ -6,6 +6,15 @@ set -euo pipefail
 REMOTE="${STATE_REMOTE:-https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git}"
 DB=data/autopilot.db
 
+push_with_retry() {   # a failed save loses the day's state (and risks a second upload), so: three tries, and the real error is printed
+  for wait in 0 8 25; do
+    sleep "$wait"
+    if out="$(git push -q -f "$REMOTE" "$1" 2>&1)"; then return 0; fi
+    echo "state push failed (waited ${wait}s): $(echo "$out" | sed -E 's#(x-access-token:)[^@]*@#\1***@#' | tail -n 6)" >&2
+  done
+  return 1
+}
+
 case "${1:-}" in
   pull)
     mkdir -p data
@@ -64,7 +73,7 @@ case "${1:-}" in
     git add data
     git -c user.name=autopilot-bot -c user.email=autopilot-bot@users.noreply.github.com \
         commit -q -m "state $(date -u +%FT%TZ)"
-    git push --quiet --force "$REMOTE" state
+    push_with_retry state
     echo "state saved"
     ;;
   *) echo "usage: $0 pull|push" >&2; exit 2 ;;

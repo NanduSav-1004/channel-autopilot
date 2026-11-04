@@ -126,3 +126,27 @@ def test_sparse_sections_borrow_from_their_nearest_neighbours_and_mark_the_loans
     assert out[0][2]["id"].startswith("b")                                      # from the nearest section
     assert len(out[2]) >= 5 and out[2][0] == {"id": "c0"}
     assert fill_sparse_sections([[], []], min_items=5) == [[], []]              # nothing anywhere: stays empty (title cards)
+
+
+def test_sibling_shorts_get_different_pictures_even_when_the_video_has_little_media():
+    from autopilot.shots import distinct_short_pool
+
+    sections = [[{"kind": "image", "path": f"s{i}_{n}"} for n in range(2)] for i in range(6)]          # 12 pictures for 6 sections
+    pools = [distinct_short_pool(sections, [0, 2, 4], k) for k in range(3)]
+    firsts = [{m["path"] for m in p[:4]} for p in pools]
+    assert firsts[0].isdisjoint(firsts[1]) and firsts[1].isdisjoint(firsts[2]) and firsts[0].isdisjoint(firsts[2])
+    assert all(p[0]["path"].startswith(f"s{[0, 2, 4][k]}_") for k, p in enumerate(pools))                # each starts in its own section
+    assert all(len({m["path"] for m in p}) == len(p) and 6 <= len(p) <= 12 for p in pools)              # no duplicates, enough to cut
+    rich = [[{"kind": "image", "path": f"r{i}_{n}"} for n in range(6)] for i in range(6)]              # lots of media: bigger shares
+    big = [distinct_short_pool(rich, [0, 2, 4], k) for k in range(3)]
+    assert all(len(p) >= 9 for p in big) and not ({m["path"] for m in big[0][:6]} & {m["path"] for m in big[1][:6]})
+    assert distinct_short_pool([[], [], []], [0, 1, 2], 1) == []
+
+
+def test_pixabay_photos_are_offered_as_extra_still_pictures(monkeypatch):
+    from autopilot import stock
+
+    monkeypatch.setattr(stock, "search_photos", lambda q, limit=8, min_width=1600: [{"kind": "photo", "id": 7, "url": "u", "thumb": "t", "title": "battery", "page": "p", "artist": "a"}])
+    got = stock.search_picture_candidates("battery")
+    assert got[0]["kind"] == "image" and got[0]["source"] == "pixabay_photo"
+    assert "Pixabay" in stock.credit_line_photo(got[0])

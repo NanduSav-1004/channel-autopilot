@@ -74,5 +74,18 @@ def search_photos(query: str, limit: int = 8, min_width: int = 1600) -> list[dic
             for h in hits if not h.get("isAiGenerated")][:limit]
 
 
+def search_picture_candidates(query: str, limit: int = 6) -> list[dict]:
+    """Pixabay photos as still-picture candidates for a section (kind "image", source "pixabay_photo"): more pictures when Commons has little."""
+    return [{**p, "kind": "image", "source": "pixabay_photo"} for p in search_photos(query, limit)]
+
+
+def download_photo_thumb(item: dict, cache: Path) -> Path:
+    return _fetch(item["thumb"], cache / f"pixphotot_{item['id']}.jpg")
+
+
+def credit_line_photo(item: dict) -> str:
+    return f'Photo "{item["title"][:60]}" by {item["artist"]} (Pixabay) {item["page"]}'
+
+
 def download_photo(item: dict, cache: Path) -> Path:
     return _fetch(item["url"], cache / f"pixphoto_{item['id']}.jpg")
