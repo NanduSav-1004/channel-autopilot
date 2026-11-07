@@ -1,0 +1,134 @@
+[topics] next category: history
+[topics] LLM proposed 5 candidate(s); need 1
+[topics] queued [history] 'The Antikythera mechanism: ancient analog computer' (search demand 1.00; source: 'Antikythera mechanism', 20000 chars)
+queued 1 new topic(s)
+[job 68] script ...
+[job 68] opening: 2 number(s) in the first 150 words
+[job 68] style: avg 14.8 words/sentence, longest 38, 11% over 22 words, hook 14 words, 'you' x13 per 1000 words
+[job 68] script done in 205s
+[job 68] qa ...
+[job 68] qa done in 89s
+[job 68] voice ...
+[job 68] closing line: Did you expect the calibration date to be earlier or later? Tell us in the comments. Subscribe for the next one.
+[job 68] comment question (pick): Did you expect the calibration date to be earlier or later?
+[tts] voice for this video: gemini:Sadachbia
+[0;93m2026-11-07 08:21:13.359150902 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+[tts] gemini model gemini-3.1-flash-tts-preview could not speak the whole narration (all Gemini TTS models failed (gemini-3.1-flash-tts-preview HTTP 503)); trying the next model
+[tts] cut 0.37s of noise from the end of a section
+[tts] Gemini spoke 13 extra word(s) before the script; cutting the first 6.5s
+[tts] cut 0.31s of noise from the end of a section
+[tts] Gemini spoke 13 extra word(s) before the script; cutting the first 6.1s
+[tts] cut 0.31s of noise from the end of a section
+[tts] Gemini spoke 13 extra word(s) before the script; cutting the first 7.2s
+[tts] cut 0.29s of noise from the end of a section
+[tts] Gemini spoke 13 extra word(s) before the script; cutting the first 6.8s
+[tts] cut 0.33s of noise from the end of a section
+[tts] Gemini spoke 13 extra word(s) before the script; cutting the first 6.6s
+[tts] cut 0.39s of noise from the end of a section
+[tts] Gemini spoke 13 extra word(s) before the script; cutting the first 6.5s
+[tts] whole narration spoken by Gemini model gemini-3.8-flash-tts
+[job 68] voice done in 240s
+[job 68] visuals ...
+[llm] gemini:gemini-3.5-flash busy, trying next: gemini-3.5-flash HTTP 503
+[llm] gemini:gemini-3.6-flash busy, trying next: gemini-3.6-flash HTTP 503
+[job 68] visuals: 26 images and 2 videos; 5/6 sections have media
+[job 68] visuals done in 315s
+[job 68] render ...
+[datashot] number 'Antikythera gears' at 44.1s (chosen by the model)
+[datashot] bars 'Key dimensions' at 77.6s (chosen by the model)
+[datashot] number 'Largest wheel teeth' at 138.2s (chosen by the model)
+[datashot] no shot for 'Functions – Calendars, Eclipses, and Gam': the model found no figures worth drawing
+[datashot] no shot for 'Scientific Investigation – Uncovering th': the model found no figures worth drawing
+[datashot] bars 'Case dimensions' at 360.3s (chosen by the model)
+[transitions] 52 cross-transitions, length unchanged (9942 frames)
+[mix] audio: music ducked
+[master] loudness -16.0 -> -14.9 LUFS, true peak -0.7 -> -1.4 dBTP
+[job 68] [qa-video] long 414.2s, -14.97 LUFS: ok
+[job 68] render done in 548s
+[job 68] upload ...
+[job 68] scheduled to go public at 2026-11-07T18:00:00Z
+[job 68] upload done in 13s
+[job 68] shorts ...
+[shorts] model proposed 6: 6 usable, 0 too long
+[shorts] repairing 3 Short(s) with unsupported sentences, e.g.: You picture divers pulling a 34 cm bronze‑wood block from 45 m depth off Antikythera.; You turn the crank and feel a cascade of thirty‑five bronze gears interlocking.
+[job 68] queued 3 Short(s)
+[job 68] shorts done in 110s
+[job 69] short_script ...
+[job 69] short_script done in 0s
+[job 69] short_voice ...
+[tts] whole narration spoken by Gemini model gemini-3.1-flash-tts-preview
+[job 69] short_voice done in 17s
+[job 69] short_render ...
+[datashot] bars 'Device dimensions' at 9.1s (chosen by the model)
+[transitions] 4 cross-transitions, length unchanged (766 frames)
+[mix] audio: music ducked
+[master] loudness -16.2 -> -14.4 LUFS, true peak -0.9 -> -1.5 dBTP
+[job 69] [qa-video] short 31.8s, -14.39 LUFS: ok
+[job 69] short_render done in 90s
+[job 69] short_upload ...
+[job 69] short_upload done in 3s
+[job 70] short_script ...
+[job 70] short_script done in 0s
+[job 70] short_voice ...
+[tts] whole narration spoken by Gemini model gemini-3.1-flash-tts-preview
+[job 70] short_voice done in 16s
+[job 70] short_render ...
+[datashot] number 'Largest gear teeth' at 29.5s (chosen by the model)
+[job 70] Short comment question (correct): What part of the gear’s story do you think we still haven’t explored?
+[transitions] 6 cross-transitions, length unchanged (863 frames)
+[mix] audio: music ducked
+[master] loudness -16.8 -> -14.4 LUFS, true peak -0.9 -> -1.5 dBTP
+[job 70] [qa-video] short 35.9s, -14.48 LUFS: ok
+[job 70] short_render done in 110s
+[job 70] short_upload ...
+[job 70] short_upload done in 2s
+[job 71] short_script ...
+[job 71] short_script done in 0s
+[job 71] short_voice ...
+[tts] Gemini spoke 0 extra word(s) before the script; cutting the first 0.3s
+[tts] whole narration spoken by Gemini model gemini-3.1-flash-tts-preview
+[job 71] short_voice done in 17s
+[job 71] short_render ...
+[datashot] no shot for 'Inside the Bronze Brain of the Antikythe': the model found no figures worth drawing
+[transitions] 6 cross-transitions, length unchanged (784 frames)
+[mix] audio: music ducked
+[master] loudness -15.2 -> -14.2 LUFS, true peak -0.9 -> -1.5 dBTP
+[job 71] [qa-video] short 32.6s, -14.21 LUFS: ok
+[job 71] short_render done in 59s
+[job 71] short_upload ...
+[job 71] short_upload done in 2s
+processed 4 job(s); dry_run=False
+{'id': 28, 'stage': 'new', 'status': 'failed', 'attempts': 3, 'error': 'qa: QA rejected script: unsupported claim: If it were only 189,000 kilometers away, its apparent size would double.; unsupported claim: If the Moon were at half its current distance, it would still be outside the Roche limit.; unsupported claim: The Moon could have solidified when orbiting at half its current distance, yet it remains intact today.'}
+{'id': 37, 'stage': 'new', 'status': 'failed', 'attempts': 3, 'error': 'qa: QA rejected script: unsupported claim: Voyager\u202f1 is the only human‑made object to have passed into interstellar space.; unsupported claim: The heliosheath was found to contain giant magnetic bubbles, which are still observed after crossing the heliopause.; unsupported claim: Data after crossing showed a change in magnetic field direction consistent with the interstellar magnetic field.'}
+{'id': 62, 'stage': 'new', 'status': 'failed', 'attempts': 3, 'error': 'qa: QA rejected script: unsupported claim: An event horizon is a one‑way boundary that lets light in but not out.; unsupported claim: [title] Why Black Holes Have Event Horizons: Light Traps to Cosmic Boundaries'}
+{'id': 63, 'stage': 'upload', 'status': 'failed', 'attempts': 3, 'error': "shorts: 'str' object has no attribute 'get'"}
+[ml] translated: 'ലോകത്തിലെ ആദ്യ കമ്പ്യൂട്ടർ! Antikythera Mechanism രഹസ്യം'
+[tts] whole narration spoken by Gemini model gemini-3.1-flash-tts-preview
+[ml] timing: 6/6 sections cut at the audio's pauses; 0 sentence(s) of 86 have an unusual pace
+[ml] voice Sulafat: 640s
+[mix] audio: music ducked
+[master] loudness -16.0 -> -14.1 LUFS, true peak -0.7 -> -1.5 dBTP
+[ml] [qa-video] long 639.8s, -14.08 LUFS: ok
+[ml] repairing the Short 'Ancient Computer Found in a Sunken Rusty Lump?': the number 30 is not in the English
+[tts] whole narration spoken by Gemini model gemini-3.1-flash-tts-preview
+[ml] timing: 1/1 sections cut at the audio's pauses; 0 sentence(s) of 9 have an unusual pace
+[mix] audio: music ducked
+[master] loudness -16.4 -> -14.3 LUFS, true peak -0.8 -> -1.4 dBTP
+[ml] [qa-video] short 38.0s, -14.34 LUFS: ok
+[llm] gemini:gemini-3.5-flash unavailable: gemini-3.5-flash daily quota exhausted
+[tts] whole narration spoken by Gemini model gemini-3.1-flash-tts-preview
+[ml] timing: 1/1 sections cut at the audio's pauses; 0 sentence(s) of 6 have an unusual pace
+[mix] audio: music ducked
+[master] loudness -16.5 -> -14.2 LUFS, true peak -2.0 -> -1.5 dBTP
+[ml] [qa-video] short 30.2s, -14.22 LUFS: ok
+[ml] repairing the Short 'Inside the Bronze Brain of the Antikythera': the number 35 is not in the English; The final sentence 'ancient humans controlled the heavens' adds a subjective interpretation and a historical claim not present in the original English text.
+[ml] repairing the Short 'Inside the Bronze Brain of the Antikythera': the number 30 is not in the English; The English text states the mechanism contains thirty-five bronze gears (with thirty visible), whereas the Malayalam text states there are about 30 bronze gears in total, omitting the fact that there are 35 gears in the mechanism.
+[ml] repairing the Short 'Inside the Bronze Brain of the Antikythera': the number 30 is not in the English; the number 35 is not in the English
+[ml] the Short 'Inside the Bronze Brain of the Antikythera' still has problems (the number 30 is not in the English); translating it sentence by sentence
+[ml] left out one sentence of the Short 'Inside the Bronze Brain of the Antikythera': it could not be translated faithfully
+[tts] whole narration spoken by Gemini model gemini-3.1-flash-tts-preview
+[ml] timing: 1/1 sections cut at the audio's pauses; 0 sentence(s) of 5 have an unusual pace
+[mix] audio: music ducked
+[master] loudness -16.1 -> -14.1 LUFS, true peak -1.6 -> -1.5 dBTP
+[ml] [qa-video] short 38.1s, -14.06 LUFS: ok
+malayalam edition: done (lOJCG_PNIHM)
