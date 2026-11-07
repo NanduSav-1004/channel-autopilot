@@ -1,0 +1,13 @@
+{
+ "title": "Why Buying a House Got So Unaffordable",
+ "angle": "Surging home prices combined with rapid mortgage rate hikes have pushed homeownership costs to extreme highs relative to average wage growth.",
+ "series": [
+  "MSPUS",
+  "MORTGAGE30US",
+  "AHETPI"
+ ],
+ "states": null,
+ "owid": null,
+ "countries": null,
+ "start": "1985"
+}

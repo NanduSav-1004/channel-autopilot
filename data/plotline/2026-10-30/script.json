@@ -1,0 +1,421 @@
+{
+ "title": "Why Eating Out Is Getting So Expensive",
+ "description": "Have you noticed your restaurant bill climbing much faster than your grocery receipt? While both have grown more expensive, dining out has pulled ahead dramatically in recent years, creating a widening gap between the supermarket and the dining room.\n\nWe look at consumer price index data to track how restaurant and grocery costs diverged over the past decade, the real-world operational pressures driving the split, and what it means for everyday dining habits.",
+ "tags": [
+  "food prices",
+  "restaurant costs",
+  "inflation",
+  "groceries",
+  "cost of living",
+  "consumer price index",
+  "economics",
+  "data story",
+  "dining out",
+  "food inflation"
+ ],
+ "thumbnail": {
+  "number": "+58%",
+  "words": "DINING OUT SURGE"
+ },
+ "scenes": [
+  {
+   "narration": "Take a close look at the bill next time you grab dinner with friends. Leaving your favorite neighborhood spot without feeling genuine sticker shock has become almost impossible.",
+   "visual": {
+    "type": "title",
+    "text": "Why Eating Out Is Getting So Expensive",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "And it is not just your imagination playing tricks on you. Since January 2015, restaurant prices have surged by 58%.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SEFV",
+    "stat": "last",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "At the grocery store, food prices also jumped significantly, rising 32% over that exact same decade-long window.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SAF11",
+    "stat": "last",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Historically, the price of groceries and the cost of eating out moved in lockstep. But over the last decade, that familiar relationship completely fractured into a massive divergence.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SEFV",
+     "CUSR0000SAF11"
+    ],
+    "since": "2015"
+   }
+  },
+  {
+   "narration": "Even as volatile supermarket price spikes finally began to cool down, restaurant menus just kept getting pricier with every passing season.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEFV",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Look at the last year alone. Grocery prices rose by just 1.8%, while restaurant prices jumped by 3.5%.",
+   "visual": {
+    "type": "statement",
+    "text": "Restaurant prices rose twice as fast last year",
+    "highlight": [
+     "twice"
+    ]
+   }
+  },
+  {
+   "narration": "If the actual food we buy is stabilizing, why is a prepared meal pulling so far ahead of grocery shelves? The answer goes far beyond the price of groceries.",
+   "visual": {
+    "type": "statement",
+    "text": "Why are restaurant bills pulling away?",
+    "highlight": [
+     "pulling"
+    ]
+   }
+  },
+  {
+   "narration": "To understand why menus are outpacing our pantries, we have to look back at how grocery prices behaved before the current era. It wasn't always a smooth ride.",
+   "visual": {
+    "type": "statement",
+    "text": "Grocery store prices have a history of volatility",
+    "highlight": [
+     "volatility"
+    ]
+   }
+  },
+  {
+   "narration": "Back in June 2020, grocery costs hit a notable spike. According to the Bureau of Labor Statistics, they rose 6% in just the year leading up to that point.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2019-06",
+    "end": "2020-06",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "That initial surge set a pattern where consumers became used to sudden, sharp increases at the checkout counter.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2020-01",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "But the market proved its capacity for change. By February 2024, the pace of those price hikes cooled significantly to just 1%.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2023-02",
+    "end": "2024-02",
+    "annotate": [
+     "2024-02"
+    ]
+   }
+  },
+  {
+   "narration": "Grocery prices have shown a clearer ability to retreat and stabilize after periods of high inflation.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2020-01"
+   }
+  },
+  {
+   "narration": "This cooling period at the store suggests that the supply chain pressures from earlier years have largely eased.",
+   "visual": {
+    "type": "statement",
+    "text": "Supply chain pressures have finally begun to fade",
+    "highlight": [
+     "fade"
+    ]
+   }
+  },
+  {
+   "narration": "If supermarket ingredients have regained their composure, why have restaurant prices climbed 6% since early 2025, while grocery prices rose only 3%?",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SAF11",
+     "CUSR0000SEFV"
+    ],
+    "since": "2025-01"
+   }
+  },
+  {
+   "narration": "Since 2020, our eating habits have hit a fork in the road. Grocery prices and restaurant tabs used to track together, but that connection has completely snapped.",
+   "visual": {
+    "type": "statement",
+    "text": "The gap between groceries and restaurants is widening.",
+    "highlight": [
+     "widening"
+    ]
+   }
+  },
+  {
+   "narration": "Consider the shift since January 2020. While grocery costs have risen 32%, dining out has surged far ahead.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "Restaurant prices have climbed a staggering 38% since 2020. They are outpacing the supermarket by a significant margin.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEFV",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "This divergence is persistent. Even as grocery price growth slowed to just 3% since January 2025, restaurants haven't followed suit.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "Instead, restaurant prices have jumped 6% in that same timeframe. They are not cooling down like the aisles at your local store.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEFV",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "The data shows a clear split. Groceries are finding a new plateau, while dining out remains on a steep upward trajectory.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEFV",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "Something fundamental changed in the industry after 2020. The grocery bill might be settling, but the restaurant tab is not.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SAF11",
+     "CUSR0000SEFV"
+    ],
+    "since": "2020"
+   }
+  },
+  {
+   "narration": "If food prices are stabilizing, why is your restaurant tab still climbing? It comes down to costs that have nothing to do with the ingredients on your plate.",
+   "visual": {
+    "type": "statement",
+    "text": "The hidden costs of dining out.",
+    "highlight": [
+     "hidden"
+    ]
+   }
+  },
+  {
+   "narration": "First, the labor market has fundamentally shifted. Restaurants are now paying significantly higher wages to compete for staff.",
+   "visual": {
+    "type": "statement",
+    "text": "Labor shortages are driving up menu prices.",
+    "highlight": [
+     "Labor"
+    ]
+   }
+  },
+  {
+   "narration": "Then there is the physical space. Commercial rents have seen consistent upward pressure in many urban hubs.",
+   "visual": {
+    "type": "statement",
+    "text": "Commercial rents remain a massive overhead burden.",
+    "highlight": [
+     "rents"
+    ]
+   }
+  },
+  {
+   "narration": "Utility bills\u2014electricity, water, and gas\u2014have also risen, creating a steady drain on restaurant operating budgets.",
+   "visual": {
+    "type": "statement",
+    "text": "Rising utility costs squeeze restaurant margins further.",
+    "highlight": [
+     "utility"
+    ]
+   }
+  },
+  {
+   "narration": "These are 'fixed' costs that restaurants must pay regardless of whether food commodity prices rise or fall.",
+   "visual": {
+    "type": "statement",
+    "text": "Fixed costs don't care about ingredient prices.",
+    "highlight": [
+     "fixed"
+    ]
+   }
+  },
+  {
+   "narration": "Even when ingredients are cheap, the cost of the kitchen staff, the building, and the power stay expensive.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEFV",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "The bottom line is that dining out is no longer just about the food. It is about the entire service experience, which has driven prices up 58% since 2015.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEFV",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Let\u2019s look at the past year of spending. One category is cooling off, while the other is still accelerating.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SAF11",
+     "CUSR0000SEFV"
+    ],
+    "since": "2025-09"
+   }
+  },
+  {
+   "narration": "Grocery inflation has eased significantly. Prices for food at home rose just 1.8% over the last twelve months.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "In contrast, restaurant menu prices are moving in the opposite direction. They climbed 3.5% in the same period.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEFV",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "This gap is even wider when we zoom out to January 2025. That is when the divergence truly intensified.",
+   "visual": {
+    "type": "statement",
+    "text": "The gap between groceries and restaurants is widening.",
+    "highlight": [
+     "widening"
+    ]
+   }
+  },
+  {
+   "narration": "Since early 2025, grocery prices have only ticked up 3%. It shows that the grocery supply chain has stabilized.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "But eating out is a different story. Restaurant prices have surged 6% since January 2025.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEFV",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "The data confirms it: restaurants are not following the same cooling trend we see in the grocery aisles.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEFV",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "The divergence is undeniable. While your grocery basket has finally stopped getting more expensive, the menu prices at your favorite restaurants are still climbing.",
+   "visual": {
+    "type": "statement",
+    "text": "The grocery price hike has finally hit zero.",
+    "highlight": [
+     "zero"
+    ]
+   }
+  },
+  {
+   "narration": "Look at the data since the peak in June 2026. Grocery prices have seen a change of -0%, effectively plateauing.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2026-06",
+    "annotate": [
+     "min"
+    ]
+   }
+  },
+  {
+   "narration": "But for dining out, there is no relief in sight. Restaurant tabs remain at record highs as of September 2026.",
+   "visual": {
+    "type": "statement",
+    "text": "Restaurant tabs are stuck at record peaks.",
+    "highlight": [
+     "peaks"
+    ]
+   }
+  },
+  {
+   "narration": "Since the peak in September 2026, the price index for restaurant meals has remained completely flat, reflecting those persistent, elevated costs.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEFV",
+    "start": "2026-06",
+    "end": "2026-09"
+   }
+  },
+  {
+   "narration": "The grocery aisle has found its rhythm again, but the hospitality industry is locked into a new, higher baseline.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2020",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "We analyzed the numbers to help you make sense of your wallet. Understanding these trends helps clarify why your bank account feels the pressure.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SAF11",
+     "CUSR0000SEFV"
+    ],
+    "since": "2020"
+   }
+  },
+  {
+   "narration": "If you want to keep tracking the data behind the headlines, hit the subscribe button for more deep dives into your daily expenses.",
+   "visual": {
+    "type": "statement",
+    "text": "Subscribe for more essential data stories.",
+    "highlight": [
+     "Subscribe"
+    ]
+   }
+  }
+ ]
+}

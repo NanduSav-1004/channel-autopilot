@@ -1,0 +1,15 @@
+{
+ "title": "Why Did Millions of People Quit Their Jobs?",
+ "angle": "Record quit rates following 2020 were driven by a historically tight labor market and rapid wage growth for job switchers.",
+ "series": [
+  "JTSQUR",
+  "UNRATE",
+  "AHETPI"
+ ],
+ "states": null,
+ "owid": null,
+ "countries": null,
+ "owid2": null,
+ "states2": null,
+ "start": "2015"
+}

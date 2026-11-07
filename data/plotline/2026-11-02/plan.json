@@ -1,0 +1,15 @@
+{
+ "title": "Is Renting Getting Worse?",
+ "angle": "Surging rent index values combined with tight rental vacancy rates have caused shelter costs to outpace median income growth over recent decades.",
+ "series": [
+  "CUSR0000SEHA",
+  "RRVRUSQ156N",
+  "MEHOINUSA672N"
+ ],
+ "states": null,
+ "owid": null,
+ "countries": null,
+ "owid2": null,
+ "states2": null,
+ "start": "1990"
+}

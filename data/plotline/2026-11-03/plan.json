@@ -1,0 +1,16 @@
+{
+ "title": "Why Electricity Bills Are Surging Across America",
+ "angle": "Rising grid maintenance costs, fuel price volatility, and growing power demand have pushed residential electricity prices up far faster than overall inflation.",
+ "series": [
+  "APU000072610",
+  "CUSR0000SEHF01",
+  "CUSR0000SAH21",
+  "CPIAUCSL"
+ ],
+ "states": null,
+ "owid": null,
+ "countries": null,
+ "owid2": null,
+ "states2": null,
+ "start": "2010"
+}

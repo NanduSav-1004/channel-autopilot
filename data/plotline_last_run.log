@@ -1,0 +1,41 @@
+[plotline] topic: Why Did Millions of People Quit Their Jobs? | data: ['JTSQUR', 'UNRATE', 'AHETPI']  
+[plotline] script check 1: 13 problem(s): ['scene 13: the narration says 3.6 but the gauge chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number', 'scene 18: the narration says 72 but the compare chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number', 'scene 35: bad visual {"type": "kpi", "series": ["AHETPI"]}: kpi needs 2 to 4 of the video\'s series ids', "scene 32: chart type 'heatmap' is already used 2 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)"]
+[llm] gemini:gemini-3.5-flash unavailable: gemini-3.5-flash daily quota exhausted
+[llm] gemini:gemini-3.6-flash unavailable: gemini-3.6-flash daily quota exhausted
+[plotline] script check 2: 4 problem(s): ["scene 33: chart type 'line' is already used 7 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)", "scene 37: chart type 'line' is already used 7 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)", "scene 40: chart type 'line' is already used 7 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)", "scene 35: chart type 'compare' is already used 3 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)"]
+[llm] gemini:gemini-3.8-flash busy, trying next: gemini-3.8-flash HTTP 503
+[llm] gemini:gemini-3.1-flash-lite busy, trying next: gemini-3.1-flash-lite HTTP 503
+[plotline] script check 3: 3 problem(s): ["scene 40: chart type 'counter' is already used 7 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)", "scene 33: chart type 'compare' is already used 3 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)", "scene 37: chart type 'compare' is already used 3 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)"]
+[plotline] still 4 problem(s) after 3 rewrites; settling by rule
+[plotline] settled by rule: 0 sentence(s) cut, 1 chart(s) replaced, 825 words left
+[0;93m2026-11-07 09:08:10.130949477 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+[readcheck] pauses added so text can be read: [(7, 1.6), (9, 0.5), (30, 0.2), (32, 2.0), (42, 0.1)]
+[readcheck] 40/42 scenes keep their text up long enough to read; short: scene 7 needs 9.1s has 8.1s, scene 32 needs 9.1s has 7.4s
+[plotline] 42 scenes, 7.2 min; rendering charts
+[mix] audio: music ducked
+[sfx] 234 sound effects
+[master] loudness -17.4 -> -15.1 LUFS, true peak -0.3 -> -1.4 dBTP
+[qa-video] long 433.1s, -15.15 LUFS: ok
+[plotline] uploaded https://youtu.be/Zz90vKewuyQ (goes public 2026-11-07T19:00:00Z)
+[plotline] Short 'The +57% Wage Surge' check 1: ['scene 4: the narration says 37 but the gauge chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number']
+[readcheck] 5/5 scenes keep their text up long enough to read
+[mix] Short audio: music ducked
+[sfx] 27 sound effects
+[master] loudness -16.6 -> -15.1 LUFS, true peak -0.8 -> -1.4 dBTP
+[qa-video] short 39.9s, -15.19 LUFS: ok
+[plotline] Short 1 uploaded https://youtu.be/-phdSBi-kgY (goes public 2026-11-07T22:00:00Z)
+[readcheck] pauses added so text can be read: [(4, 0.3)]
+[readcheck] 5/5 scenes keep their text up long enough to read
+[mix] Short audio: music ducked
+[sfx] 26 sound effects
+[master] loudness -16.7 -> -15.2 LUFS, true peak -0.2 -> -1.4 dBTP
+[qa-video] short 42.8s, -15.22 LUFS: ok
+[plotline] Short 2 uploaded https://youtu.be/EjbbNPrYqzQ (goes public 2026-11-08T03:00:00Z)
+[readcheck] pauses added so text can be read: [(1, 0.2)]
+[readcheck] 5/5 scenes keep their text up long enough to read
+[mix] Short audio: music ducked
+[sfx] 35 sound effects
+[master] loudness -17.1 -> -15.2 LUFS, true peak -0.1 -> -1.5 dBTP
+[qa-video] short 41.3s, -15.27 LUFS: ok
+[plotline] Short 3 uploaded https://youtu.be/6pWtsnysBsU (goes public 2026-11-08T09:00:00Z)
+Plotline: Why Did Millions of People Quit Their Jobs?: video Zz90vKewuyQ, 3 Short(s)
