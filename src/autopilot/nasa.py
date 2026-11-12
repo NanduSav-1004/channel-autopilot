@@ -8,6 +8,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from autopilot import net
+
 API = "https://images-api.nasa.gov/search"
 UA = {"User-Agent": "channel-autopilot/0.1 (https://github.com/NanduSav-1004/channel-autopilot)"}
 NASA_CENTERS = {"JPL", "GSFC", "MSFC", "JSC", "KSC", "ARC", "GRC", "LARC", "AFRC", "SSC", "HQ", "NASA"}
@@ -21,7 +23,7 @@ def _quote(url: str) -> str:
 
 def _get(url: str, limit: int | None = None) -> bytes:
     req = urllib.request.Request(_quote(url), headers=UA)
-    with urllib.request.urlopen(req, timeout=60) as r:
+    with net.urlopen(req, timeout=60) as r:
         return r.read() if limit is None else r.read(limit)
 
 
@@ -104,7 +106,7 @@ def download_video(item: dict, cache: Path) -> Path:
             if u.lower().endswith(tag):
                 req = urllib.request.Request(_quote(u), headers={**UA, "Range": "bytes=0-0"})
                 try:
-                    with urllib.request.urlopen(req, timeout=60) as r:
+                    with net.urlopen(req, timeout=60) as r:
                         total = int(str(r.headers.get("Content-Range", "/0")).rsplit("/", 1)[-1] or 0)
                 except (OSError, ValueError):
                     total = 0

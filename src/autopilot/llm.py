@@ -8,6 +8,7 @@ import time
 import urllib.error
 import urllib.request
 
+from autopilot import net
 from autopilot.errors import TransientError
 
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -76,7 +77,7 @@ def _call(model: str, body: bytes, key: str, retries: int) -> dict:
         req = urllib.request.Request(url, data=body, headers={"x-goog-api-key": key, "Content-Type": "application/json"})
         wait = min(2 ** attempt * 2, 60)
         try:
-            data = json.load(urllib.request.urlopen(req, timeout=240))
+            data = json.load(net.urlopen(req, timeout=240))
             return json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
         except urllib.error.HTTPError as exc:
             if exc.code == 404:
@@ -111,7 +112,7 @@ def _call_groq(model: str, prompt: str, key: str, retries: int) -> dict:
             **UA, "Authorization": f"Bearer {key}", "Content-Type": "application/json"})
         wait = min(2 ** attempt * 2, 60)
         try:
-            data = json.load(urllib.request.urlopen(req, timeout=240))
+            data = json.load(net.urlopen(req, timeout=240))
             return json.loads(data["choices"][0]["message"]["content"])
         except urllib.error.HTTPError as exc:
             if exc.code == 429:
@@ -137,6 +138,17 @@ def _call_groq(model: str, prompt: str, key: str, retries: int) -> dict:
                 raise ModelBusy(f"{model} network error: {exc!r}") from exc
         time.sleep(wait)
     raise LLMError("unreachable")
+
+
+def _object(x) -> dict:
+    """The model's answer as an object. Models sometimes answer with a list: a one-element list holding an object is unwrapped, any other list
+    becomes {"items": [...]} (so callers see a missing key and retry, instead of crashing with "'list' object has no attribute 'get'" as the
+    Plotline topic planner did on 12 Nov 2026); anything else that is not an object becomes {}."""
+    if isinstance(x, dict):
+        return x
+    if isinstance(x, list):
+        return x[0] if len(x) == 1 and isinstance(x[0], dict) else {"items": x}
+    return {}
 
 
 def generate_json(
@@ -166,8 +178,8 @@ def generate_json(
             continue
         try:
             if provider == "groq":
-                return _call_groq(m, prompt, groq_key, retries)
-            return _call(m, gem_body, gemini_key, retries)
+                return _object(_call_groq(m, prompt, groq_key, retries))
+            return _object(_call(m, gem_body, gemini_key, retries))
         except ModelUnavailable as exc:
             _unavailable.add(f"{provider}:{m}")
             print(f"[llm] {provider}:{m} unavailable: {exc}", flush=True)

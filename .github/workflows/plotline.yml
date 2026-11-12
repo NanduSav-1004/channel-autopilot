@@ -61,9 +61,10 @@ jobs:
           cache: pip
 
       - name: System packages
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-lato fonts-dejavu-core ffmpeg
+        timeout-minutes: 25
+        run: scripts/install_system_packages.sh fonts-lato fonts-dejavu-core ffmpeg
 
-      - run: pip install -e .
+      - run: pip install --retries 5 --timeout 60 -e .
 
       - name: Cache voice models
         id: voice
@@ -120,7 +121,12 @@ jobs:
           sys.path.insert(0, "src")
           from autopilot import notify
           lines = [l.strip() for l in open("plotline_run.log", errors="replace").read().splitlines() if l.strip()] if os.path.exists("plotline_run.log") else []
+          sys.path.insert(0, "scripts")
+          import ci_info
+          step = ci_info.failed_steps()
           why = next((l for l in reversed(lines) if "Error" in l), lines[-1] if lines else "no log")
+          if step and any(w in step.lower() for w in ("package", "install", "restore", "save")):
+              why = "step failed: " + step            # the log is from an earlier run or an unrelated step
           notify.send("Plotline Data: the daily workflow FAILED: " + why[:300] + "\nhttps://github.com/" + os.environ["GITHUB_REPOSITORY"] + "/actions/runs/" + os.environ["GITHUB_RUN_ID"])
           PY
 

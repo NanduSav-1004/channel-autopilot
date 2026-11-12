@@ -6,6 +6,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from autopilot import net
+
 API = "https://pixabay.com/api/videos/"
 UA = {"User-Agent": "channel-autopilot/0.1 (https://github.com/NanduSav-1004/channel-autopilot)"}
 
@@ -33,13 +35,13 @@ def search(query: str, limit: int = 8) -> list[dict]:
         return []
     params = {"key": key, "q": query, "per_page": max(3, limit), "safesearch": "true"}
     req = urllib.request.Request(API + "?" + urllib.parse.urlencode(params), headers=UA)
-    return parse_hits(json.load(urllib.request.urlopen(req, timeout=30)))[:limit]
+    return parse_hits(json.load(net.urlopen(req, timeout=30)))[:limit]
 
 
 def _fetch(url: str, path: Path) -> Path:
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=120).read())
+        path.write_bytes(net.urlopen(urllib.request.Request(url, headers=UA), timeout=120).read())
         time.sleep(0.2)
     return path
 
@@ -68,7 +70,7 @@ def search_photos(query: str, limit: int = 8, min_width: int = 1600) -> list[dic
     params = {"key": key, "q": query, "image_type": "photo", "orientation": "horizontal", "per_page": 30, "safesearch": "true",
               "min_width": min_width}
     req = urllib.request.Request(PHOTO_API + "?" + urllib.parse.urlencode(params), headers=UA)
-    hits = json.load(urllib.request.urlopen(req, timeout=30)).get("hits", [])
+    hits = json.load(net.urlopen(req, timeout=30)).get("hits", [])
     return [{"kind": "photo", "id": h["id"], "url": h["largeImageURL"], "thumb": h["webformatURL"], "title": h.get("tags", ""),
              "page": h.get("pageURL", ""), "artist": h.get("user", "unknown"), "license": "Pixabay Content License"}
             for h in hits if not h.get("isAiGenerated")][:limit]

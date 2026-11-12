@@ -14,6 +14,12 @@ tail = ""
 if Path("run.log").exists():          # the last lines say WHY it failed, so the alert is enough to decide what to do
     lines = [ln for ln in Path("run.log").read_text(errors="replace").splitlines() if ln.strip()][-6:]
     tail = "\n\nLast log lines:\n" + KEYS.sub("***", "\n".join(ln[:240] for ln in lines))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import ci_info
+
+step = ci_info.failed_steps()
+if step:
+    tail = f"\n\nFailed step: {step}" + (tail if "install" not in step.lower() and "package" not in step.lower() else "")
 run = f"https://github.com/{os.environ.get('GITHUB_REPOSITORY', '')}/actions/runs/{os.environ.get('GITHUB_RUN_ID', '')}"
 from datetime import datetime, timedelta, timezone
 

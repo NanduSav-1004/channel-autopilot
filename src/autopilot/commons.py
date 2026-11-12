@@ -7,6 +7,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from autopilot import net
+
 API = "https://commons.wikimedia.org/w/api.php"
 UA = {"User-Agent": "channel-autopilot/0.1 (https://github.com/NanduSav-1004/channel-autopilot)"}
 # Reject NC/ND/unknown. Allow CC0, public domain, CC BY, CC BY-SA.
@@ -49,7 +51,7 @@ def search(query: str, limit: int = 20) -> list[dict]:
         "format": "json", "formatversion": 2,
     }
     url = API + "?" + urllib.parse.urlencode(params)
-    data = json.load(urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=30))
+    data = json.load(net.urlopen(urllib.request.Request(url, headers=UA), timeout=30))
     return parse_results(data)
 
 
@@ -58,7 +60,7 @@ def download(item: dict, cache: Path) -> Path:
     path = cache / (hashlib.sha1(item["thumb"].encode()).hexdigest()[:16] + ".jpg")
     if not path.exists():
         req = urllib.request.Request(item["thumb"], headers=UA)
-        path.write_bytes(urllib.request.urlopen(req, timeout=60).read())
+        path.write_bytes(net.urlopen(req, timeout=60).read())
         time.sleep(0.3)  # be polite to Commons
     return path
 

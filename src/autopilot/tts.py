@@ -14,6 +14,7 @@ import uuid
 import wave
 from pathlib import Path
 
+from autopilot import net
 from autopilot.speech import speech_text
 
 SENTENCE_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z\"'(])")
@@ -154,7 +155,7 @@ def _whisper_words(wav: bytes, language: str = "en", model: str = "whisper-large
     req = urllib.request.Request("https://api.groq.com/openai/v1/audio/transcriptions", data=body, headers={
         **UA, "Authorization": f"Bearer {key}", "Content-Type": f"multipart/form-data; boundary={b}"})
     try:
-        return json.load(urllib.request.urlopen(req, timeout=120)).get("words", [])
+        return json.load(net.urlopen(req, timeout=120)).get("words", [])
     except (OSError, ValueError):
         return []
 
@@ -184,7 +185,7 @@ class GeminiEngine:
                 f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent", data=body,
                 headers={"x-goog-api-key": self.key, "Content-Type": "application/json"})
             try:
-                data = json.load(urllib.request.urlopen(req, timeout=240))
+                data = json.load(net.urlopen(req, timeout=240))
                 return base64.b64decode(data["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
             except urllib.error.HTTPError as exc:  # quota, missing model, overload: try the next model's pool
                 last = f"{model} HTTP {exc.code}"

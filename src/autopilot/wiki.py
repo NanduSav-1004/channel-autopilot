@@ -5,6 +5,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from autopilot import net
+
 API = "https://en.wikipedia.org/w/api.php"
 UA = {"User-Agent": "channel-autopilot/0.1 (https://github.com/NanduSav-1004/channel-autopilot)"}
 
@@ -14,7 +16,7 @@ def _get(params: dict) -> dict:
     last: Exception | None = None
     for attempt in range(4):        # CI runners share IP addresses, and Wikipedia sometimes answers 429/503 or times out
         try:
-            return json.load(urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=30))
+            return json.load(net.urlopen(urllib.request.Request(url, headers=UA), timeout=30))
         except urllib.error.HTTPError as exc:
             if exc.code not in (408, 429, 500, 502, 503, 504):
                 raise

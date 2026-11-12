@@ -91,7 +91,7 @@ def pick_topic(gen=None, recent: list[str] | None = None) -> dict:
     cat = datasets.catalog()
     prompt = PLAN_PROMPT.format(recent="; ".join(recent or []) or "none", menu=menu())
     for _ in range(3):
-        plan = gen(prompt)
+        plan = llm._object(gen(prompt))
         plan["series"] = [s for s in plan.get("series") or [] if s in cat["fred"]][:4]
         if plan.get("states") not in cat["states"]:
             plan["states"] = None
@@ -376,8 +376,8 @@ def write_script(plan: dict, bundle: dict, gen=None, tries: int = 3, log=print, 
     gen = gen or llm.generate_json
     ids = list(bundle["series"]) + (["state data"] if bundle["states"] else []) + (["country data"] if bundle["owid"] else [])
     facts = "\n".join(bundle["facts"])
-    outline = gen(OUTLINE_PROMPT.format(title=plan["title"], angle=plan.get("angle", ""), facts=facts))
-    acts = (outline.get("acts") or [])[:6]
+    outline = llm._object(gen(OUTLINE_PROMPT.format(title=plan["title"], angle=plan.get("angle", ""), facts=facts)))
+    acts = (outline.get("acts") or outline.get("items") or [])[:6]          # a bare list answer arrives as {"items": [...]} (llm._object)
     if len(acts) < 4:
         raise ValueError("the outline has too few acts")
     texts: list[list[dict]] = []
@@ -512,10 +512,10 @@ def fix_script(script: dict, plan: dict, bundle: dict, facts: str, ids: list[str
 def _write_act(gen, plan: dict, act: dict, n: int, total: int, facts: str, done: list[dict], extra: str, ids: list[str]) -> list[dict]:
     story = " ".join(s["narration"] for s in done)[-3000:] or "(this is the start)"
     used = sorted({f"{x:g}" for s in done for x in _numbers(s["narration"]) if not (x.is_integer() and 1900 <= x <= 2100)})
-    out = gen(ACT_PROMPT.format(n=n, total=total, title=plan["title"], goal=act.get("goal", ""), act_facts="\n".join(act.get("facts") or []) or "(choose)",
+    out = llm._object(gen(ACT_PROMPT.format(n=n, total=total, title=plan["title"], goal=act.get("goal", ""), act_facts="\n".join(act.get("facts") or []) or "(choose)",
                                 facts=facts, story=story, used=", ".join(used) or "none", words=ACT_WORDS[0], scenes=ACT_WORDS[1], extra=extra,
-                                visuals=VISUALS, ids=", ".join(ids)))
-    return [s for s in out.get("scenes") or [] if s.get("narration") and isinstance(s.get("visual"), dict)]
+                                visuals=VISUALS, ids=", ".join(ids))))
+    return [s for s in out.get("scenes") or out.get("items") or [] if isinstance(s, dict) and s.get("narration") and isinstance(s.get("visual"), dict)]
 
 
 # ---- charts: from a scene's request to a motion.js spec, using only the data --------------------------------------------
@@ -1196,9 +1196,9 @@ def write_shorts(script: dict, bundle: dict, n: int = 3, gen=None, log=print) ->
         if want <= 0:
             break
         avoid = "; ".join(s["title"] for s in shorts) or "none"
-        out = gen(SHORTS_PROMPT.format(title=script["title"], n=want, facts=facts, story=story, wmin=SHORT_WORDS[0], wmax=SHORT_WORDS[1],
-                                       visuals=VISUALS, ids=", ".join(ids), avoid=avoid))
-        for sh in (out.get("shorts") or [])[:want]:
+        out = llm._object(gen(SHORTS_PROMPT.format(title=script["title"], n=want, facts=facts, story=story, wmin=SHORT_WORDS[0], wmax=SHORT_WORDS[1],
+                                       visuals=VISUALS, ids=", ".join(ids), avoid=avoid)))
+        for sh in [x for x in (out.get("shorts") or out.get("items") or []) if isinstance(x, dict)][:want]:
             sh["scenes"] = [s for s in sh.get("scenes") or [] if s.get("narration") and isinstance(s.get("visual"), dict)]
             if not sh["scenes"]:
                 continue

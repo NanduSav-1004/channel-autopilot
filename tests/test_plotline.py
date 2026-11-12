@@ -407,3 +407,13 @@ def test_plotline_adopts_an_upload_that_the_state_forgot(monkeypatch):
     other = {}
     assert pd.adopt_from_channel(other, "2026-11-06", Yt(), log=lambda m: None) is False and other == {}          # nothing for that day
     assert pd.adopt_from_channel({}, "2026-11-04", object(), log=lambda m: None) is False                          # a broken client never raises
+
+
+def test_a_bare_list_answer_from_the_model_still_gives_acts_scenes_and_shorts(monkeypatch):
+    scenes = [{"narration": "The index rose.", "visual": {"type": "line", "series": "X"}}, {"narration": "", "visual": {}}, "junk"]
+    plan = {"title": "T"}
+    out = plotline._write_act(lambda p: scenes, plan, {"goal": "g", "facts": []}, 1, 4, "facts", [], "", [])     # the model answered with the scenes list itself
+    assert [s["narration"] for s in out] == ["The index rose."]
+    from autopilot import llm
+
+    assert llm._object([{"title": "a"}, {"title": "b"}]).get("items")[1]["title"] == "b"

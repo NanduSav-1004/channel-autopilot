@@ -11,6 +11,8 @@ from pathlib import Path
 
 import yaml
 
+from autopilot import net
+
 CATALOG = Path(__file__).resolve().parents[2] / "config" / "plotline_catalog.yaml"
 CACHE = Path("work/data")
 STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
@@ -33,7 +35,7 @@ def _get(url: str, tries: int = 3) -> str:
     headers = UA if "ourworldindata" in url else {}     # FRED refuses some custom user agents; its default one works
     for attempt in range(tries):
         try:
-            return urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=60).read().decode("utf-8")
+            return net.urlopen(urllib.request.Request(url, headers=headers), timeout=60).read().decode("utf-8")
         except OSError:
             if attempt == tries - 1:
                 raise

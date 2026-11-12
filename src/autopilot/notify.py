@@ -4,6 +4,8 @@ import os
 import urllib.parse
 import urllib.request
 
+from autopilot import net
+
 
 def configured() -> bool:
     return bool(os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"))
@@ -16,7 +18,7 @@ def send(text: str) -> bool:
     token, chat = os.environ["TELEGRAM_BOT_TOKEN"], os.environ["TELEGRAM_CHAT_ID"]
     data = urllib.parse.urlencode({"chat_id": chat, "text": text[:3500], "disable_web_page_preview": "true"}).encode()
     try:
-        with urllib.request.urlopen(urllib.request.Request(f"https://api.telegram.org/bot{token}/sendMessage", data=data), timeout=20) as r:
+        with net.urlopen(urllib.request.Request(f"https://api.telegram.org/bot{token}/sendMessage", data=data), timeout=20) as r:
             return bool(json.load(r).get("ok"))
     except (OSError, ValueError):
         return False
@@ -29,7 +31,7 @@ def updates(offset: int | None = None) -> list[dict]:
     token = os.environ["TELEGRAM_BOT_TOKEN"]
     url = f"https://api.telegram.org/bot{token}/getUpdates?timeout=0" + (f"&offset={offset}" if offset is not None else "")
     try:
-        with urllib.request.urlopen(url, timeout=20) as r:
+        with net.urlopen(url, timeout=20) as r:
             res = json.load(r).get("result", [])
     except (OSError, ValueError):
         return []

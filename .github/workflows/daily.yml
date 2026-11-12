@@ -73,9 +73,11 @@ jobs:
           cache: pip
 
       - name: System packages (fonts for captions and thumbnails)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-lato fonts-dejavu-core fonts-noto-core ffmpeg
+        timeout-minutes: 25
+        run: scripts/install_system_packages.sh
 
-      - run: pip install -e .
+      - id: install
+        run: pip install --retries 5 --timeout 60 -e .
 
       - name: Cache voice models
         id: voice
@@ -110,7 +112,7 @@ jobs:
           autopilot $ARGS 2>&1 | tee run.log
 
       - name: Malayalam edition (a second channel; skipped until its login exists, and never affects the English video)
-        if: always()
+        if: always() && steps.install.outcome == 'success'
         continue-on-error: true
         shell: bash
         run: |

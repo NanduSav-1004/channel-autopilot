@@ -6,6 +6,8 @@ import urllib.parse
 import urllib.request
 from collections.abc import Callable
 
+from autopilot import net
+
 URL = "https://suggestqueries.google.com/complete/search"
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) channel-autopilot/0.1"}
 REGION = "us"  # the audience is US/UK, and results otherwise follow the server's location
@@ -16,7 +18,7 @@ def suggest(query: str) -> list[str]:
     params = {"client": "firefox", "ds": "yt", "q": query, "gl": REGION, "hl": "en"}
     try:
         req = urllib.request.Request(URL + "?" + urllib.parse.urlencode(params), headers=UA)
-        data = json.loads(urllib.request.urlopen(req, timeout=15).read().decode("utf-8", "replace"))
+        data = json.loads(net.urlopen(req, timeout=15).read().decode("utf-8", "replace"))
         time.sleep(0.15)  # be polite
         return [str(s) for s in data[1]]
     except (OSError, ValueError, IndexError, KeyError):

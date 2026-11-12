@@ -423,7 +423,7 @@ def master_loudness(wav: Path, log=print) -> bool:
         subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(wav), "-af", flt, "-ar", "48000", "-ac", "1", str(tmp)], check=True)
         after = measure_loudness(tmp)
         got, peak = float(after["input_i"]), float(after["input_tp"])
-        if peak > FINAL_TP + 0.3 or abs(before - FINAL_LUFS) - abs(got - FINAL_LUFS) < 0.5:
+        if peak > FINAL_TP + 0.5 or abs(before - FINAL_LUFS) - abs(got - FINAL_LUFS) < 0.5:   # -1.0 dBTP is still safely under YouTube's re-encode
             log(f"[master] kept the original mix ({before:.1f} LUFS; the result {got:.1f} LUFS, {peak:.1f} dBTP was no clear gain)")
             return False
         shutil.move(str(tmp), str(wav))
