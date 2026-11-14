@@ -1,0 +1,150 @@
+[
+ {
+  "title": "The Massive 55 Percent Drop in US Births",
+  "scenes": [
+   {
+    "narration": "Have you noticed families look different today than they did decades ago?",
+    "visual": {
+     "type": "title",
+     "text": "The Massive 55 Percent Drop in US Births",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Back in 1960, the US fertility rate was 3.65 births per woman.",
+    "visual": {
+     "type": "counter",
+     "series": "SPDYNTFRTINUSA",
+     "stat": "at",
+     "date": "1960-01"
+    }
+   },
+   {
+    "narration": "By 2024, that number plummeted to just 1.63.",
+    "visual": {
+     "type": "counter",
+     "series": "SPDYNTFRTINUSA",
+     "stat": "last"
+    }
+   },
+   {
+    "narration": "That is a staggering 55% decline in birth rates over those decades.",
+    "visual": {
+     "type": "line",
+     "series": "SPDYNTFRTINUSA",
+     "start": "1960",
+     "annotate": [
+      "max"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "A massive demographic shift is reshaping our future.",
+     "highlight": [
+      "shift"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "Is the US Birth Rate Finally Rebounding?",
+  "scenes": [
+   {
+    "narration": "Are we finally seeing a rebound in American birth rates?",
+    "visual": {
+     "type": "title",
+     "text": "Is the US Birth Rate Finally Rebounding?",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "The data shows a small glimmer of change recently.",
+    "visual": {
+     "type": "statement",
+     "text": "Minor shifts tell a deeper story.",
+     "highlight": [
+      "shifts"
+     ]
+    }
+   },
+   {
+    "narration": "Between January 2023 and January 2024, the fertility rate ticked up by 0.6%.",
+    "visual": {
+     "type": "line",
+     "series": "SPDYNTFRTINUSA",
+     "start": "1960"
+    }
+   },
+   {
+    "narration": "However, this follows years of decline, including a 1% drop from 2020 to 2024.",
+    "visual": {
+     "type": "compare",
+     "series": "SPDYNTFRTINUSA",
+     "from": "2020-01",
+     "to": "2024-01"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "line",
+     "series": "SPDYNTFRTINUSA",
+     "start": "2020"
+    }
+   }
+  ]
+ },
+ {
+  "title": "Why Modern Families Are Shrinking",
+  "scenes": [
+   {
+    "narration": "Why are families getting smaller compared to the mid-nineties?",
+    "visual": {
+     "type": "title",
+     "text": "Why Modern Families Are Shrinking",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "In January 1995, the fertility rate was 1.98 births per woman.",
+    "visual": {
+     "type": "counter",
+     "series": "SPDYNTFRTINUSA",
+     "stat": "at",
+     "date": "1995-01"
+    }
+   },
+   {
+    "narration": "Today, that rate has fallen by 18%.",
+    "visual": {
+     "type": "compare",
+     "series": "SPDYNTFRTINUSA",
+     "from": "1995-01",
+     "to": "last"
+    }
+   },
+   {
+    "narration": "Economic pressures and new life goals are making smaller families the modern norm.",
+    "visual": {
+     "type": "gauge",
+     "series": "SPDYNTFRTINUSA",
+     "start": "1960"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Structural changes are permanent choices.",
+     "highlight": [
+      "permanent"
+     ]
+    }
+   }
+  ]
+ }
+]

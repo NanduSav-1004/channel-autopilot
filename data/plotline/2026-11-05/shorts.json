@@ -1,0 +1,155 @@
+[
+ {
+  "title": "Your Coffee Price Is Up 164 Percent",
+  "scenes": [
+   {
+    "narration": "Have you noticed your morning coffee getting much more expensive?",
+    "visual": {
+     "type": "title",
+     "text": "Your Coffee Price Is Up 164 Percent",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since the year 2000, ground coffee prices have soared.",
+    "visual": {
+     "type": "line",
+     "series": "APU0000717311",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "We are looking at a massive 164% total increase.",
+    "visual": {
+     "type": "counter",
+     "series": "APU0000717311",
+     "stat": "last",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "That is significantly higher than the rise in general inflation.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "APU0000717311",
+      "CPIAUCSL"
+     ],
+     "since": "2000",
+     "as": "change"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Coffee prices are outpacing inflation",
+     "highlight": [
+      "outpacing"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "Why Coffee Costs 2.6 Times More Now",
+  "scenes": [
+   {
+    "narration": "Ever wonder how much more you are paying for coffee today?",
+    "visual": {
+     "type": "title",
+     "text": "Why Coffee Costs 2.6 Times More Now",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "In January 2000, a pound of ground coffee cost $3.54.",
+    "visual": {
+     "type": "line",
+     "series": "APU0000717311",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "By September 2026, that same pound jumped to $9.33.",
+    "visual": {
+     "type": "compare",
+     "series": "APU0000717311",
+     "from": "2000-01",
+     "to": "2026-09"
+    }
+   },
+   {
+    "narration": "That is 2.6 times the original price.",
+    "visual": {
+     "type": "line",
+     "series": "APU0000717311",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Your coffee costs 2.6x more",
+     "highlight": [
+      "2.6x"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "Coffee Prices vs Inflation",
+  "scenes": [
+   {
+    "narration": "Is your coffee bill rising faster than everything else?",
+    "visual": {
+     "type": "title",
+     "text": "Coffee Prices vs Inflation",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Between 2025 and 2026, coffee prices jumped 33%.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "APU0000717311",
+      "CPIAUCSL"
+     ],
+     "since": "2025"
+    }
+   },
+   {
+    "narration": "In that same window, general inflation grew just 5%.",
+    "visual": {
+     "type": "kpi",
+     "series": [
+      "APU0000717311",
+      "CPIAUCSL"
+     ]
+    }
+   },
+   {
+    "narration": "Coffee is clearly accelerating away from normal price trends, rising 33% since January 2025.",
+    "visual": {
+     "type": "compare",
+     "series": "APU0000717311",
+     "from": "2025-01",
+     "to": "last"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Coffee prices are surging",
+     "highlight": [
+      "surging"
+     ]
+    }
+   }
+  ]
+ }
+]

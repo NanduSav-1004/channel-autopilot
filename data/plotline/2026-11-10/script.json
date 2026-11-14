@@ -1,0 +1,466 @@
+{
+ "title": "Which American Jobs Are Actually Growing?",
+ "description": "While traditional manufacturing jobs have steadily declined over recent decades, health and education services have surged to become the dominant engine of US employment growth. At the same time, sectors like information and construction present a starkly contrasting picture of the modern workforce.\n\nIn this video, we analyze official labor statistics from 1990 to 2026 to reveal how the US job market transformed and where work is moving next. Subscribe for clear, data-driven visual stories.",
+ "tags": [
+  "US economy",
+  "labor market",
+  "job growth",
+  "employment data",
+  "manufacturing jobs",
+  "healthcare jobs",
+  "Plotline Data",
+  "US jobs",
+  "economics",
+  "employment trends"
+ ],
+ "thumbnail": {
+  "number": "+160%",
+  "words": "US Job Shifts"
+ },
+ "scenes": [
+  {
+   "narration": "The American workforce is undergoing a historic, quiet transformation. While headlines focus on tech or factory floors, one sector is quietly dominating.",
+   "visual": {
+    "type": "title",
+    "text": "Which American Jobs Are Actually Growing?",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "Private education and healthcare jobs have surged to an unprecedented 28.1 million today. This isn't just a trend; it is a total reshaping of the economy.",
+   "visual": {
+    "type": "counter",
+    "series": "USEHS",
+    "stat": "last",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Since 1990, this massive sector has grown by 160%. It is now 2.6 times larger than it was back then.",
+   "visual": {
+    "type": "line",
+    "series": "USEHS",
+    "start": "1990",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Healthcare and education are pulling ahead because our aging population and professional training needs show no signs of slowing down.",
+   "visual": {
+    "type": "statement",
+    "text": "An aging population demands more care than ever.",
+    "highlight": [
+     "aging"
+    ]
+   }
+  },
+  {
+   "narration": "Compare this to manufacturing, which has seen a 29% decline since 1990. Automation and global shifts have fundamentally changed that landscape.",
+   "visual": {
+    "type": "compare",
+    "series": "MANEMP",
+    "from": "1990",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Even the information sector remains largely flat compared to the early 2000s, barely holding onto its share of the total workforce.",
+   "visual": {
+    "type": "line",
+    "series": "USINFO",
+    "start": "1990",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "The surge in human-centric jobs is real. Let\u2019s look at why these specific sectors are the true engines of modern employment.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "USEHS",
+     "MANEMP",
+     "USINFO",
+     "USCONS"
+    ],
+    "since": "1990",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "To understand where we are, we have to look back at the workforce of 1990. It was a different era entirely.",
+   "visual": {
+    "type": "statement",
+    "text": "The American Workforce in 1990",
+    "highlight": [
+     "1990"
+    ]
+   }
+  },
+  {
+   "narration": "Back then, manufacturing was the undeniable titan of the economy, employing 17.8 million people.",
+   "visual": {
+    "type": "counter",
+    "series": "MANEMP",
+    "stat": "at",
+    "date": "1990-01"
+   }
+  },
+  {
+   "narration": "It hit a peak of 17.9 million in February 1990, serving as the country's primary employment engine.",
+   "visual": {
+    "type": "line",
+    "series": "MANEMP",
+    "start": "1990",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Meanwhile, the private education and health sector was just beginning its climb, starting at 10.8 million jobs.",
+   "visual": {
+    "type": "counter",
+    "series": "USEHS",
+    "stat": "at",
+    "date": "1990-01"
+   }
+  },
+  {
+   "narration": "According to the Bureau of Labor Statistics, construction and information sectors were much smaller pillars back then.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "MANEMP",
+     "USEHS",
+     "USCONS",
+     "USINFO"
+    ],
+    "since": "1990"
+   }
+  },
+  {
+   "narration": "The landscape was defined by industrial output, with millions more working on factory floors than in classrooms or clinics.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "MANEMP",
+     "USEHS"
+    ],
+    "from": "1990",
+    "to": "2026"
+   }
+  },
+  {
+   "narration": "But the tide was already turning. The foundations of a service-oriented future were being quietly laid.",
+   "visual": {
+    "type": "stacked",
+    "series": [
+     "MANEMP",
+     "USEHS",
+     "USCONS",
+     "USINFO"
+    ],
+    "as": "share",
+    "since": "1990"
+   }
+  },
+  {
+   "narration": "As the new millennium approached, the American economic bedrock began to shift.",
+   "visual": {
+    "type": "statement",
+    "text": "The industrial era began its long, quiet retreat.",
+    "highlight": [
+     "retreat"
+    ]
+   }
+  },
+  {
+   "narration": "Manufacturing took the hardest hit, falling by 29% from its early 1990s peak.",
+   "visual": {
+    "type": "line",
+    "series": "MANEMP",
+    "start": "1990",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "By April 2020, factory employment reached a historic low of 11.4 million jobs.",
+   "visual": {
+    "type": "counter",
+    "series": "MANEMP",
+    "stat": "min",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Meanwhile, the tech-heavy information sector saw a wild ride after the dot-com bubble burst.",
+   "visual": {
+    "type": "line",
+    "series": "USINFO",
+    "start": "1990",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "From a peak of 3.72 million in 2001, information sector jobs fell by 26% by today.",
+   "visual": {
+    "type": "compare",
+    "series": "USINFO",
+    "from": "2001-03",
+    "to": "2026"
+   }
+  },
+  {
+   "narration": "Volatility became the defining feature of the tech era, leaving total headcount largely stagnant.",
+   "visual": {
+    "type": "gauge",
+    "series": "USINFO",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "While these pillars faltered, the economy was silently preparing to transition toward human-centric roles.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "MANEMP",
+     "USINFO"
+    ],
+    "since": "1990",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Why is the economy shifting so dramatically? It starts with the people we care for.",
+   "visual": {
+    "type": "statement",
+    "text": "Demographics drive the new American workforce.",
+    "highlight": [
+     "Demographics"
+    ]
+   }
+  },
+  {
+   "narration": "As the population ages, the demand for health and education services has exploded, climbing 160% since 1990.",
+   "visual": {
+    "type": "line",
+    "series": "USEHS",
+    "start": "1990",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Meanwhile, the construction sector is reaching new heights to meet modern infrastructure and housing needs.",
+   "visual": {
+    "type": "counter",
+    "series": "USCONS",
+    "stat": "last",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Construction has grown by 54% since 1990, reflecting the physical expansion required by a changing nation.",
+   "visual": {
+    "type": "compare",
+    "series": "USCONS",
+    "from": "1990",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "In contrast, the information sector has faced significant pressure, struggling to reclaim its turn-of-the-century footprint.",
+   "visual": {
+    "type": "line",
+    "series": "USINFO",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Tech and information jobs have seen a 2% change since 1990, leaving employment levels relatively flat.",
+   "visual": {
+    "type": "gauge",
+    "series": "USINFO",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Our economy is trading industrial assembly for service-based care, rewriting the map of American work.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "MANEMP",
+     "USEHS",
+     "USINFO",
+     "USCONS"
+    ],
+    "from": "1990",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "To understand today's hiring momentum, we look at the last twelve months of job growth across four major sectors. The trends reveal a stark divide in the American labor market.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "USEHS",
+     "USCONS",
+     "MANEMP",
+     "USINFO"
+    ]
+   }
+  },
+  {
+   "narration": "Private education and healthcare leads the pack with a 1.9% increase. It is the clear engine of modern hiring.",
+   "visual": {
+    "type": "compare",
+    "series": "USEHS",
+    "from": "2025-10",
+    "to": "2026-10"
+   }
+  },
+  {
+   "narration": "Construction follows closely, growing by 1.5% as the nation continues to expand its physical infrastructure.",
+   "visual": {
+    "type": "line",
+    "series": "USCONS",
+    "start": "2025",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Manufacturing is showing modest signs of life, ticking upward by 0.6% over the last year.",
+   "visual": {
+    "type": "statement",
+    "text": "Manufacturing shows small but steady gains",
+    "highlight": [
+     "steady"
+    ]
+   }
+  },
+  {
+   "narration": "However, the information sector tells a very different story. It has contracted by 4.2% since last year.",
+   "visual": {
+    "type": "line",
+    "series": "USINFO",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Comparing these one-year changes highlights which industries are currently pulling away from the pack.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "USEHS",
+     "USCONS",
+     "MANEMP",
+     "USINFO"
+    ],
+    "since": "2025"
+   }
+  },
+  {
+   "narration": "This snapshot defines the current labor climate, separating sectors experiencing active expansion from those undergoing painful rebalancing.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "USEHS",
+     "USCONS",
+     "MANEMP",
+     "USINFO"
+    ],
+    "from": "2025",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "The American workforce is fundamentally different than it was just a few years ago. We are seeing a major shift toward service-centered employment.",
+   "visual": {
+    "type": "statement",
+    "text": "The American Labor Landscape is Evolving",
+    "highlight": [
+     "Evolving"
+    ]
+   }
+  },
+  {
+   "narration": "Private education and healthcare now employ 28.1 million people. This sector has seen a 14% increase since 2020.",
+   "visual": {
+    "type": "counter",
+    "series": "USEHS",
+    "stat": "last",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "In contrast, manufacturing has remained relatively flat. Employment sits at 12.7 million, showing a 1% decrease from 2020 levels.",
+   "visual": {
+    "type": "line",
+    "series": "MANEMP",
+    "start": "2020",
+    "annotate": [
+     "min"
+    ]
+   }
+  },
+  {
+   "narration": "These two sectors tell the story of a modern economy prioritizing human services over traditional industrial output.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "USEHS",
+     "MANEMP"
+    ],
+    "since": "2020",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "The transition is clear: health, education, and services are the true pillars of growth today.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "USEHS",
+     "MANEMP"
+    ]
+   }
+  },
+  {
+   "narration": "Have you noticed more new jobs or businesses opening in healthcare or education in your own town? Tell us in the comments.",
+   "visual": {
+    "type": "statement",
+    "text": "Where do you see the most job growth?",
+    "highlight": [
+     "growth"
+    ]
+   }
+  },
+  {
+   "narration": "If you want to keep tracking these trends, please subscribe to our channel for more data stories.",
+   "visual": {
+    "type": "statement",
+    "text": "Subscribe for More Data Insights",
+    "highlight": [
+     "Subscribe"
+    ]
+   }
+  }
+ ],
+ "engage": {
+  "kind": "personal",
+  "question": "Have you noticed more new jobs or businesses opening in healthcare or education in your own town?",
+  "onscreen": "HAVE YOU NOTICED MORE NEW JOBS OR BUSINESSES OPENING IN HEALTHCARE OR EDUCATION IN YOUR OWN TOWN",
+  "comment": "Have you noticed more new jobs or businesses opening in healthcare or education in your own town?"
+ }
+}

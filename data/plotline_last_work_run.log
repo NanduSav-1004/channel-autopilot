@@ -1,0 +1,42 @@
+[plotline] topic: Why Has the Federal Minimum Wage Lost So Much Value? | data: ['FEDMINNFRWG', 'AHETPI', 'CPIAUCSL']  
+[plotline] script check 1: 10 problem(s): ['scene 12: the narration says 4.5 but the compare chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number', 'scene 17: bad visual {"type": "gauge", "series": "CPIAUCSL", "start": "1970"}: gauge cannot show an index', 'scene 31: the narration says 9.9 but the gauge chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number', "scene 34: chart type 'compare' is already used 3 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)"]
+[plotline] script check 2: 6 problem(s): ['scene 12: the narration says 4.5 but the counter chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number', 'scene 31: the narration says 9.9 but the compare chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number', "scene 37: chart type 'line' is already used 7 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)", "scene 27: chart type 'multiline' is already used 3 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)"]
+[llm] gemini:gemini-3.5-flash unavailable: gemini-3.5-flash daily quota exhausted
+[plotline] script check 3: 4 problem(s): ['scene 12: the narration says 4.5 but the compare chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number', "scene 37: chart type 'compare' is already used 3 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)", "scene 40: chart type 'multiline' is already used 3 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)", "scene 32: chart type 'bars' is already used 3 times; pick a different type from the menu (multiline, slope, race, kpi, waffle, gauge, donut, heatmap, bars, compare, counter ... whichever fits the sentence)"]
+[llm] gemini:gemini-3.6-flash unavailable: gemini-3.6-flash daily quota exhausted
+[llm] gemini:gemini-3.8-flash busy, trying next: gemini-3.8-flash HTTP 503
+[plotline] still 4 problem(s) after 3 rewrites; settling by rule
+[plotline] settled by rule: 0 sentence(s) cut, 1 chart(s) replaced, 832 words left
+[0;93m2026-11-14 08:57:08.327444939 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+[readcheck] pauses added so text can be read: [(3, 0.5)]
+[readcheck] 42/42 scenes keep their text up long enough to read
+[plotline] 42 scenes, 7.9 min; rendering charts
+[mix] audio: music ducked
+[sfx] 214 sound effects
+[master] loudness -17.0 -> -15.1 LUFS, true peak -0.3 -> -1.4 dBTP
+[qa-video] long 476.6s, -15.11 LUFS: ok
+[llm] gemini:gemini-3.8-flash busy, trying next: gemini-3.8-flash network error: TimeoutError('The read operation timed out')
+[plotline] uploaded https://youtu.be/yOo1Dsx2UCg (goes public 2026-11-14T19:00:00Z)
+[plotline] Short 'The Silent Pay Cut of Inflation' check 1: ['scene 4: bad visual {"type": "compare", "series": "CPIAUCSL", "from": "1980", "to": "last"}: compare cannot show an index; use line or counter']
+[readcheck] pauses added so text can be read: [(4, 0.8), (5, 0.8)]
+[readcheck] 3/5 scenes keep their text up long enough to read; short: scene 4 needs 6.8s has 6.7s, scene 5 needs 3.7s has 3.2s
+[mix] Short audio: music ducked
+[sfx] 9 sound effects
+[master] loudness -16.9 -> -15.3 LUFS, true peak -0.3 -> -1.5 dBTP
+[qa-video] short 31.0s, -15.52 LUFS: ok
+[plotline] Short 1 uploaded https://youtu.be/tqD05nJOfkg (goes public 2026-11-14T22:00:00Z)
+[readcheck] pauses added so text can be read: [(3, 0.6), (5, 0.8)]
+[readcheck] 4/5 scenes keep their text up long enough to read; short: scene 5 needs 3.9s has 3.2s
+[mix] Short audio: music ducked
+[sfx] 40 sound effects
+[master] loudness -17.0 -> -15.1 LUFS, true peak -0.3 -> -1.2 dBTP
+[qa-video] short 30.6s, -15.32 LUFS: ok
+[plotline] Short 2 uploaded https://youtu.be/iT9574-weM8 (goes public 2026-11-15T03:00:00Z)
+[readcheck] pauses added so text can be read: [(1, 0.4), (2, 0.8), (5, 0.8)]
+[readcheck] 4/5 scenes keep their text up long enough to read; short: scene 5 needs 3.6s has 3.2s
+[mix] Short audio: music ducked
+[sfx] 39 sound effects
+[master] loudness -16.8 -> -15.2 LUFS, true peak -0.3 -> -1.4 dBTP
+[qa-video] short 28.5s, -15.4 LUFS: ok
+[plotline] Short 3 uploaded https://youtu.be/WYWR9BoUsbc (goes public 2026-11-15T09:00:00Z)
+Plotline: Why the Federal Minimum Wage Has Lost So Much Purchasing Power: video yOo1Dsx2UCg, 3 Short(s)

@@ -1,0 +1,16 @@
+{
+ "title": "Which American Jobs Are Actually Growing?",
+ "angle": "While manufacturing jobs have steadily declined over decades, health and education services have surged to become the dominant engine of US employment.",
+ "series": [
+  "MANEMP",
+  "USEHS",
+  "USINFO",
+  "USCONS"
+ ],
+ "states": null,
+ "owid": null,
+ "countries": null,
+ "owid2": null,
+ "states2": null,
+ "start": "1990"
+}

@@ -1,0 +1,156 @@
+[
+ {
+  "title": "Is Online Shopping Taking Over Everything?",
+  "scenes": [
+   {
+    "narration": "It feels like everything is bought online today.",
+    "visual": {
+     "type": "title",
+     "text": "Is Online Shopping Taking Over Everything?",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "But look at the reality of retail sales.",
+    "visual": {
+     "type": "statement",
+     "text": "The reality of retail is surprising.",
+     "highlight": [
+      "surprising"
+     ]
+    }
+   },
+   {
+    "narration": "As of April 2026, online shopping is just 17.1% of total retail sales.",
+    "visual": {
+     "type": "waffle",
+     "series": "ECOMPCTSA",
+     "stat": "last"
+    }
+   },
+   {
+    "narration": "That means over four out of five dollars are still spent in physical stores.",
+    "visual": {
+     "type": "gauge",
+     "series": "ECOMPCTSA",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "line",
+     "series": "ECOMPCTSA",
+     "start": "2000",
+     "annotate": [
+      "max"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "The Massive Growth of Digital Commerce",
+  "scenes": [
+   {
+    "narration": "How much has online shopping really grown?",
+    "visual": {
+     "type": "title",
+     "text": "The Massive Growth of Digital Commerce",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "In January 2000, online retail was just 0.8% of the market.",
+    "visual": {
+     "type": "counter",
+     "series": "ECOMPCTSA",
+     "stat": "at",
+     "date": "2000-01",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "Fast forward to April 2026, and that share has exploded by 2038%.",
+    "visual": {
+     "type": "line",
+     "series": "ECOMPCTSA",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "Digital storefronts are now 21.4 times larger than they were at the turn of the millennium.",
+    "visual": {
+     "type": "line",
+     "series": "ECOMPCTSA",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Growth has been extraordinary.",
+     "highlight": [
+      "extraordinary"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "Why Physical Stores Are Still Winning",
+  "scenes": [
+   {
+    "narration": "Why do physical stores still dominate the retail landscape?",
+    "visual": {
+     "type": "title",
+     "text": "Why Physical Stores Are Still Winning",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Total retail and restaurant spending reached $745 billion in September 2026.",
+    "visual": {
+     "type": "counter",
+     "series": "RSAFS",
+     "stat": "last",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "While online sales hit $124.3 billion, traditional stores hold the massive majority.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "RSNSR",
+      "RSAFS"
+     ],
+     "since": "2000",
+     "as": "value"
+    }
+   },
+   {
+    "narration": "Shoppers still crave instant gratification and in-person inspection.",
+    "visual": {
+     "type": "statement",
+     "text": "Physical retail remains king.",
+     "highlight": [
+      "king"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "RSNSR",
+      "RSAFS"
+     ],
+     "since": "2020"
+    }
+   }
+  ]
+ }
+]

@@ -1,0 +1,154 @@
+[
+ {
+  "title": "Why the Federal Minimum Wage Feels Stuck",
+  "scenes": [
+   {
+    "narration": "Did you know the federal minimum wage has been frozen for over 15 years?",
+    "visual": {
+     "type": "title",
+     "text": "Why the Federal Minimum Wage Feels Stuck",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since July 2009, the federal rate has remained locked at $7.25 per hour.",
+    "visual": {
+     "type": "line",
+     "series": "FEDMINNFRWG",
+     "start": "2009"
+    }
+   },
+   {
+    "narration": "While that number stayed still, inflation has continued to climb higher every single year.",
+    "visual": {
+     "type": "line",
+     "series": "CPIAUCSL",
+     "start": "2009"
+    }
+   },
+   {
+    "narration": "This means your hard-earned dollars buy significantly less today than they did back in 2009.",
+    "visual": {
+     "type": "gauge",
+     "series": "FEDMINNFRWG",
+     "start": "2009"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Check the full analysis on our channel.",
+     "highlight": [
+      "channel"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "Minimum Wage vs. Average Pay",
+  "scenes": [
+   {
+    "narration": "How much has average pay grown compared to the minimum wage since 1970?",
+    "visual": {
+     "type": "title",
+     "text": "Minimum Wage vs. Average Pay",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Between 1970 and 2026, the federal minimum wage rose by 353%.",
+    "visual": {
+     "type": "counter",
+     "series": "FEDMINNFRWG",
+     "stat": "last",
+     "start": "1970"
+    }
+   },
+   {
+    "narration": "In that same period, average pay for non-managers skyrocketed by 889%.",
+    "visual": {
+     "type": "counter",
+     "series": "AHETPI",
+     "stat": "last",
+     "start": "1970"
+    }
+   },
+   {
+    "narration": "The gap between the floor and the average worker has widened drastically over the decades.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "FEDMINNFRWG",
+      "AHETPI"
+     ],
+     "since": "1970",
+     "as": "change"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "See the full data breakdown on our channel.",
+     "highlight": [
+      "breakdown"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "The Silent Pay Cut of Inflation",
+  "scenes": [
+   {
+    "narration": "Are your wages losing the race against rising prices?",
+    "visual": {
+     "type": "title",
+     "text": "The Silent Pay Cut of Inflation",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since 1980, consumer prices have jumped by 333%.",
+    "visual": {
+     "type": "counter",
+     "series": "CPIAUCSL",
+     "stat": "last",
+     "start": "1980"
+    }
+   },
+   {
+    "narration": "In the same timeframe, the federal minimum wage only grew by 134%.",
+    "visual": {
+     "type": "counter",
+     "series": "FEDMINNFRWG",
+     "stat": "last",
+     "start": "1980"
+    }
+   },
+   {
+    "narration": "Without automatic adjustments, inflation turns into a silent pay cut for the lowest earners.",
+    "visual": {
+     "type": "line",
+     "series": "CPIAUCSL",
+     "start": "1980",
+     "annotate": [
+      "max"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Watch the full report on our channel.",
+     "highlight": [
+      "report"
+     ]
+    }
+   }
+  ]
+ }
+]

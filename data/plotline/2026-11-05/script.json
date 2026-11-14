@@ -1,0 +1,437 @@
+{
+ "title": "Why Ground Coffee Prices Are Surging to Record Highs",
+ "description": "Ground coffee prices have reached historic highs, outpacing general consumer inflation over the last two decades. Using official data from the U.S. Bureau of Labor Statistics, we track the journey of coffee prices from 2000 to 2026.\n\nFrom severe frost and drought in key growing regions to rising global shipping and energy costs, discover what is really driving up the cost of your daily brew. Subscribe to Plotline Data for clear, data-driven stories.",
+ "tags": [
+  "Coffee Prices",
+  "Inflation",
+  "Ground Coffee",
+  "Economy",
+  "Plotline Data",
+  "Grocery Prices",
+  "Commodity Prices",
+  "Data Visualisation",
+  "Consumer Price Index",
+  "Supply Chain"
+ ],
+ "thumbnail": {
+  "number": "$9.72",
+  "words": "Record Coffee Price"
+ },
+ "scenes": [
+  {
+   "narration": "Your morning brew has never cost this much. In April 2026, ground coffee hit an unprecedented record high of $9.72 per pound across the United States.",
+   "visual": {
+    "type": "title",
+    "text": "Why Ground Coffee Prices Are Surging to Record Highs",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "That sudden spike left millions of coffee drinkers facing serious sticker shock at the grocery checkout.",
+   "visual": {
+    "type": "statement",
+    "text": "Coffee prices reached unprecedented historic highs",
+    "highlight": [
+     "historic"
+    ]
+   }
+  },
+  {
+   "narration": "Relief has been minimal. By September 2026, the average price edged down slightly to $9.33 per pound.",
+   "visual": {
+    "type": "compare",
+    "series": "APU0000717311",
+    "from": "2026-04",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "That represents a drop of just 4% from the peak, keeping prices near historic highs.",
+   "visual": {
+    "type": "gauge",
+    "series": "APU0000717311",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Look back to January 2000, when a pound of ground coffee cost a modest $3.54.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000717311",
+    "start": "2000",
+    "end": "2026"
+   }
+  },
+  {
+   "narration": "By September 2026, the price was 2.6 times that level, marking a total surge of 164%.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "APU0000717311",
+     "CPIAUCSL"
+    ],
+    "since": "2000",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Over that same span, overall consumer prices increased by 99%. Why has coffee detached so radically from normal inflation?",
+   "visual": {
+    "type": "statement",
+    "text": "Why did coffee outpace ordinary inflation?",
+    "highlight": [
+     "inflation"
+    ]
+   }
+  },
+  {
+   "narration": "To understand today's record highs, we have to look back to the early 2000s. According to the Bureau of Labor Statistics, ground coffee hit a low of $2.75 per pound in June 2004.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000717311",
+    "start": "2000",
+    "end": "2005",
+    "annotate": [
+     "min"
+    ]
+   }
+  },
+  {
+   "narration": "By January 2005, prices started creeping back up, reaching $3.05 per pound.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000717311",
+    "stat": "at",
+    "date": "2005-01"
+   }
+  },
+  {
+   "narration": "From January 2005 to September 2026, coffee prices surged 206%. By comparison, overall consumer prices rose 76%.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "APU0000717311",
+     "CPIAUCSL"
+    ],
+    "since": "2005",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Ground coffee was no longer staying cheap. Expanding demand and shifting weather began straining global supply.",
+   "visual": {
+    "type": "statement",
+    "text": "Global demand and weather strained supply chains",
+    "highlight": [
+     "weather"
+    ]
+   }
+  },
+  {
+   "narration": "By January 2010, ground coffee was averaging $3.81 per pound.",
+   "visual": {
+    "type": "compare",
+    "series": "APU0000717311",
+    "from": "2010-01",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Since January 2010, coffee climbed 145%, while overall inflation increased 55%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "APU0000717311",
+     "CPIAUCSL"
+    ],
+    "since": "2010"
+   }
+  },
+  {
+   "narration": "Coffee was establishing a much higher baseline price floor. That fundamental shift set the stage for even bigger shocks later.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000717311",
+    "start": "2000",
+    "end": "2015"
+   }
+  },
+  {
+   "narration": "By January 2015, ground coffee averaged $4.74 per pound. Since January 2015, coffee climbed 97%, while overall inflation rose 43%.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "APU0000717311",
+     "CPIAUCSL"
+    ],
+    "since": "2015",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Then came 2020. In January 2020, ground coffee stood at $4.17 a pound before unprecedented disruptions hit global supply.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000717311",
+    "stat": "at",
+    "date": "2020-01"
+   }
+  },
+  {
+   "narration": "From January 2020 to September 2026, ground coffee surged 124%. Overall consumer prices rose 30% across that same timeframe.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "APU0000717311",
+     "CPIAUCSL"
+    ],
+    "since": "2020"
+   }
+  },
+  {
+   "narration": "Severe weather and shipping bottlenecks triggered rapid retail spikes. By December 2022, coffee reached $6.46 per pound, climbing 30% in a single year.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000717311",
+    "start": "2020",
+    "end": "2023",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "That pressure only intensified. By January 2025, ground coffee jumped to $7.02 per pound as supply constraints compounded.",
+   "visual": {
+    "type": "statement",
+    "text": "Supply disruptions compounded retail price pressures.",
+    "highlight": [
+     "pressures"
+    ]
+   }
+  },
+  {
+   "narration": "Between January 2025 and September 2026, coffee prices gained another 33%. General inflation grew just 5% over those months.",
+   "visual": {
+    "type": "compare",
+    "series": "APU0000717311",
+    "from": "2025-01",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Over the last year, ground coffee rose 2.1%, while broader consumer prices grew 3.7%. Retail prices remain significantly elevated.",
+   "visual": {
+    "type": "heatmap",
+    "series": "APU0000717311",
+    "years": 4
+   }
+  },
+  {
+   "narration": "Retail coffee prices do not surge in a vacuum. Behind these soaring bills lies a perfect storm of climate events and supply chain vulnerabilities.",
+   "visual": {
+    "type": "statement",
+    "text": "Climate shocks and supply bottlenecks drive price spikes",
+    "highlight": "Climate"
+   }
+  },
+  {
+   "narration": "Inflation was already building across the economy. By June 2022, overall consumer prices spiked 9% over the preceding year, raising processing and transportation costs.",
+   "visual": {
+    "type": "line",
+    "series": "CPIAUCSL",
+    "start": "2021",
+    "end": "2022",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "On top of inflation, severe weather hit key farming regions. Freak frosts and historic droughts devastated crops across South America, crippling harvests.",
+   "visual": {
+    "type": "statement",
+    "text": "Frosts and droughts destroyed major South American crops",
+    "highlight": "droughts"
+   }
+  },
+  {
+   "narration": "Monthly price swings reflected these crop losses. Sudden freezes in Brazil drastically reduced yield potential across entire harvest cycles.",
+   "visual": {
+    "type": "heatmap",
+    "series": "APU0000717311",
+    "years": 5
+   }
+  },
+  {
+   "narration": "Shipping chaos compounded agricultural losses. Container shortages and maritime bottlenecks delayed green coffee deliveries, driving ocean freight rates to record levels.",
+   "visual": {
+    "type": "statement",
+    "text": "Global shipping disruptions delayed ocean coffee freight",
+    "highlight": "shipping"
+   }
+  },
+  {
+   "narration": "When extreme weather coincided with freight bottlenecks, coffee prices surged far faster than general inflation. Supply shocks quickly overwhelmed standard market buffers.",
+   "visual": {
+    "type": "compare",
+    "series": "APU0000717311",
+    "from": "2020",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Together, climate shocks and shipping bottlenecks pushed coffee into historically high territory. The supply chain remains deeply vulnerable to future extreme events.",
+   "visual": {
+    "type": "gauge",
+    "series": "APU0000717311",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "Why does a bag of coffee feel so much heavier on the wallet? The answer lies in how far coffee prices have detached from the rest of the grocery aisle.",
+   "visual": {
+    "type": "statement",
+    "text": "Coffee prices have outpaced general inflation for years.",
+    "highlight": [
+     "outpaced"
+    ]
+   }
+  },
+  {
+   "narration": "Since January 2000, ground coffee prices have climbed 164%. That is significantly higher than the 99% increase seen in the broader consumer price index.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "APU0000717311",
+     "CPIAUCSL"
+    ],
+    "since": "2000"
+   }
+  },
+  {
+   "narration": "Coffee is not just following the inflation trend; it is accelerating away from it. By September 2026, the price was 2.6 times what it was in January 2000.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000717311",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Look at the price history since 2005. Ground coffee surged 206% in that window, while general consumer goods rose 76%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "APU0000717311",
+     "CPIAUCSL"
+    ],
+    "since": "2005"
+   }
+  },
+  {
+   "narration": "This isn't just a minor fluctuation; it shows coffee is increasingly vulnerable to volatile supply chains and climate shocks.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000717311",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Even in the last year, while overall inflation hit 3.7%, the premium paid for your morning brew remains stubbornly high at $9.33 per pound.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "APU0000717311",
+     "CPIAUCSL"
+    ]
+   }
+  },
+  {
+   "narration": "The price floor for coffee has fundamentally shifted. We are paying more because the global supply system has struggled to keep pace with demand.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000717311",
+    "start": "2000",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Agricultural vulnerability is now a permanent feature of your grocery bill. Coffee is a bellwether for how climate shifts disrupt global trade.",
+   "visual": {
+    "type": "statement",
+    "text": "Climate shocks drive grocery price volatility",
+    "highlight": [
+     "Climate"
+    ]
+   }
+  },
+  {
+   "narration": "Since 2010, ground coffee has surged 145%. General inflation climbed only 55% in that same period.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "APU0000717311",
+     "CPIAUCSL"
+    ],
+    "since": "2010"
+   }
+  },
+  {
+   "narration": "In April 2026, prices peaked at $9.72 per pound. While they have since dipped by 4%, the trend remains alarmingly elevated.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000717311",
+    "start": "2025",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "While broader inflation has been relatively flat at 0% change from the recent high, coffee remains costly. The supply chain has not yet fully recovered.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "APU0000717311",
+     "CPIAUCSL"
+    ]
+   }
+  },
+  {
+   "narration": "We are seeing a systemic shift where agricultural goods outpace the cost of other living expenses. Your morning cup reflects these deep structural changes.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "APU0000717311",
+     "CPIAUCSL"
+    ],
+    "since": "2000",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Understanding these data trends is key to navigating the modern grocery aisle. Which commodity topic would you like us to explain next? Tell us in the comments.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "APU0000717311",
+     "CPIAUCSL"
+    ]
+   }
+  },
+  {
+   "narration": "Subscribe for more data-driven insights into the forces shaping your world.",
+   "visual": {
+    "type": "statement",
+    "text": "Subscribe for deeper data analysis",
+    "highlight": [
+     "Subscribe"
+    ]
+   }
+  }
+ ],
+ "engage": {
+  "kind": "request",
+  "question": "Which commodity topic would you like us to explain next?",
+  "onscreen": "WHICH COMMODITY TOPIC WOULD YOU LIKE US TO EXPLAIN NEXT",
+  "comment": "Which commodity topic would you like us to explain next?"
+ }
+}

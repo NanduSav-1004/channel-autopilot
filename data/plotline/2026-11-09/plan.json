@@ -1,0 +1,16 @@
+{
+ "title": "Where Did American Savings Go?",
+ "angle": "As household saving rates plummeted post-pandemic, credit card balances surged to record highs despite steady wage growth.",
+ "series": [
+  "PSAVERT",
+  "CCLACBW027SBOG",
+  "AHETPI",
+  "TDSP"
+ ],
+ "states": null,
+ "owid": null,
+ "countries": null,
+ "owid2": null,
+ "states2": null,
+ "start": "2015"
+}

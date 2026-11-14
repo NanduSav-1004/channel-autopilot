@@ -1,0 +1,131 @@
+[
+ {
+  "title": "Why Ground Beef Prices Are Sky-High",
+  "scenes": [
+   {
+    "narration": "Have you noticed your grocery bill hitting record levels lately?",
+    "visual": {
+     "type": "title",
+     "text": "Why Ground Beef Prices Are Sky-High",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Between early 2020 and October 2026, ground beef prices jumped by an eye-watering 74%.",
+    "visual": {
+     "type": "counter",
+     "series": "APU0000703112",
+     "stat": "at",
+     "date": "2026-10",
+     "start": "2020"
+    }
+   },
+   {
+    "narration": "While other meats faced inflation, beef completely decoupled from the rest of the aisle.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "APU0000703112",
+      "APU0000FF1101",
+      "APU0000704111"
+     ],
+     "since": "2020",
+     "as": "change"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Beef is in a league of its own",
+     "highlight": [
+      "Beef"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "The 60% Surge in Beef Prices",
+  "scenes": [
+   {
+    "narration": "Why has the price of your weekly burger changed so much in a decade?",
+    "visual": {
+     "type": "title",
+     "text": "The 60% Surge in Beef Prices",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since January 2015, the price of ground beef has climbed a staggering 60%.",
+    "visual": {
+     "type": "line",
+     "series": "APU0000703112",
+     "start": "2015"
+    }
+   },
+   {
+    "narration": "In that same time, chicken breast rose only 19% and bacon gained 20%.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "APU0000703112",
+      "APU0000FF1101",
+      "APU0000704111"
+     ],
+     "since": "2015"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "gauge",
+     "series": "APU0000703112",
+     "start": "2015"
+    }
+   }
+  ]
+ },
+ {
+  "title": "Why Beef Prices Refuse to Drop",
+  "scenes": [
+   {
+    "narration": "Did you know that beef prices spiked 22% in just the last 21 months?",
+    "visual": {
+     "type": "title",
+     "text": "Why Beef Prices Refuse to Drop",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Between January 2025 and October 2026, ground beef surged 22% while other meats cooled off.",
+    "visual": {
+     "type": "compare",
+     "series": "APU0000703112",
+     "from": "2025-01",
+     "to": "2026-10"
+    }
+   },
+   {
+    "narration": "Biology is the key: cattle reproduce slowly, making herd recovery a years-long process.",
+    "visual": {
+     "type": "kpi",
+     "series": [
+      "APU0000703112",
+      "APU0000FF1101"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Supply bottlenecks define the price",
+     "highlight": [
+      "bottlenecks"
+     ]
+    }
+   }
+  ]
+ }
+]

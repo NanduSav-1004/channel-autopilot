@@ -1,0 +1,152 @@
+[
+ {
+  "title": "The $1.1 Trillion Credit Card Debt Spike",
+  "scenes": [
+   {
+    "narration": "Have you noticed your credit card balance creeping higher?",
+    "visual": {
+     "type": "title",
+     "text": "The $1.1 Trillion Credit Card Debt Spike",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "In January 2015, credit card balances at US banks sat at $625.5 billion.",
+    "visual": {
+     "type": "line",
+     "series": "CCLACBW027SBOG",
+     "start": "2015"
+    }
+   },
+   {
+    "narration": "By October 2026, those balances surged to a record $1.1 trillion.",
+    "visual": {
+     "type": "counter",
+     "series": "CCLACBW027SBOG",
+     "stat": "last"
+    }
+   },
+   {
+    "narration": "That is an increase of 76% over the last decade.",
+    "visual": {
+     "type": "line",
+     "series": "CCLACBW027SBOG",
+     "start": "2015"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Debt is rising faster than ever.",
+     "highlight": [
+      "debt"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "Where Did American Savings Go?",
+  "scenes": [
+   {
+    "narration": "Do you remember when Americans were saving record amounts?",
+    "visual": {
+     "type": "title",
+     "text": "Where Did American Savings Go?",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "In April 2020, the personal saving rate hit an incredible 31.8%.",
+    "visual": {
+     "type": "line",
+     "series": "PSAVERT",
+     "start": "2015",
+     "annotate": [
+      "max"
+     ]
+    }
+   },
+   {
+    "narration": "Fast forward to September 2026, and that rate has cratered to just 3.8%.",
+    "visual": {
+     "type": "gauge",
+     "series": "PSAVERT",
+     "start": "2015"
+    }
+   },
+   {
+    "narration": "That is an 88% drop from the pandemic peak.",
+    "visual": {
+     "type": "counter",
+     "series": "PSAVERT",
+     "stat": "at",
+     "date": "2026-09",
+     "start": "2020-04"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "The savings cushion has vanished.",
+     "highlight": [
+      "vanished"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "The Wage vs. Debt Reality Check",
+  "scenes": [
+   {
+    "narration": "Higher hourly pay should help, right? But the math is complicated.",
+    "visual": {
+     "type": "title",
+     "text": "The Wage vs. Debt Reality Check",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since January 2015, average hourly pay for non-managers grew 57%.",
+    "visual": {
+     "type": "line",
+     "series": "AHETPI",
+     "start": "2015"
+    }
+   },
+   {
+    "narration": "However, household debt service payments still consume 11.1% of disposable income.",
+    "visual": {
+     "type": "line",
+     "series": "TDSP",
+     "start": "2015"
+    }
+   },
+   {
+    "narration": "Rising wages are being absorbed by these persistent debt obligations.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "AHETPI",
+      "TDSP"
+     ],
+     "since": "2015",
+     "as": "change"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Higher wages cannot keep up.",
+     "highlight": [
+      "wages"
+     ]
+    }
+   }
+  ]
+ }
+]
