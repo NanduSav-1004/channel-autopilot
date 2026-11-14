@@ -1,0 +1,17 @@
+today's video is already uploaded; nothing to do (use --force to make another)
+[ml] translated: 'Moon വേഗത കൂട്ടിയാൽ എന്ത് സംഭവിക്കും? Moon Tides & Tidal Force'
+[tts] gemini model gemini-3.1-flash-tts-preview could not speak the whole narration (all Gemini TTS models failed (gemini-3.1-flash-tts-preview KeyError)); trying the next model
+[tts] cut 0.32s of noise from the end of a section
+[tts] cut 0.36s of noise from the end of a section
+[tts] cut 0.38s of noise from the end of a section
+[tts] cut 0.40s of noise from the end of a section
+[tts] cut 0.34s of noise from the end of a section
+[tts] cut 0.38s of noise from the end of a section
+[tts] whole narration spoken by Gemini model gemini-3.8-flash-tts
+[ml] timing: 6/6 sections cut at the audio's pauses; 1 sentence(s) of 234 have an unusual pace
+[ml] voice Achird: 554s
+[ml] media rebuilt: 60 items for 6 sections
+[mix] audio: music ducked
+[master] loudness -15.6 -> -14.9 LUFS, true peak -0.0 -> -1.5 dBTP
+[ml] [qa-video] long 553.7s, -14.98 LUFS: ERROR black picture for 38.8s in total (158s for 8.5s, 168s for 3.8s, 194s for 8.2s, 203s for 1.7s)
+malayalam edition FAILED: VideoCheckError: the finished video failed its check: black picture for 38.8s in total (158s for 8.5s, 168s for 3.8s, 194s for 8.2s, 203s for 1.7s)

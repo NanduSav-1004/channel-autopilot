@@ -1,0 +1,148 @@
+[topics] next category: core
+[topics] LLM proposed 5 candidate(s); need 1
+[topics] queued [core] 'How a quartz crystal oscillator keeps time in electronics' (search demand 0.62; source: 'Crystal oscillator', 20000 chars)
+queued 1 new topic(s)
+[job 98] script ...
+[job 98] opening: 0 number(s) in the first 150 words
+[job 98] style: avg 13.2 words/sentence, longest 24, 4% over 22 words, hook 11 words, 'you' x21 per 1000 words
+[job 98] script done in 128s
+[job 98] qa ...
+[job 98] repairing sections [0, 1, 2, 5] (8 unsupported claim(s))
+[job 98] repairing sections [0] (1 unsupported claim(s))
+[job 98] qa FAILED: QA rejected script: unsupported claim: That means a 10 MHz crystal drifts only ten hertz over a second—far tighter than cheap oscillators.
+[job 98] script ...
+[job 98] opening: 0 number(s) in the first 150 words
+[job 98] style: avg 12.1 words/sentence, longest 24, 2% over 22 words, hook 12 words, 'you' x31 per 1000 words
+[job 98] script done in 165s
+[job 98] qa ...
+[job 98] repairing sections [0] (1 unsupported claim(s))
+[job 98] repairing sections [0] (1 unsupported claim(s))
+[job 98] qa FAILED: QA rejected script: unsupported claim: Your watch’s tiny crystal isn’t a tiny clock
+[job 98] script ...
+[job 98] opening: 2 number(s) in the first 150 words
+[job 98] style: avg 15.0 words/sentence, longest 30, 10% over 22 words, hook 12 words, 'you' x15 per 1000 words
+[job 98] script done in 251s
+[job 98] qa ...
+[job 98] repairing sections [0] (1 unsupported claim(s))
+[job 98] repairing sections [0, 2] (2 unsupported claim(s))
+[llm] groq:openai/gpt-oss-120b unavailable: openai/gpt-oss-120b daily quota exhausted
+[job 98] qa FAILED: QA rejected script: unsupported claim: A quartz crystal inside smartphones acts as a crystal oscillator; unsupported claim: Quartz crystals provide timing for wristwatches, digital integrated circuits and radio transmitters
+processed 1 job(s); dry_run=False
+[daily] today's topic failed after all attempts (core); choosing another topic
+[topics] next category: what_if
+[topics] LLM proposed 5 candidate(s); need 1
+[topics] rejected 'Coriolis effect': search returned a different article ('Coriolis force')
+[topics] rejected 'Spaghettification': article too thin (3107 < 6000 chars)
+[topics] rejected 'Echo (sound)': search returned a different article ('Surface, Echo & Sound')
+[topics] queued [what_if] 'What if the Moon moved twice as fast?' (search demand 0.67; source: 'Tidal force', 12934 chars)
+[job 99] script ...
+[job 99] opening: 0 number(s) in the first 150 words
+[job 99] style: avg 4.9 words/sentence, longest 13, 0% over 22 words, hook 3 words, 'you' x30 per 1000 words
+[job 99] script done in 298s
+[job 99] qa ...
+[job 99] repairing sections [5] (6 unsupported claim(s))
+[job 99] rewriting title/description (3 unsupported statement(s))
+[job 99] the script does NOT answer the topic
+[job 99] qa done in 242s
+[job 99] voice ...
+[job 99] closing line: Which topic should we explain next? Tell us in the comments. Subscribe if you want tomorrow's.
+[job 99] comment question (request): Which topic should we explain next?
+[tts] voice for this video: kokoro:am_michael
+[0;93m2026-11-14 08:49:56.652880256 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+[tts] word times for 'The Moon.' looked wrong; using an even spread
+[job 99] voice done in 163s
+[job 99] visuals ...
+[job 99] visuals: 30 images and 7 videos; 6/6 sections have media
+[job 99] visuals done in 458s
+[job 99] render ...
+[datashot] no shot for 'The Tidal Stretch': the model found no figures worth drawing
+[datashot] no shot for 'Why the Moon Wins': the model found no figures worth drawing
+[datashot] no shot for 'The Distance Rule': the model found no figures worth drawing
+[datashot] no shot for 'Body Mechanics': the model found no figures worth drawing
+[datashot] no shot for 'Friction and Locking': the model found no figures worth drawing
+[datashot] no shot for 'The Breaking Point': the model found no figures worth drawing
+[transitions] 58 cross-transitions, length unchanged (11114 frames)
+[mix] audio: music ducked
+[master] loudness -16.7 -> -15.3 LUFS, true peak -0.8 -> -1.4 dBTP
+[job 99] [qa-video] long 463.0s, -15.33 LUFS: ERROR black picture for 35.7s in total (70s for 3.5s, 78s for 3.5s, 106s for 3.6s, 113s for 3.6s)
+[job 99] render FAILED: the finished video failed its check: black picture for 35.7s in total (70s for 3.5s, 78s for 3.5s, 106s for 3.6s, 113s for 3.6s)
+[job 99] render ...
+[job 99] render done in 0s
+[job 99] upload ...
+[job 99] scheduled to go public at 2026-11-14T18:00:00Z
+[job 99] thumbnail not set (FileNotFoundError); retry with `autopilot thumbnails`
+[job 99] upload done in 6s
+[job 99] shorts ...
+[llm] groq:qwen/qwen3.8-27b busy, trying next: qwen/qwen3.8-27b HTTP 429
+[shorts] model proposed 6: 3 usable, 0 too long
+[job 99] queued 3 Short(s)
+[job 99] shorts done in 95s
+[job 100] short_script ...
+[job 100] short_script done in 0s
+[job 100] short_voice ...
+[job 100] short_voice done in 9s
+[job 100] short_render ...
+[datashot] no shot for 'Why the Moon Pulls You Toward It': the model found no figures worth drawing
+[transitions] 5 cross-transitions, length unchanged (645 frames)
+[mix] audio: music ducked
+[master] loudness -16.6 -> -15.1 LUFS, true peak -0.8 -> -1.5 dBTP
+[job 100] [qa-video] short 26.9s, -15.15 LUFS: ok
+[job 100] short_render done in 53s
+[job 100] short_upload ...
+[job 100] short_upload done in 3s
+[job 101] short_script ...
+[job 101] short_script done in 0s
+[job 101] short_voice ...
+[job 101] short_voice done in 10s
+[job 101] short_render ...
+[datashot] number 'Solar tide relative' at 22.5s (chosen by the model)
+[job 101] Short comment question (personal): Where do you notice the biggest tide change on your coast?
+[transitions] 4 cross-transitions, length unchanged (706 frames)
+[mix] audio: music ducked
+[master] loudness -16.5 -> -15.2 LUFS, true peak -0.8 -> -1.5 dBTP
+[job 101] [qa-video] short 29.3s, -15.17 LUFS: ok
+[job 101] short_render done in 84s
+[job 101] short_upload ...
+[job 101] short_upload done in 2s
+[job 102] short_script ...
+[job 102] short_script done in 0s
+[job 102] short_voice ...
+[job 102] short_voice done in 11s
+[job 102] short_render ...
+[datashot] no shot for 'The Distance Rule That Makes Tides Stron': the model found no figures worth drawing
+[transitions] 6 cross-transitions, length unchanged (739 frames)
+[mix] audio: music ducked
+[master] loudness -16.3 -> -14.9 LUFS, true peak -0.8 -> -1.5 dBTP
+[job 102] [qa-video] short 30.8s, -14.96 LUFS: ok
+[job 102] short_render done in 48s
+[job 102] short_upload ...
+[job 102] short_upload done in 2s
+processed 4 job(s); dry_run=False
+{'id': 28, 'stage': 'new', 'status': 'failed', 'attempts': 3, 'error': 'qa: QA rejected script: unsupported claim: If it were only 189,000 kilometers away, its apparent size would double.; unsupported claim: If the Moon were at half its current distance, it would still be outside the Roche limit.; unsupported claim: The Moon could have solidified when orbiting at half its current distance, yet it remains intact today.'}
+{'id': 37, 'stage': 'new', 'status': 'failed', 'attempts': 3, 'error': 'qa: QA rejected script: unsupported claim: Voyager\u202f1 is the only human‑made object to have passed into interstellar space.; unsupported claim: The heliosheath was found to contain giant magnetic bubbles, which are still observed after crossing the heliopause.; unsupported claim: Data after crossing showed a change in magnetic field direction consistent with the interstellar magnetic field.'}
+{'id': 62, 'stage': 'new', 'status': 'failed', 'attempts': 3, 'error': 'qa: QA rejected script: unsupported claim: An event horizon is a one‑way boundary that lets light in but not out.; unsupported claim: [title] Why Black Holes Have Event Horizons: Light Traps to Cosmic Boundaries'}
+{'id': 63, 'stage': 'upload', 'status': 'failed', 'attempts': 3, 'error': "shorts: 'str' object has no attribute 'get'"}
+{'id': 78, 'stage': 'short_script', 'status': 'failed', 'attempts': 3, 'error': 'short_voice: Short is 58s, over the 58s limit'}
+{'id': 84, 'stage': 'new', 'status': 'failed', 'attempts': 3, 'error': 'qa: QA rejected script: unsupported claim: Carrington measured low‑latitude sunspots to derive an axis tilt of 7.25°; unsupported claim: [title] Solar Rotation: Differential periods and axis tilt'}
+{'id': 93, 'stage': 'new', 'status': 'failed', 'attempts': 3, 'error': 'qa: QA rejected script: unsupported claim: A laser does not print your chip.; unsupported claim: Light does not etch metal directly.; unsupported claim: The etching does the actual work of cutting.'}
+{'id': 98, 'stage': 'new', 'status': 'failed', 'attempts': 3, 'error': 'qa: QA rejected script: unsupported claim: A quartz crystal inside smartphones acts as a crystal oscillator; unsupported claim: Quartz crystals provide timing for wristwatches, digital integrated circuits and radio transmitters'}
+[ml] translated: 'Moon വേഗത കൂട്ടിയാൽ എന്ത് സംഭവിക്കും? Moon Tides & Tidal Force'
+[tts] gemini model gemini-3.1-flash-tts-preview could not speak the whole narration (all Gemini TTS models failed (gemini-3.1-flash-tts-preview KeyError)); trying the next model
+[tts] cut 0.22s of noise from the end of a section
+[tts] cut 0.42s of noise from the end of a section
+[tts] cut 0.34s of noise from the end of a section
+[tts] cut 0.24s of noise from the end of a section
+[tts] gemini model gemini-3.8-flash-tts could not speak the whole narration (all Gemini TTS models failed (gemini-3.8-flash-tts HTTP 429)); trying the next model
+[tts] cut 0.48s of noise from the end of a section
+[tts] cut 0.64s of noise from the end of a section
+[tts] cut 0.48s of noise from the end of a section
+[tts] cut 0.32s of noise from the end of a section
+[tts] cut 0.40s of noise from the end of a section
+[tts] cut 0.48s of noise from the end of a section
+[tts] whole narration spoken by Gemini model gemini-3.8-flash-lite-tts
+[ml] timing: 6/6 sections cut at the audio's pauses; 1 sentence(s) of 234 have an unusual pace
+[ml] voice Achird: 565s
+[mix] audio: music ducked
+[master] loudness -16.0 -> -15.1 LUFS, true peak -0.5 -> -1.5 dBTP
+[ml] [qa-video] long 564.5s, -15.1 LUFS: ERROR black picture for 31.1s in total (90s for 2.8s, 96s for 3.5s, 131s for 1.8s, 139s for 1.2s)
+malayalam edition FAILED: VideoCheckError: the finished video failed its check: black picture for 31.1s in total (90s for 2.8s, 96s for 3.5s, 131s for 1.8s, 139s for 1.2s)
