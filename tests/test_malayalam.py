@@ -506,6 +506,12 @@ def test_the_malayalam_voice_never_uses_the_oldest_model_and_waits_for_quota_ins
     with pytest.raises(llm.LLMUnavailable):                    # a kind of failure the later runs retry
         malayalam.make_voice({"sections": []}, "x.wav", {"name": "Charon"})
 
+    def plain(*a, **k):                                        # the message of 14 Nov 2026 had a lower-case "gemini" and no HTTP code
+        raise OSError("no gemini model could speak the whole narration")
+    monkeypatch.setattr(tts, "synthesize_script", plain)
+    with pytest.raises(llm.LLMUnavailable):
+        malayalam.make_voice({"sections": []}, "x.wav", {"name": "Charon"})
+
 
 def test_redo_long_deletes_the_long_video_and_its_shorts_only_while_the_long_one_is_private_and_scheduled(tmp_path, monkeypatch):
     from datetime import datetime, timezone

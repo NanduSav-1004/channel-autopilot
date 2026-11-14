@@ -699,7 +699,8 @@ def make_voice(script_ml: dict, out_wav: Path, voice: dict) -> list[dict]:
     try:
         timings = tts.synthesize_script(script_ml, out_wav, MalayalamGeminiEngine(voice["name"]), None)
     except OSError as exc:
-        if "Gemini" in str(exc) and ("HTTP 429" in str(exc) or "HTTP 503" in str(exc) or "could not speak" in str(exc)):
+        msg = str(exc).lower()
+        if "gemini" in msg and ("http 429" in msg or "http 503" in msg or "speak the whole narration" in msg):      # case matters: the engine's name is lower case
             raise llm.LLMUnavailable(f"no Malayalam voice model has quota right now ({str(exc)[:160]})") from exc   # retried by the later runs
         raise
     fixed = ml_add_word_times(out_wav, timings)
