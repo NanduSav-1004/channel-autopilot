@@ -6,6 +6,8 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 
+from autopilot import imaging
+
 W, H = 1280, 720
 FONT_HEAVY = "/usr/share/fonts/truetype/lato/Lato-Black.ttf"
 FONT_BOLD = "/usr/share/fonts/truetype/lato/Lato-Bold.ttf"
@@ -116,7 +118,7 @@ Return JSON: {{"best": <number 1-{n}>, "reason": str}}"""
 def _small_jpeg(path: Path, side: int = 512) -> bytes:
     import io
 
-    img = Image.open(path).convert("RGB")
+    img = imaging.open_rgb(path)
     img.thumbnail((side, side))
     buf = io.BytesIO()
     img.save(buf, "JPEG", quality=70)

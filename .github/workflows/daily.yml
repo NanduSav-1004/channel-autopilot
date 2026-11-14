@@ -19,6 +19,10 @@ on:
         description: "Really upload to YouTube (otherwise dry run)"
         type: boolean
         default: false
+      redo_en_long:
+        description: "Delete today's still-private English long video AND its Shorts and make them again"
+        type: boolean
+        default: false
       redo_en_shorts:
         description: "Remake today's English Shorts at these positions, e.g. 0,1 (deletes the old ones while still private and scheduled)"
         type: string
@@ -109,6 +113,7 @@ jobs:
           ARGS="daily --privacy $PRIVACY"
           [ "$LIVE" = "true" ] && ARGS="$ARGS --live"
           [ -n "${{ inputs.redo_en_shorts }}" ] && ARGS="$ARGS --redo-en-shorts ${{ inputs.redo_en_shorts }}"
+          [ "${{ inputs.redo_en_long }}" = "true" ] && ARGS="$ARGS --redo-en-long"
           autopilot $ARGS 2>&1 | tee run.log
 
       - name: Malayalam edition (a second channel; skipped until its login exists, and never affects the English video)

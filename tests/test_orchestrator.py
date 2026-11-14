@@ -271,3 +271,38 @@ def test_visuals_stage_accepts_enough_coverage(tmp_path, monkeypatch):
     st, job, d = _visuals_setup(tmp_path, monkeypatch, items)
     st.visuals(job)
     assert (d / "items.json").exists()
+
+
+def test_redo_english_long_deletes_it_and_its_shorts_only_while_private_and_scheduled(tmp_path, monkeypatch):
+    import types
+    from datetime import datetime, timezone
+
+    from autopilot import upload
+
+    def setup(status):
+        conn = db.connect(tmp_path / f"{status['privacyStatus']}.db")
+        long_id = db.add_job(conn, "t", "long")
+        conn.execute("UPDATE jobs SET video_id = 'LONGV', stage = 'shorts', status = 'done', publish_at = 'x' WHERE id = ?", (long_id,))
+        s = db.add_job(conn, "s0", "short", parent_id=long_id, short_idx=0)
+        conn.execute("UPDATE jobs SET video_id = 'SHORTV', stage = 'short_upload', status = 'done' WHERE id = ?", (s,))
+        conn.commit()
+        state = {"LONGV": status, "SHORTV": {"privacyStatus": "private", "publishAt": "2026-11-14T20:00:00Z"}}
+
+        class Videos:
+            def list(self, part, id):
+                return types.SimpleNamespace(execute=lambda: {"items": [{"status": state[id]}]})
+        deleted = []
+        monkeypatch.setattr(upload, "_client", lambda profile="en": types.SimpleNamespace(videos=lambda: Videos()))
+        monkeypatch.setattr(upload, "delete_video", lambda vid, profile="en": deleted.append(vid))
+        return conn, long_id, s, deleted
+
+    now = datetime(2026, 11, 14, 15, 30, tzinfo=timezone.utc)
+    conn, long_id, s, deleted = setup({"privacyStatus": "private", "publishAt": "2026-11-14T18:00:00Z"})
+    lines = stages.Stages(conn, CFG, root=tmp_path / "out", work=tmp_path / "work").redo_english_long(now)
+    row = conn.execute("SELECT * FROM jobs WHERE id = ?", (long_id,)).fetchone()
+    assert sorted(deleted) == ["LONGV", "SHORTV"] and "deleted" in lines[0]
+    assert row["video_id"] is None and row["stage"] == "qa" and row["status"] == "pending"            # resumes at the voice stage
+    short = conn.execute("SELECT * FROM jobs WHERE id = ?", (s,)).fetchone()
+    assert short["video_id"] is None and short["stage"] == "short_render"
+    conn2, _, _, deleted2 = setup({"privacyStatus": "public"})
+    assert "kept" in stages.Stages(conn2, CFG, root=tmp_path / "out", work=tmp_path / "work").redo_english_long(now)[0] and deleted2 == []

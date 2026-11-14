@@ -104,6 +104,7 @@ def main() -> None:
     parser.add_argument("--preview", type=int, metavar="N", help="topics: show the next N proposed topics without queueing any")
     parser.add_argument("--redo-en-shorts", default="", help="daily: remake today's English Shorts at these positions (e.g. 0,1): deletes the "
                                                            "old ones while still private and scheduled")
+    parser.add_argument("--redo-en-long", action="store_true", help="daily: delete today's still-private English long video and its Shorts and make them again")
     parser.add_argument("--redo-shorts", action="store_true", help="ml --auto: delete today's still-private Malayalam Shorts and rebuild them")
     parser.add_argument("--redo-long", action="store_true", help="ml --auto: delete today's still-private Malayalam long video and its Shorts and rebuild them")
     parser.add_argument("--retry", action="store_true", help="ml --auto: also retry editions that failed earlier today")
@@ -148,7 +149,10 @@ def main() -> None:
     conn = db.connect()
     done_before = done_count(conn)
     skip_discovery = False
-    if args.command == "daily" and args.redo_en_shorts.strip():
+    if args.command == "daily" and args.redo_en_long:
+        for line in Stages(conn, cfg, privacy=args.privacy).redo_english_long():
+            print(f"[daily] {line}", flush=True)
+    elif args.command == "daily" and args.redo_en_shorts.strip():
         wanted = [int(x) for x in args.redo_en_shorts.replace(" ", "").split(",") if x != ""]
         for line in Stages(conn, cfg, privacy=args.privacy).redo_english_shorts(wanted):
             print(f"[daily] {line}", flush=True)

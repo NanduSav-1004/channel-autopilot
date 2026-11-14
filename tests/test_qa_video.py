@@ -26,8 +26,10 @@ def test_black_frozen_and_silent_stretches_are_errors_only_when_long_and_not_at_
     assert q.judge(OK_INFO, {**NONE, "black": [(100.0, 100.7)]}, None, "long", None)["warnings"]
     dark_scene = q.judge(OK_INFO, {**NONE, "black": [(132.0, 134.7), (200.0, 203.7)]}, None, "long", None)          # a bulb that begins to glow
     assert dark_scene["warnings"] and not dark_scene["errors"]
-    assert q.judge(OK_INFO, {**NONE, "black": [(100.0, 109.0)]}, None, "long", None)["errors"]
-    assert q.judge({**OK_INFO, "v_dur": 40.0, "a_dur": 40.0, "dur": 40.0}, {**NONE, "black": [(10.0, 17.0)]}, None, "short", None)["errors"]
+    assert not q.judge(OK_INFO, {**NONE, "black": [(100.0, 109.0), (150.0, 158.0), (200.0, 208.0)]}, None, "long", None)["errors"]   # 25 s of 300: a dark topic
+    assert q.judge(OK_INFO, {**NONE, "black": [(100.0, 125.0)]}, None, "long", None)["errors"]                                      # one 25 s stretch
+    assert q.judge(OK_INFO, {**NONE, "black": [(10.0, 60.0), (100.0, 160.0)]}, None, "long", None)["errors"]                        # a third of it... and more: mostly black
+    assert q.judge({**OK_INFO, "v_dur": 40.0, "a_dur": 40.0, "dur": 40.0}, {**NONE, "black": [(10.0, 21.0)]}, None, "short", None)["errors"]
     assert q.judge(OK_INFO, {**NONE, "freeze": [(50.0, 58.0)]}, None, "long", None) ["warnings"] and not q.judge(OK_INFO, {**NONE, "freeze": [(50.0, 58.0)]}, None, "long", None)["errors"]
     assert q.judge(OK_INFO, {**NONE, "freeze": [(50.0, 70.0)]}, None, "long", None)["errors"]
     assert q.judge(OK_INFO, {**NONE, "silence": [(100.0, 104.0)]}, None, "long", None)["warnings"]
@@ -39,13 +41,13 @@ def test_black_frozen_and_silent_stretches_are_errors_only_when_long_and_not_at_
 @pytest.mark.skipif(not (shutil.which("ffmpeg") and shutil.which("ffprobe")), reason="needs ffmpeg")
 def test_the_real_scan_finds_black_picture_and_dead_silence_in_a_made_up_clip(tmp_path):
     clip = tmp_path / "bad.mp4"
-    # 30 s of moving picture with a 4 s black stretch at 10 s, and a tone that goes silent from 15 s to 25 s
+    # 30 s of moving picture with a 13 s black stretch from 8 s, and a tone that goes silent from 15 s to 25 s
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc2=s=320x180:r=24:d=30", "-f", "lavfi", "-i", "sine=f=300:d=30",
-                    "-filter_complex", ("[0:v]drawbox=x=0:y=0:w=320:h=180:color=black:t=fill:enable='between(t,10,14)'[v];"
+                    "-filter_complex", ("[0:v]drawbox=x=0:y=0:w=320:h=180:color=black:t=fill:enable='between(t,8,21)'[v];"
                                         "[1:a]volume=enable='between(t,15,25)':volume=0[a]"), "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-pix_fmt", "yuv420p",
                     "-c:a", "aac", str(clip)], check=True)
     found = q.scan(clip)
-    assert any(abs(a - 10) < 0.6 and abs(b - 14) < 0.6 for a, b in found["black"])
+    assert any(abs(a - 8) < 0.6 and abs(b - 21) < 0.6 for a, b in found["black"])
     assert any(abs(a - 15) < 0.6 for a, b in found["silence"])
     res = q.judge(q.probe(clip), found, q.loudness(clip), "short", (320, 180))
     assert any("black" in e for e in res["errors"]) and any("silence" in e for e in res["errors"])

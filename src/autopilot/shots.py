@@ -9,7 +9,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from autopilot import commons, llm, nasa, stock
+from autopilot import commons, imaging, llm, nasa, stock
 
 SHOT_SECONDS = 6.0          # how much media to GATHER: about one distinct image per this many seconds
 CUT_SECONDS = 3.5           # how often a long video CUTS to a new shot
@@ -105,7 +105,7 @@ def plan_queries(script: dict, topic: str, gen: Callable = llm.generate_json) ->
 
 
 def _jpeg_small(path: Path, side: int = 512) -> bytes:
-    img = Image.open(path).convert("RGB")
+    img = imaging.open_rgb(path)
     img.thumbnail((side, side))
     buf = io.BytesIO()
     img.save(buf, "JPEG", quality=70)

@@ -346,6 +346,33 @@ class Stages:
             db.add_job(self.conn, plans[i]["title"], "short", job["source_title"], parent_id=job["id"], short_idx=i)
         return max(0, min(len(plans), n) - existing)
 
+    def redo_english_long(self, now=None) -> list[str]:
+        """Make today's English LONG video again (for example after a bad render). It is deleted from the channel and its job goes back to the
+        voice stage, but ONLY while it is still private and scheduled. Its Shorts link to it, so they are made again too (redo_english_shorts)."""
+        from datetime import datetime, timezone
+
+        from autopilot import upload
+
+        now = now or datetime.now(timezone.utc)
+        job = self.conn.execute("SELECT * FROM jobs WHERE kind = 'long' AND video_id IS NOT NULL ORDER BY id DESC LIMIT 1").fetchone()
+        if not job:
+            return ["redo: no uploaded long video"]
+        items = upload._client("en").videos().list(part="status", id=job["video_id"]).execute().get("items", [])
+        st = items[0]["status"] if items else None
+        when = schedule.parse(st["publishAt"]) if st and st.get("publishAt") else None
+        if st is not None and not (st["privacyStatus"] == "private" and when and when > now):
+            return ["long: kept (already public or not scheduled), so nothing was deleted"]
+        shorts_lines = self.redo_english_shorts([0, 1, 2], now)       # first: it finds the long video by its video id, which is cleared below
+        if st is not None:
+            upload.delete_video(job["video_id"], "en")
+        d = self.dir(job)
+        for name in ("final.mp4", "thumbnail.jpg"):
+            (d / name).unlink(missing_ok=True)
+        self.conn.execute("UPDATE jobs SET video_id = NULL, thumbnail_set = 0, publish_at = NULL, stage = 'qa', status = 'pending', attempts = 0, "
+                          "error = NULL WHERE id = ?", (job["id"],))
+        self.conn.commit()
+        return ["long: old scheduled video deleted, will be made again from its script", *shorts_lines]
+
     def redo_english_shorts(self, indexes: list[int], now=None) -> list[str]:
         """Make today's English Shorts at these positions (0 = first) again, for example after a fix. Each old video is deleted from the
         channel and its job is reset, but ONLY while it is still private and scheduled; a Short that is already public is never touched."""

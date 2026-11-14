@@ -7,6 +7,8 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
+from autopilot import imaging
+
 W, H, FPS = 1280, 720, 24
 FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
@@ -177,7 +179,7 @@ def render_video(script: dict, timings: list[dict], narration: Path, out_mp4: Pa
 
 def _prep_image(src: Path, dst: Path) -> None:
     """Cover-fit to 1920x1080 so zoompan has headroom and smooth motion."""
-    img = Image.open(src).convert("RGB")
+    img = imaging.open_rgb(src)
     scale = max(1920 / img.width, 1080 / img.height)
     img = img.resize((round(img.width * scale), round(img.height * scale)), Image.LANCZOS)
     left, top = (img.width - 1920) // 2, (img.height - 1080) // 2
@@ -506,7 +508,7 @@ def _prep_vertical(src: Path, dst: Path) -> None:
     from PIL import ImageEnhance, ImageFilter
 
     cw, ch = round(VW * VSCALE), round(VH * VSCALE)
-    img = Image.open(src).convert("RGB")
+    img = imaging.open_rgb(src)
     s = max(cw / img.width, ch / img.height)
     bg = img.resize((round(img.width * s), round(img.height * s)), Image.LANCZOS)
     left, top = (bg.width - cw) // 2, (bg.height - ch) // 2
