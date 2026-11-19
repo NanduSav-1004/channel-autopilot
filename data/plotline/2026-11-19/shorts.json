@@ -1,0 +1,163 @@
+[
+ {
+  "title": "Why Did France Buck the Global Obesity Trend?",
+  "scenes": [
+   {
+    "narration": "Did you know one major Western nation actually saw adult obesity fall by 3% since the year 2000?",
+    "visual": {
+     "type": "title",
+     "text": "Why Did France Buck the Global Obesity Trend?",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "While English-speaking nations saw massive climbs, France completely diverged from global patterns.",
+    "visual": {
+     "type": "slope",
+     "series": [
+      "france",
+      "united-states",
+      "united-kingdom"
+     ],
+     "from": "2000",
+     "to": "last"
+    }
+   },
+   {
+    "narration": "In 2010, the adult obesity rate in France reached a high of 12.9%.",
+    "visual": {
+     "type": "counter",
+     "series": "france",
+     "stat": "max",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "Since that peak, the French obesity rate steadily dropped down to 11.2% in 2024.",
+    "visual": {
+     "type": "line",
+     "series": "france",
+     "start": "2000",
+     "end": "2024",
+     "annotate": "min"
+    }
+   },
+   {
+    "narration": "This proves that local policies and dining culture can reshape public health. The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Local environment and policies shift outcomes",
+     "highlight": [
+      "policies"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "41 Percent of American Adults Face Obesity Today",
+  "scenes": [
+   {
+    "narration": "Did you know that 41.0% of adults in the United States are living with obesity today?",
+    "visual": {
+     "type": "title",
+     "text": "41 Percent of American Adults Face Obesity Today",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Back in the year 2000, that number stood at 27.5%.",
+    "visual": {
+     "type": "compare",
+     "series": "united-states",
+     "from": "2000",
+     "to": "last"
+    }
+   },
+   {
+    "narration": "That represents a massive 49% surge in obesity prevalence across the nation over just two decades.",
+    "visual": {
+     "type": "line",
+     "series": "united-states",
+     "start": "2000",
+     "end": "2024",
+     "annotate": "max"
+    }
+   },
+   {
+    "narration": "High daily food energy plays a huge role, with 3,947 calories available per person daily in the US.",
+    "visual": {
+     "type": "scatter",
+     "trails": false
+    }
+   },
+   {
+    "narration": "That puts America far above peer nations like the UK at 27.4%. The full story is on the channel.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "united-states",
+      "australia",
+      "united-kingdom",
+      "canada"
+     ],
+     "since": "2000"
+    }
+   }
+  ]
+ },
+ {
+  "title": "The Unseen 128 Percent Jump in Japan's Obesity Rate",
+  "scenes": [
+   {
+    "narration": "Why did Japan's adult obesity rate jump by a staggering 128% since the year 2000?",
+    "visual": {
+     "type": "title",
+     "text": "The Unseen 128 Percent Jump in Japan's Obesity Rate",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "At the turn of the century, Japan reported an adult obesity rate of just 2.6%.",
+    "visual": {
+     "type": "gauge",
+     "series": "japan",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "Fast forward to 2024, and that figure has climbed steadily upward to 5.9%.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "japan",
+      "germany",
+      "france"
+     ],
+     "since": "2000",
+     "as": "value"
+    }
+   },
+   {
+    "narration": "That means the current rate is 2.3 times higher than it was at the start of the century.",
+    "visual": {
+     "type": "kpi",
+     "series": [
+      "japan",
+      "germany"
+     ]
+    }
+   },
+   {
+    "narration": "It shows how modern economic shift is impacting even traditionally lower-weight countries. The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Global lifestyle changes impact even low rates",
+     "highlight": [
+      "lifestyle"
+     ]
+    }
+   }
+  ]
+ }
+]

@@ -1,0 +1,420 @@
+{
+ "title": "Are We Getting Heavier? The Data Behind Global Obesity",
+ "description": "Global obesity rates are shifting in unexpected ways. We examine the latest data from 168 countries to understand how food availability and lifestyle trends correlate with our changing health outcomes.\n\nFrom the highest rates in the Bahamas to the lowest in Vietnam, we break down the long-term trends in the US, UK, and beyond to see if caloric supply truly tells the whole story.",
+ "tags": [
+  "obesity data",
+  "global health",
+  "data visualization",
+  "nutrition trends",
+  "public health",
+  "world statistics",
+  "health metrics",
+  "lifestyle data",
+  "Our World in Data",
+  "societal trends"
+ ],
+ "thumbnail": {
+  "number": "48.3%",
+  "words": "Global Obesity Crisis"
+ },
+ "scenes": [
+  {
+   "narration": "Our world is physically changing, and the data shows a clear divide. In some nations, nearly half the population is now obese.",
+   "visual": {
+    "type": "title",
+    "text": "Are We Getting Heavier? The Data Behind Global Obesity",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "The Bahamas leads the globe with 48.3% of its adults currently living with obesity.",
+   "visual": {
+    "type": "world_map",
+    "highlight": "Bahamas"
+   }
+  },
+  {
+   "narration": "Yet, just a few thousand miles away, the picture is completely different. In Vietnam, that same figure sits at just 2.4%.",
+   "visual": {
+    "type": "line",
+    "series": "united-states",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "This massive gap highlights a modern global challenge. We are living through a period where weight trends are diverging sharply across borders.",
+   "visual": {
+    "type": "statement",
+    "text": "The gap between nations is growing",
+    "highlight": [
+     "gap"
+    ]
+   }
+  },
+  {
+   "narration": "To understand how we arrived here, we have to look at the numbers. The reality is often more complex than individual choices.",
+   "visual": {
+    "type": "scatter",
+    "trails": false
+   }
+  },
+  {
+   "narration": "In the United States, 41.0% of adults now face this health issue, up significantly from 27.5% at the turn of the century.",
+   "visual": {
+    "type": "compare",
+    "series": "united-states",
+    "from": "2000",
+    "to": "2024"
+   }
+  },
+  {
+   "narration": "But it isn't just one region. Whether in the United Kingdom or Australia, the trend lines are climbing toward historic highs.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "united-kingdom",
+     "australia"
+    ],
+    "since": "2000",
+    "as": "value"
+   }
+  },
+  {
+   "narration": "Looking at English-speaking nations, the trajectory since the turn of the millennium has been undeniably upward.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "united-states",
+     "united-kingdom",
+     "canada",
+     "australia"
+    ],
+    "since": "2000",
+    "as": "value"
+   }
+  },
+  {
+   "narration": "In the United Kingdom, obesity prevalence rose by 44% compared to the year 2000.",
+   "visual": {
+    "type": "compare",
+    "series": "united-kingdom",
+    "from": "2000",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Australia has seen an even steeper climb, with rates increasing by 57% over the same period.",
+   "visual": {
+    "type": "counter",
+    "series": "australia",
+    "stat": "last",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Across the Atlantic, Canada shows a 29% increase in adult obesity rates since the start of the century.",
+   "visual": {
+    "type": "line",
+    "series": "canada",
+    "start": "2000",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "According to Our World in Data, these nations are grappling with a complex, persistent public health shift.",
+   "visual": {
+    "type": "statement",
+    "text": "Obesity is a persistent, complex, global health challenge.",
+    "highlight": [
+     "complex"
+    ]
+   }
+  },
+  {
+   "narration": "When we compare the growth across these four nations, the divergence in their total figures is striking.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "united-states",
+     "united-kingdom",
+     "canada",
+     "australia"
+    ],
+    "from": "2000",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Ultimately, the rapid rise in obesity is a defining story of modern economic and lifestyle change.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "united-states",
+     "united-kingdom",
+     "canada",
+     "australia"
+    ],
+    "since": "2000"
+   }
+  },
+  {
+   "narration": "While many nations face steady growth, some countries have diverged from the pack. The patterns we see elsewhere simply don't apply everywhere.",
+   "visual": {
+    "type": "statement",
+    "text": "Obesity trends are not universal.",
+    "highlight": [
+     "universal"
+    ]
+   }
+  },
+  {
+   "narration": "Consider Japan. Since 2000, the share of adults with obesity has surged, reaching 5.9% in 2024.",
+   "visual": {
+    "type": "line",
+    "series": "japan",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "In fact, the 2024 value for Japan is 2.3 times higher than it was in 2000.",
+   "visual": {
+    "type": "line",
+    "series": "japan",
+    "start": "2006"
+   }
+  },
+  {
+   "narration": "Now look at Germany. After years of climbing, the trend stalled, holding steady at 20.6% since 2010.",
+   "visual": {
+    "type": "line",
+    "series": "germany",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Even more unique is France. While others grew, France saw a 3% decline from 2000 to 2024.",
+   "visual": {
+    "type": "line",
+    "series": "france",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "French rates reached their highest point of 12.9% in 2010, before trending downward.",
+   "visual": {
+    "type": "gauge",
+    "series": "france",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "These contrasts show that while global pressure is real, local policies and environments play a massive role.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "japan",
+     "germany",
+     "france"
+    ],
+    "since": "2000",
+    "as": "value"
+   }
+  },
+  {
+   "narration": "So, what is the engine driving these shifting numbers? One major factor is the total amount of food available to us.",
+   "visual": {
+    "type": "statement",
+    "text": "Caloric availability is a key piece of the puzzle.",
+    "highlight": [
+     "Caloric"
+    ]
+   }
+  },
+  {
+   "narration": "When we plot caloric availability against obesity rates across 172 countries, a clear pattern emerges.",
+   "visual": {
+    "type": "scatter",
+    "trails": false
+   }
+  },
+  {
+   "narration": "The data shows that these two variables generally move together, with a positive correlation of 0.24.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "united-states",
+     "united-kingdom",
+     "germany"
+    ]
+   }
+  },
+  {
+   "narration": "Take the United States. With 3,947 calories available per person per day, the obesity rate sits at 40.7%.",
+   "visual": {
+    "type": "counter",
+    "series": "united-states",
+    "stat": "at",
+    "date": "2023"
+   }
+  },
+  {
+   "narration": "Other developed nations show a similar relationship between the energy provided in the food supply and weight trends.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "united-kingdom",
+     "germany",
+     "france",
+     "canada",
+     "australia"
+    ],
+    "from": "2000",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "For instance, Canada has 3,590 calories available per person daily, aligning with a 25.9% obesity rate.",
+   "visual": {
+    "type": "line",
+    "series": "canada",
+    "start": "2012"
+   }
+  },
+  {
+   "narration": "It highlights that as caloric access rises, the prevalence of obesity often climbs in parallel, shifting public health outcomes.",
+   "visual": {
+    "type": "countries_bars"
+   }
+  },
+  {
+   "narration": "Let's zoom into the developed world to see how these nations compare today. While global trends are shifting, the latest 2024 data reveals a clear picture of where these countries stand.",
+   "visual": {
+    "type": "countries_bars"
+   }
+  },
+  {
+   "narration": "Australia currently leads this group with an obesity rate of 30.6%. It's a significant figure that reflects a long-term upward trend.",
+   "visual": {
+    "type": "counter",
+    "series": "australia",
+    "stat": "last"
+   }
+  },
+  {
+   "narration": "In the United Kingdom, 27.4% of adults are now living with obesity. It is a persistent challenge for public health officials across the nation.",
+   "visual": {
+    "type": "gauge",
+    "series": "united-kingdom",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Meanwhile, Canada sits at 26.0%. These three nations illustrate the heavy impact that modern, calorie-dense environments can have on population health.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "united-states",
+     "united-kingdom",
+     "canada"
+    ],
+    "from": "2000",
+    "to": "2024"
+   }
+  },
+  {
+   "narration": "But the crisis isn't confined to Western nations. Some regions are seeing even more extreme numbers.",
+   "visual": {
+    "type": "statement",
+    "text": "Extreme obesity rates are climbing globally.",
+    "highlight": [
+     "global"
+    ]
+   }
+  },
+  {
+   "narration": "Egypt now reports 43.9% of its adult population living with obesity. Qatar isn't far behind, with a rate of 42.0%.",
+   "visual": {
+    "type": "world_map"
+   }
+  },
+  {
+   "narration": "These spikes in the Middle East and Africa show that the transition toward higher obesity rates is becoming a truly global phenomenon.",
+   "visual": {
+    "type": "race",
+    "series": [
+     "australia",
+     "canada",
+     "united-kingdom",
+     "egypt",
+     "qatar"
+    ],
+    "since": "2000"
+   }
+  },
+  {
+   "narration": "From the U.S. at 41.0% to Belize at 43.4%, obesity is a global health challenge. These figures underscore the scale of our current reality.",
+   "visual": {
+    "type": "line",
+    "series": "united-states",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Yet, the story is not universal. Some regions maintain significantly lower rates, like Eritrea at 4.3%.",
+   "visual": {
+    "type": "countries_bars"
+   }
+  },
+  {
+   "narration": "Data shows that local policies and environmental factors influence these outcomes. Trends are not destiny.",
+   "visual": {
+    "type": "statement",
+    "text": "Environment shapes our collective health outcomes.",
+    "highlight": [
+     "Environment"
+    ]
+   }
+  },
+  {
+   "narration": "In the United States, we have seen a 49% surge in the share of adults with obesity since 2000.",
+   "visual": {
+    "type": "compare",
+    "series": "united-states",
+    "from": "2000",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "We can see where nations stand by looking at the full spectrum of global data. These patterns help us understand broader health dynamics.",
+   "visual": {
+    "type": "countries_bars"
+   }
+  },
+  {
+   "narration": "Looking globally, the Bahamas now leads the world with 48.3% of its adult population living with obesity.",
+   "visual": {
+    "type": "line",
+    "series": "united-states",
+    "start": "2006"
+   }
+  },
+  {
+   "narration": "Thanks for watching. Please subscribe for more data-driven stories on the trends shaping our world. What do you think the data is missing? Tell us in the comments.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "united-states",
+     "united-kingdom"
+    ]
+   }
+  }
+ ],
+ "engage": {
+  "kind": "correct",
+  "question": "What do you think the data is missing?",
+  "onscreen": "WHAT DO YOU THINK THE DATA IS MISSING",
+  "comment": "What do you think the data is missing?"
+ }
+}

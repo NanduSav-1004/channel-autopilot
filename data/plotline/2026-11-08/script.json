@@ -1,0 +1,432 @@
+{
+ "title": "What Really Drives Gas Prices? The Data Behind the Pump",
+ "description": "Gas prices can feel wildly unpredictable, swinging dramatically from one season to the next. In this video, we break down decades of economic data tracking US regular gasoline prices, West Texas Intermediate crude oil benchmarks, and general consumer price inflation.\n\nBy comparing pump prices against crude oil markets and overall consumer inflation, we see exactly why gas prices fluctuate so intensely. Subscribe to Plotline Data for clear, data-driven breakdowns of the economic forces shaping daily life.",
+ "tags": [
+  "gas prices",
+  "crude oil",
+  "economy",
+  "inflation",
+  "Plotline Data",
+  "energy markets",
+  "US economy",
+  "data visualization",
+  "gasoline",
+  "commodity prices"
+ ],
+ "thumbnail": {
+  "number": "$4.93",
+  "words": "WHY GAS SPIKES"
+ },
+ "scenes": [
+  {
+   "narration": "Every driver knows the sinking feeling at the pump when prices suddenly surge. In June 2022, regular gas hit an all-time peak of $4.93 per gallon.",
+   "visual": {
+    "type": "title",
+    "text": "What Really Drives Gas Prices? The Data Behind the Pump",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "Even after pulling back, fuel costs are climbing fast again. By November 2026, the national average stood at $4.15 per gallon.",
+   "visual": {
+    "type": "gauge",
+    "series": "GASREGW",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Over the last year alone, from November 2025 to November 2026, gas prices jumped by 36.2%.",
+   "visual": {
+    "type": "heatmap",
+    "series": "GASREGW",
+    "years": 5
+   }
+  },
+  {
+   "narration": "During that same twelve-month period, crude oil surged by 66.2%, reaching $100 per barrel in November 2026.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "GASREGW",
+     "DCOILWTICO"
+    ],
+    "since": "2025",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "That far outpaces overall inflation, with consumer prices rising just 3.7% over the year ending in September 2026.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "GASREGW",
+     "DCOILWTICO",
+     "CPIAUCSL"
+    ],
+    "since": "2025"
+   }
+  },
+  {
+   "narration": "Gas prices clearly rise faster and drop sharper than everyday goods. So what causes these relentless swings at the pump?",
+   "visual": {
+    "type": "statement",
+    "text": "What causes relentless price swings at the pump?",
+    "highlight": [
+     "swings"
+    ]
+   }
+  },
+  {
+   "narration": "To unpack what drives fuel costs, we must follow the journey from raw crude to the retail pump.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "GASREGW",
+     "DCOILWTICO"
+    ]
+   }
+  },
+  {
+   "narration": "To understand where fuel costs are heading, we have to look back across three decades of data, according to the U.S. Energy Information Administration.",
+   "visual": {
+    "type": "line",
+    "series": "GASREGW",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Back in August 1990, regular gasoline averaged just $1.22 per gallon for American drivers at the pump.",
+   "visual": {
+    "type": "compare",
+    "series": "GASREGW",
+    "from": "1990-08",
+    "to": "2026"
+   }
+  },
+  {
+   "narration": "Prices dropped even lower by the end of that decade, reaching an absolute historic floor of $0.92 per gallon in February 1999.",
+   "visual": {
+    "type": "counter",
+    "series": "GASREGW",
+    "stat": "min",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "That bargain floor quickly dissolved into decades of heavy volatility, as shifting global market forces repeatedly drove fuel prices higher.",
+   "visual": {
+    "type": "heatmap",
+    "series": "GASREGW",
+    "years": 10
+   }
+  },
+  {
+   "narration": "Spikes grew dramatically sharper over time, including an earlier major peak in July 2008 when regular gas reached $4.06.",
+   "visual": {
+    "type": "counter",
+    "series": "GASREGW",
+    "stat": "at",
+    "date": "2008-07"
+   }
+  },
+  {
+   "narration": "Over the long run, consumer prices increased +164% since January 1990, showing how fuel outpaced everyday household inflation.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "GASREGW",
+     "CPIAUCSL",
+     "DCOILWTICO"
+    ],
+    "since": "1990",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "From August 1990 to November 2026, regular gas climbed +241%, standing at 3.4 times its initial baseline.",
+   "visual": {
+    "type": "statement",
+    "text": "Gasoline prices expanded far beyond general inflation",
+    "highlight": [
+     "expanded"
+    ]
+   }
+  },
+  {
+   "narration": "Every pump shock starts upstream in global energy trading. Geopolitical disruptions and supply cuts send raw oil prices climbing fast.",
+   "visual": {
+    "type": "statement",
+    "text": "Global crude shocks drive retail gas surges",
+    "highlight": [
+     "shocks"
+    ]
+   }
+  },
+  {
+   "narration": "In June 2008, crude oil rocketed to its highest recorded peak of $134 per barrel.",
+   "visual": {
+    "type": "line",
+    "series": "DCOILWTICO",
+    "start": "2000",
+    "end": "2010",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "By April 2011, another price shock pushed crude back up to $109 per barrel. That was a +30% increase in a single year.",
+   "visual": {
+    "type": "counter",
+    "series": "DCOILWTICO",
+    "stat": "at",
+    "date": "2011-04"
+   }
+  },
+  {
+   "narration": "Global supply constraints struck again in June 2022 as crude reached $115 per barrel. Upstream crude prices surged +61% over the preceding year.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "DCOILWTICO",
+     "GASREGW"
+    ],
+    "since": "2021",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "At retail stations, gas surged to $4.48 per gallon in May 2026. That represented a +42% jump over twelve months.",
+   "visual": {
+    "type": "counter",
+    "series": "GASREGW",
+    "stat": "at",
+    "date": "2026-05"
+   }
+  },
+  {
+   "narration": "Looking back across two decades, since January 2005 crude oil has climbed +113%, while regular gas prices have increased +127%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "DCOILWTICO",
+     "GASREGW"
+    ],
+    "since": "2005"
+   }
+  },
+  {
+   "narration": "Consider how wild that swing is compared to December 1998, when crude hit a rock-bottom $11 per barrel. Violent boom-and-bust cycles constantly reframe retail fuel costs.",
+   "visual": {
+    "type": "compare",
+    "series": "DCOILWTICO",
+    "from": "1998-12",
+    "to": "2008"
+   }
+  },
+  {
+   "narration": "Crude oil is the single primary factor shaping retail gas prices. When global crude benchmarks shift, station prices follow almost immediately.",
+   "visual": {
+    "type": "statement",
+    "text": "Crude oil dictates retail gas prices",
+    "highlight": "dictates"
+   }
+  },
+  {
+   "narration": "To understand market dynamics, look at early baseline pricing. In January 1990, West Texas Intermediate crude traded at $23 per barrel.",
+   "visual": {
+    "type": "counter",
+    "series": "DCOILWTICO",
+    "stat": "at",
+    "date": "1990-01",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "As global energy demand expanded, benchmark prices trended higher. Crude oil increased +337% from January 1990 to November 2026.",
+   "visual": {
+    "type": "line",
+    "series": "DCOILWTICO",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Despite wild swings over three decades, baseline pricing moved upward. By November 2026, crude oil reached $100 per barrel.",
+   "visual": {
+    "type": "counter",
+    "series": "DCOILWTICO",
+    "stat": "at",
+    "date": "2026-11",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Global market dynamics regularly reset energy price baselines. Benchmark crude climbed from $58 in January 2020 to $76 in January 2025.",
+   "visual": {
+    "type": "compare",
+    "series": "DCOILWTICO",
+    "from": "2020-01",
+    "to": "2025-01"
+   }
+  },
+  {
+   "narration": "Refinery shifts and crude movements created long-term divergence. Since January 2010, crude oil increased +27%, while regular gas surged +53%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "DCOILWTICO",
+     "GASREGW"
+    ],
+    "since": "2010"
+   }
+  },
+  {
+   "narration": "Upstream oil trading establishes the underlying cost for every gallon. Global crude market dynamics ultimately drive ongoing pump volatility.",
+   "visual": {
+    "type": "statement",
+    "text": "Upstream crude dynamics drive pump volatility",
+    "highlight": "drive"
+   }
+  },
+  {
+   "narration": "While standard household goods follow a steady upward path over time, retail energy costs swing with far sharper velocity.",
+   "visual": {
+    "type": "statement",
+    "text": "Gas prices move far faster than standard inflation",
+    "highlight": [
+     "inflation"
+    ]
+   }
+  },
+  {
+   "narration": "Across the entire broader economy, overall consumer prices stand 2.6 times higher today than they did back in January 1990.",
+   "visual": {
+    "type": "line",
+    "series": "CPIAUCSL",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Comparing long-term trends, since January 2000 general consumer inflation rose +99%, while regular gas prices surged +222%.",
+   "visual": {
+    "type": "line",
+    "series": "GASREGW",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Focusing on recent history, since January 2015 broad consumer prices increased +43%, whereas retail fuel jumped +96%.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "CPIAUCSL",
+     "GASREGW"
+    ]
+   }
+  },
+  {
+   "narration": "Upstream crude oil moved even faster over that exact stretch, advancing +108% since January 2015.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CPIAUCSL",
+     "GASREGW",
+     "DCOILWTICO"
+    ],
+    "since": "2015",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Even during the nationwide inflation shock of June 2022, general consumer prices increased by just +9% over twelve months.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "CPIAUCSL",
+     "GASREGW"
+    ]
+   }
+  },
+  {
+   "narration": "At its peak in June 2022, regular gasoline reached an all-time high of $4.93 per gallon.",
+   "visual": {
+    "type": "counter",
+    "series": "GASREGW",
+    "stat": "at",
+    "date": "2022-06"
+   }
+  },
+  {
+   "narration": "Crude oil reached its all-time peak of $134 in June 2008, kicking off years of dramatic market swings.",
+   "visual": {
+    "type": "line",
+    "series": "DCOILWTICO",
+    "start": "2008",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Pump prices do not move alongside typical household goods. They track the global crude market through every sudden geopolitical and supply shock.",
+   "visual": {
+    "type": "statement",
+    "text": "Pump prices track global crude markets",
+    "highlight": "crude"
+   }
+  },
+  {
+   "narration": "Recent market shifts highlight how rapidly retail fuel reacts. From January 2025 to November 2026, regular gas moved up +35%.",
+   "visual": {
+    "type": "counter",
+    "series": "GASREGW",
+    "stat": "at",
+    "date": "2026-11",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "Over that exact span, crude oil climbed +32%. The direct connection between crude benchmark trading and your local pump stays unbroken.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "DCOILWTICO",
+     "GASREGW"
+    ],
+    "from": "2025-01",
+    "to": "2026-11"
+   }
+  },
+  {
+   "narration": "When upstream crude moves, retail stations adjust fast. Ultimately, gas prices reflect global energy commodity markets rather than standard inflation trends.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "GASREGW",
+     "DCOILWTICO",
+     "CPIAUCSL"
+    ]
+   }
+  },
+  {
+   "narration": "With regular gas at $4.15 a gallon, do you expect prices to trend higher or lower over the next year? Tell us in the comments.",
+   "visual": {
+    "type": "gauge",
+    "series": "GASREGW",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Subscribe to Plotline Data for more data stories explaining the numbers shaping your world. Which of these numbers surprised you most? Tell us in the comments.",
+   "visual": {
+    "type": "statement",
+    "text": "Subscribe for more data stories",
+    "highlight": "Subscribe"
+   }
+  }
+ ],
+ "engage": {
+  "kind": "pick",
+  "question": "Which of these numbers surprised you most?",
+  "onscreen": "WHICH OF THESE NUMBERS SURPRISED YOU MOST",
+  "comment": "Which of these numbers surprised you most?"
+ }
+}

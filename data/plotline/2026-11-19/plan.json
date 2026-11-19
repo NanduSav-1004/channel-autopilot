@@ -1,0 +1,19 @@
+{
+ "title": "Are We Getting Heavier? The Data Behind Global Obesity",
+ "angle": "Comparing international obesity rates against caloric supply reveals how changes in food availability correlate with health outcomes across developed nations.",
+ "series": [],
+ "states": null,
+ "owid": "obesity-prevalence-adults-who-gho",
+ "countries": [
+  "United States",
+  "United Kingdom",
+  "Germany",
+  "Japan",
+  "France",
+  "Canada",
+  "Australia"
+ ],
+ "owid2": "daily-per-capita-caloric-supply",
+ "states2": null,
+ "start": "2000"
+}

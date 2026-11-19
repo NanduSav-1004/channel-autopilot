@@ -1,0 +1,421 @@
+{
+ "title": "Why Buying a House Became So Unaffordable",
+ "description": "Housing costs have reached a breaking point, leaving many wondering how we got here. By analyzing decades of data on home prices, mortgage rates, and wage growth, we uncover the shifting landscape of the American dream.\n\nWe break down the numbers to show how the cost of homeownership has evolved since 1985. Discover the reality behind the housing market and what these trends mean for the average household today.",
+ "tags": [
+  "housing market",
+  "real estate",
+  "mortgage rates",
+  "home prices",
+  "data visualization",
+  "economy",
+  "personal finance",
+  "housing crisis",
+  "wage growth",
+  "market trends"
+ ],
+ "thumbnail": {
+  "number": "+375%",
+  "words": "Home Price Surge"
+ },
+ "scenes": [
+  {
+   "narration": "The American dream of owning a home is drifting further out of reach. Prices have surged in a way that breaks with every historical norm.",
+   "visual": {
+    "type": "title",
+    "text": "Why Buying a House Became So Unaffordable",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "Look at the cost of a new house since 1985. It has skyrocketed by 375 percent.",
+   "visual": {
+    "type": "line",
+    "series": "MSPUS",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "To put that in perspective, the median price today is 4.8 times what it was back then.",
+   "visual": {
+    "type": "line",
+    "series": "MSPUS",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "Now, consider what the typical worker earns. Average hourly pay has grown by 279 percent over the same period.",
+   "visual": {
+    "type": "line",
+    "series": "AHETPI",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "Wages simply haven't kept pace with the cost of shelter. The gap between your paycheck and property prices is widening.",
+   "visual": {
+    "type": "statement",
+    "text": "Home prices are rising faster than your hourly pay.",
+    "highlight": [
+     "faster"
+    ]
+   }
+  },
+  {
+   "narration": "Even as new home prices cooled from their 2022 peak, the math for buyers remains brutal.",
+   "visual": {
+    "type": "counter",
+    "series": "MSPUS",
+    "stat": "max",
+    "start": "2022"
+   }
+  },
+  {
+   "narration": "It is a fundamental shift in the economy. This isn't just a cycle; it's a structural transformation.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "MSPUS",
+     "AHETPI"
+    ],
+    "since": "1985"
+   }
+  },
+  {
+   "narration": "Let\u2019s dial back to January 1985. Back then, a new home cost $82,800.",
+   "visual": {
+    "type": "counter",
+    "series": "MSPUS",
+    "stat": "at",
+    "date": "1985-01",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "Simultaneously, the average worker was earning $8.61 per hour, according to the Bureau of Labor Statistics.",
+   "visual": {
+    "type": "counter",
+    "series": "AHETPI",
+    "stat": "at",
+    "date": "1985-01",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "Housing felt expensive then too, largely because borrowing money was incredibly pricey. Mortgage rates sat at 13.07%.",
+   "visual": {
+    "type": "counter",
+    "series": "MORTGAGE30US",
+    "stat": "at",
+    "date": "1985-01",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "Even with those high rates, housing costs and typical wages once moved in relative lockstep.",
+   "visual": {
+    "type": "line",
+    "series": "MSPUS",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "Over the following decades, paychecks grew significantly. By September 2026, the average wage reached 3.8 times its 1985 level.",
+   "visual": {
+    "type": "line",
+    "series": "AHETPI",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "But that growth was dwarfed by the property market. Today, median new home prices have surged far beyond wage gains.",
+   "visual": {
+    "type": "statement",
+    "text": "Housing growth consistently outpaced worker pay",
+    "highlight": [
+     "outpaced"
+    ]
+   }
+  },
+  {
+   "narration": "What was once a balanced relationship between debt and income has fundamentally unraveled.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "MSPUS",
+     "AHETPI"
+    ],
+    "since": "1985"
+   }
+  },
+  {
+   "narration": "For years, the housing market danced to a predictable rhythm. Rates and prices moved in a steady, manageable balance.",
+   "visual": {
+    "type": "line",
+    "series": "MORTGAGE30US",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "Then, we hit a historic low. By December 2020, mortgage rates bottomed out at 2.68%.",
+   "visual": {
+    "type": "counter",
+    "series": "MORTGAGE30US",
+    "stat": "at",
+    "date": "2020-12",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "This sparked an unprecedented buying frenzy. Home prices spiked, reaching a peak of $442,600 by October 2022.",
+   "visual": {
+    "type": "counter",
+    "series": "MSPUS",
+    "stat": "max",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "But the market couldn't sustain that gravity. The era of cheap money ended abruptly.",
+   "visual": {
+    "type": "statement",
+    "text": "The era of cheap money ended abruptly.",
+    "highlight": [
+     "abruptly"
+    ]
+   }
+  },
+  {
+   "narration": "The pivot was sharp. By October 2026, mortgage rates climbed to 7.33%.",
+   "visual": {
+    "type": "counter",
+    "series": "MORTGAGE30US",
+    "stat": "at",
+    "date": "2026-10",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "This shift was massive. In just one year, rates surged by 17.2%.",
+   "visual": {
+    "type": "compare",
+    "series": "MORTGAGE30US",
+    "from": "2025-10",
+    "to": "2026-10"
+   }
+  },
+  {
+   "narration": "Now, buyers face a dual reality: elevated prices and borrowing costs that have fundamentally diverged from the long-term trend.",
+   "visual": {
+    "type": "line",
+    "series": "MORTGAGE30US",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "This shift didn't happen in a vacuum. It was driven by systemic catalysts that repeatedly bucked long-term trends.",
+   "visual": {
+    "type": "statement",
+    "text": "Market shifts follow predictable, then erratic, patterns.",
+    "highlight": [
+     "erratic"
+    ]
+   }
+  },
+  {
+   "narration": "History shows us that rapid spikes in borrowing costs often precede market anxiety. Look at April 1985.",
+   "visual": {
+    "type": "counter",
+    "series": "MORTGAGE30US",
+    "stat": "max",
+    "date": "1985-04",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "Mortgage rates hit 13.20% then. The market felt the pressure, yet it eventually stabilized.",
+   "visual": {
+    "type": "line",
+    "series": "MORTGAGE30US",
+    "start": "1985",
+    "end": "1987",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "A similar shock arrived in October 1987. Mortgage rates hit 11.26%.",
+   "visual": {
+    "type": "counter",
+    "series": "MORTGAGE30US",
+    "stat": "at",
+    "date": "1987-10",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "Prices responded to these pressures differently over time. By October 2017, we saw another sharp acceleration.",
+   "visual": {
+    "type": "counter",
+    "series": "MSPUS",
+    "stat": "at",
+    "date": "2017-10",
+    "start": "1985"
+   }
+  },
+  {
+   "narration": "That October, the median new home price hit $337,900, jumping 9% in a single year.",
+   "visual": {
+    "type": "line",
+    "series": "MSPUS",
+    "start": "2015",
+    "end": "2018"
+   }
+  },
+  {
+   "narration": "These historical spikes were warnings. The market was building structural imbalances long before the recent frenzy began.",
+   "visual": {
+    "type": "statement",
+    "text": "Systemic imbalances drive housing market volatility.",
+    "highlight": [
+     "volatility"
+    ]
+   }
+  },
+  {
+   "narration": "To understand why housing feels so broken, look at the recent divide between our paychecks and property prices. The math is simple, yet stark.",
+   "visual": {
+    "type": "statement",
+    "text": "The gap between wages and housing is widening.",
+    "highlight": [
+     "widening"
+    ]
+   }
+  },
+  {
+   "narration": "In January 2025, the average hourly pay was $30.79. By September 2026, it climbed to $32.60.",
+   "visual": {
+    "type": "counter",
+    "series": "AHETPI",
+    "stat": "at",
+    "date": "2026-09",
+    "start": "2025-01"
+   }
+  },
+  {
+   "narration": "That represents a 6 percent growth for workers over that period. It sounds like progress, but it ignores the cost of entry into the market.",
+   "visual": {
+    "type": "line",
+    "series": "AHETPI",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "Look at the new home price data. In January 2025, the median house cost $423,100.",
+   "visual": {
+    "type": "counter",
+    "series": "MSPUS",
+    "stat": "at",
+    "date": "2025-01",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "By July 2026, that median price dropped to $393,300.",
+   "visual": {
+    "type": "counter",
+    "series": "MSPUS",
+    "stat": "at",
+    "date": "2026-07",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "While prices retreated by 7 percent, borrowing costs surged, negating the relief for most prospective buyers.",
+   "visual": {
+    "type": "line",
+    "series": "MORTGAGE30US",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "Purchasing power is not just about the sticker price. It is the crushing combination of stagnant wage growth and sustained debt costs.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "AHETPI",
+     "MSPUS"
+    ],
+    "since": "2025"
+   }
+  },
+  {
+   "narration": "We have explored the long-term trends shaping today's housing market. The data paints a clear picture of a complex, structural divide.",
+   "visual": {
+    "type": "statement",
+    "text": "The housing market has fundamentally shifted.",
+    "highlight": [
+     "shifted"
+    ]
+   }
+  },
+  {
+   "narration": "Over the past year, we have seen median new home prices retreat by 4.1%. This cooling reflects the heavy burden of high borrowing costs.",
+   "visual": {
+    "type": "compare",
+    "series": "MSPUS",
+    "from": "2025-07",
+    "to": "2026-07"
+   }
+  },
+  {
+   "narration": "Meanwhile, the average hourly pay for workers has grown by 3.3% over the last year. However, this wage growth struggles to keep pace with entry costs.",
+   "visual": {
+    "type": "line",
+    "series": "AHETPI",
+    "start": "1995"
+   }
+  },
+  {
+   "narration": "To understand the scale of the problem, look at the median price of a new house since 1985. It has skyrocketed by 375%, far outpacing the growth of typical worker wages.",
+   "visual": {
+    "type": "line",
+    "series": "MSPUS",
+    "start": "1985",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "These numbers reveal that the path to homeownership is no longer just a question of personal savings. It is a result of decades of systemic divergence.",
+   "visual": {
+    "type": "statement",
+    "text": "Affordability is defined by systemic trends.",
+    "highlight": [
+     "systemic"
+    ]
+   }
+  },
+  {
+   "narration": "Understanding these pressures is the first step toward navigating this environment. Data remains our best tool for decoding the reality behind the headlines.",
+   "visual": {
+    "type": "statement",
+    "text": "Data decodes the reality of your finances.",
+    "highlight": [
+     "data"
+    ]
+   }
+  },
+  {
+   "narration": "We will continue to track these shifts as the market evolves. Please subscribe to join us for our next deep dive into the numbers.",
+   "visual": {
+    "type": "statement",
+    "text": "Subscribe for more data-driven stories.",
+    "highlight": [
+     "subscribe"
+    ]
+   }
+  }
+ ]
+}

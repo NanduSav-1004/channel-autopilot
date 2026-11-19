@@ -1,0 +1,19 @@
+{
+ "title": "Do Richer Countries Actually Work Less?",
+ "angle": "As nations grow wealthier, annual working hours per person drop significantly, revealing a sharp divide in global work-life balance.",
+ "series": [],
+ "states": null,
+ "owid": "annual-working-hours-per-worker",
+ "countries": [
+  "United States",
+  "United Kingdom",
+  "Germany",
+  "Mexico",
+  "South Korea",
+  "Japan",
+  "France"
+ ],
+ "owid2": "gdp-per-capita-worldbank",
+ "states2": null,
+ "start": "1970"
+}

@@ -1,0 +1,182 @@
+[
+ {
+  "title": "Why New Cars Are Disappearing",
+  "scenes": [
+   {
+    "narration": "Have you noticed cheap new cars are basically gone?",
+    "visual": {
+     "type": "title",
+     "text": "Why New Cars Are Disappearing",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since January 2000, new car prices have climbed 26%.",
+    "visual": {
+     "type": "line",
+     "series": "CUSR0000SETA01",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "But overall consumer prices? They jumped 99%.",
+    "visual": {
+     "type": "line",
+     "series": "CPIAUCSL",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "It feels like they should be more affordable.",
+    "visual": {
+     "type": "statement",
+     "text": "Purchasing power is shifting",
+     "highlight": [
+      "shifting"
+     ]
+    }
+   },
+   {
+    "narration": "Yet, automakers simply deleted entry-level models entirely.",
+    "visual": {
+     "type": "counter",
+     "series": "CUSR0000SETA01",
+     "stat": "last",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Watch the full breakdown",
+     "highlight": [
+      "full"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "The Wage vs Car Price Reality",
+  "scenes": [
+   {
+    "narration": "Are you working harder just to afford a car?",
+    "visual": {
+     "type": "title",
+     "text": "The Wage vs Car Price Reality",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since January 2000, worker pay has surged 138%.",
+    "visual": {
+     "type": "line",
+     "series": "AHETPI",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "By October 2026, average hourly pay hit $32.75.",
+    "visual": {
+     "type": "counter",
+     "series": "AHETPI",
+     "stat": "at",
+     "date": "2026-10",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "Yet, manufacturers are choosing higher profit margins instead.",
+    "visual": {
+     "type": "statement",
+     "text": "Margins over volume",
+     "highlight": [
+      "Margins"
+     ]
+    }
+   },
+   {
+    "narration": "The cheap new car is permanently retired.",
+    "visual": {
+     "type": "compare",
+     "series": "AHETPI",
+     "from": "2000-01",
+     "to": "2026-10"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "See the data behind it",
+     "highlight": [
+      "data"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "The 16 Million Car Plateau",
+  "scenes": [
+   {
+    "narration": "The new car market isn't what it used to be.",
+    "visual": {
+     "type": "title",
+     "text": "The 16 Million Car Plateau",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Back in 2001, we hit a peak of 22.1 million vehicles.",
+    "visual": {
+     "type": "counter",
+     "series": "TOTALSA",
+     "stat": "max",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "By October 2026, sales dropped to 16.0 million.",
+    "visual": {
+     "type": "line",
+     "series": "TOTALSA",
+     "start": "2000",
+     "annotate": [
+      "min"
+     ]
+    }
+   },
+   {
+    "narration": "That is a 27% drop from the 2001 high.",
+    "visual": {
+     "type": "compare",
+     "series": "TOTALSA",
+     "from": "2001-10",
+     "to": "2026-10"
+    }
+   },
+   {
+    "narration": "Automakers learned that selling fewer cars is profitable.",
+    "visual": {
+     "type": "statement",
+     "text": "Scarcity is profitable",
+     "highlight": [
+      "Scarcity"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Check out the full report",
+     "highlight": [
+      "full"
+     ]
+    }
+   }
+  ]
+ }
+]

@@ -1,0 +1,15 @@
+{
+ "title": "What Really Drives the Price of Gas?",
+ "angle": "Gasoline pump prices track crude oil market swings far more directly than general consumer inflation, explaining why gas prices fluctuate so dramatically.",
+ "series": [
+  "GASREGW",
+  "DCOILWTICO",
+  "CPIAUCSL"
+ ],
+ "states": null,
+ "owid": null,
+ "countries": null,
+ "owid2": null,
+ "states2": null,
+ "start": "1990"
+}

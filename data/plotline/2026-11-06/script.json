@@ -1,0 +1,405 @@
+{
+ "title": "Why Are People Having Fewer Babies? The Data Explained",
+ "description": "Over the past six decades, fertility rates across major developed economies have fallen steadily below the population replacement level. We examine official World Bank data via FRED to trace how birth rates dropped dramatically over the generations.\n\nExplore the economic and societal shifts behind this historic demographic collapse, from structural cost pressures to changing family choices. Subscribe to Plotline Data for clear, evidence-based data stories every week.",
+ "tags": [
+  "fertility rate",
+  "birth rate decline",
+  "demographics",
+  "US population",
+  "economics",
+  "World Bank data",
+  "data story",
+  "population trends",
+  "Plotline Data"
+ ],
+ "thumbnail": {
+  "number": "-55%",
+  "words": "US Birth Decline"
+ },
+ "scenes": [
+  {
+   "narration": "Something quiet but monumental is reshaping our world. Across recent decades, fewer people are choosing to have children, driving a dramatic fall in fertility.",
+   "visual": {
+    "type": "title",
+    "text": "Why Are People Having Fewer Babies? The Data Explained",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "Back in 1960, the US fertility rate reached a high of 3.65 births per woman. Large families were a cornerstone of American life.",
+   "visual": {
+    "type": "counter",
+    "series": "SPDYNTFRTINUSA",
+    "stat": "at",
+    "date": "1960-01"
+   }
+  },
+  {
+   "narration": "That picture changed rapidly over the following decades. By 1970, the rate fell to 2.48, and hit 1.77 by 1975.",
+   "visual": {
+    "type": "line",
+    "series": "SPDYNTFRTINUSA",
+    "start": "1960",
+    "end": "1975"
+   }
+  },
+  {
+   "narration": "Between 1960 and 2024, America's birth rate plunged by 55%. That represents a fundamental transformation in societal structure.",
+   "visual": {
+    "type": "compare",
+    "series": "SPDYNTFRTINUSA",
+    "from": "1960",
+    "to": "2024"
+   }
+  },
+  {
+   "narration": "Even after brief rebounds, like reaching 2.08 in 1990, rates continued sliding downward through 2020.",
+   "visual": {
+    "type": "counter",
+    "series": "SPDYNTFRTINUSA",
+    "stat": "at",
+    "date": "1990-01"
+   }
+  },
+  {
+   "narration": "In 2023, the rate touched an all-time low of 1.62, before ticking up slightly to 1.63 in 2024.",
+   "visual": {
+    "type": "line",
+    "series": "SPDYNTFRTINUSA",
+    "start": "1960",
+    "annotate": "min"
+   }
+  },
+  {
+   "narration": "This historic drop isn't just a statistical blip. It marks a deep structural shift that will reverberate for generations.",
+   "visual": {
+    "type": "statement",
+    "text": "A deep structural shift for future generations",
+    "highlight": [
+     "structural"
+    ]
+   }
+  },
+  {
+   "narration": "To truly understand today's birth rate decline, we have to rewind to the post-war era. The mid-twentieth century was defined by a massive demographic surge.",
+   "visual": {
+    "type": "statement",
+    "text": "Rewinding to the post-war demographic surge",
+    "highlight": "surge"
+   }
+  },
+  {
+   "narration": "According to the World Bank, American fertility reached its absolute peak right at the opening of the decade in 1960. Families were larger than they had been in generations.",
+   "visual": {
+    "type": "line",
+    "series": "SPDYNTFRTINUSA",
+    "start": "1960",
+    "end": "1965",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "That dramatic climb did not last forever. By 1965, the fertility rate fell swiftly to 2.91 births per woman.",
+   "visual": {
+    "type": "counter",
+    "series": "SPDYNTFRTINUSA",
+    "stat": "at",
+    "date": "1965-01"
+   }
+  },
+  {
+   "narration": "Measuring from that 1965 milestone down to 2024, American birth rates have plummeted by 44%.",
+   "visual": {
+    "type": "compare",
+    "series": "SPDYNTFRTINUSA",
+    "from": "1965",
+    "to": "2024"
+   }
+  },
+  {
+   "narration": "This initial drop was driven by profound social progress. Expanding educational opportunities and widespread family planning gave people new control over their lives.",
+   "visual": {
+    "type": "statement",
+    "text": "Social progress and expanded family planning",
+    "highlight": "planning"
+   }
+  },
+  {
+   "narration": "By 1970, the slide was well underway, with rates sitting 34% above current levels before dropping further.",
+   "visual": {
+    "type": "compare",
+    "series": "SPDYNTFRTINUSA",
+    "from": "1970",
+    "to": "2024"
+   }
+  },
+  {
+   "narration": "What began as a return to normal after a baby boom soon established a brand new baseline for family size.",
+   "visual": {
+    "type": "gauge",
+    "series": "SPDYNTFRTINUSA",
+    "start": "1960"
+   }
+  },
+  {
+   "narration": "After the steep drops of earlier decades, the decline temporarily paused. By January 1980, American fertility stabilized at 1.84 births per woman.",
+   "visual": {
+    "type": "counter",
+    "series": "SPDYNTFRTINUSA",
+    "stat": "at",
+    "date": "1980-01"
+   }
+  },
+  {
+   "narration": "Changing economic realities and dual-income households established a brand new baseline for family sizes across the country.",
+   "visual": {
+    "type": "statement",
+    "text": "Dual incomes created a new family baseline",
+    "highlight": "baseline"
+   }
+  },
+  {
+   "narration": "A modest mini-boom followed heading into the new millennium. By January 2000, the fertility rate climbed back up to 2.06.",
+   "visual": {
+    "type": "line",
+    "series": "SPDYNTFRTINUSA",
+    "start": "1980",
+    "end": "2000"
+   }
+  },
+  {
+   "narration": "That momentum proved remarkably steady for several years. By January 2005, the rate held firm at 2.06, remaining 21% above current levels.",
+   "visual": {
+    "type": "counter",
+    "series": "SPDYNTFRTINUSA",
+    "stat": "at",
+    "date": "2005-01"
+   }
+  },
+  {
+   "narration": "However, broader economic pressures soon ended that plateau. By January 2010, fertility dropped to 1.93, representing a 16% drop compared to 2024.",
+   "visual": {
+    "type": "counter",
+    "series": "SPDYNTFRTINUSA",
+    "stat": "at",
+    "date": "2010-01"
+   }
+  },
+  {
+   "narration": "The downward slope gathered pace throughout the following decade. By January 2015, the rate fell back down to 1.84 births per woman.",
+   "visual": {
+    "type": "line",
+    "series": "SPDYNTFRTINUSA",
+    "start": "2005",
+    "end": "2015"
+   }
+  },
+  {
+   "narration": "Just before global disruptions hit, birth rates sank even lower. By January 2020, fertility settled at 1.64, setting up historic lows.",
+   "visual": {
+    "type": "counter",
+    "series": "SPDYNTFRTINUSA",
+    "stat": "at",
+    "date": "2020-01",
+    "start": "1960"
+   }
+  },
+  {
+   "narration": "Following the fallout of the Great Recession, economic shocks permanently altered how young adults approached building a family.",
+   "visual": {
+    "type": "statement",
+    "text": "Economic shocks altered family planning",
+    "highlight": [
+     "Economic"
+    ]
+   }
+  },
+  {
+   "narration": "Surging housing prices paired with escalating student debt forced many young couples to continually postpone major traditional milestones.",
+   "visual": {
+    "type": "statement",
+    "text": "Surging housing costs delayed milestones",
+    "highlight": [
+     "housing"
+    ]
+   }
+  },
+  {
+   "narration": "Securing financial stability and advancing personal careers became essential prerequisites long before most couples even contemplated parenthood.",
+   "visual": {
+    "type": "compare",
+    "series": "SPDYNTFRTINUSA",
+    "from": "1990",
+    "to": "2024"
+   }
+  },
+  {
+   "narration": "Looking from January 2015 to January 2024, fertility dropped another 12%, showing how temporary delays turned into permanent choices.",
+   "visual": {
+    "type": "line",
+    "series": "SPDYNTFRTINUSA",
+    "start": "2015",
+    "end": "2024"
+   }
+  },
+  {
+   "narration": "Simultaneously, evolving cultural expectations encouraged more women to pursue higher education, professional autonomy, and independent life goals.",
+   "visual": {
+    "type": "statement",
+    "text": "Cultural shifts prioritized independence",
+    "highlight": [
+     "Cultural"
+    ]
+   }
+  },
+  {
+   "narration": "Between January 2020 and January 2024, birth rates slipped an additional 1%, reflecting lingering economic uncertainty and pandemic disruptions.",
+   "visual": {
+    "type": "line",
+    "series": "SPDYNTFRTINUSA",
+    "start": "2020",
+    "end": "2024"
+   }
+  },
+  {
+   "narration": "Though rates saw a slight 0.6% gain in the final year, America's low fertility era remains deeply entrenched.",
+   "visual": {
+    "type": "line",
+    "series": "SPDYNTFRTINUSA",
+    "start": "1960"
+   }
+  },
+  {
+   "narration": "Minor annual upticks can easily mask a long-term demographic reality.",
+   "visual": {
+    "type": "compare",
+    "series": "SPDYNTFRTINUSA",
+    "from": "1960",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Across recent decades, lower fertility has fundamentally reshaped standard household structures. Smaller families mean fewer siblings, fewer cousins, and steadily shrinking extended networks.",
+   "visual": {
+    "type": "statement",
+    "text": "Smaller families reshape standard household structures",
+    "highlight": [
+     "reshape"
+    ]
+   }
+  },
+  {
+   "narration": "When birth rates sit below demographic replacement levels, overall population growth stalls. Over time, society gradually transitions toward a much older population structure.",
+   "visual": {
+    "type": "line",
+    "series": "SPDYNTFRTINUSA",
+    "start": "1960",
+    "annotate": [
+     "min"
+    ]
+   }
+  },
+  {
+   "narration": "A shrinking ratio of active workers to retirees places unprecedented strain on social safety nets. Maintaining public pensions and healthcare systems becomes increasingly difficult.",
+   "visual": {
+    "type": "statement",
+    "text": "Fewer workers create immense social security pressures",
+    "highlight": [
+     "pressures"
+    ]
+   }
+  },
+  {
+   "narration": "Local communities must also adapt as youth populations contract. Public investment naturally shifts away from schools and child services toward elder care.",
+   "visual": {
+    "type": "gauge",
+    "series": "SPDYNTFRTINUSA",
+    "start": "1960"
+   }
+  },
+  {
+   "narration": "Long-term economic dynamism can also cool as workforce expansion slows. Fewer young adults enter the market, dampening consumer demand and overall innovation.",
+   "visual": {
+    "type": "statement",
+    "text": "Slower workforce growth dampens economic dynamism",
+    "highlight": [
+     "dynamism"
+    ]
+   }
+  },
+  {
+   "narration": "Small annual fluctuations do not change this overarching trajectory. Compact household structures are now firmly established as the modern default.",
+   "visual": {
+    "type": "gauge",
+    "series": "SPDYNTFRTINUSA",
+    "start": "1960"
+   }
+  },
+  {
+   "narration": "America's demographic shift is not a sudden collapse, but a quiet, decades-long restructuring of modern family life across the nation.",
+   "visual": {
+    "type": "statement",
+    "text": "A quiet restructuring of modern family life",
+    "highlight": "restructuring"
+   }
+  },
+  {
+   "narration": "Broader access to higher education, evolving career ambitions, and persistent housing costs have fundamentally reshaped household decisions.",
+   "visual": {
+    "type": "statement",
+    "text": "Evolving ambitions and housing costs reshape households",
+    "highlight": "ambitions"
+   }
+  },
+  {
+   "narration": "Compared to January 1975, the national birth rate has dropped another 8%, establishing compact families as the modern norm.",
+   "visual": {
+    "type": "compare",
+    "series": "SPDYNTFRTINUSA",
+    "from": "1975-01",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Current fertility levels sit near historic lows, reflecting structural economic patterns that minor policy adjustments cannot quickly reverse.",
+   "visual": {
+    "type": "gauge",
+    "series": "SPDYNTFRTINUSA",
+    "start": "1960"
+   }
+  },
+  {
+   "narration": "Measured against January 1995, fertility has declined 18%, illustrating how temporary delays in milestones gradually became permanent choices.",
+   "visual": {
+    "type": "line",
+    "series": "SPDYNTFRTINUSA",
+    "start": "1995",
+    "annotate": [
+     "min"
+    ]
+   }
+  },
+  {
+   "narration": "Ultimately, modern demographic contraction reflects deeply entrenched socioeconomic realities rather than fleeting cultural shifts.",
+   "visual": {
+    "type": "statement",
+    "text": "Socioeconomic realities shape modern demographic trends",
+    "highlight": "realities"
+   }
+  },
+  {
+   "narration": "What economic or social topic would you like us to break down next? Tell us in the comments. Subscribe to Plotline Data for more data-driven stories.",
+   "visual": {
+    "type": "statement",
+    "text": "Subscribe for more data driven stories",
+    "highlight": "Subscribe"
+   }
+  }
+ ],
+ "engage": {
+  "kind": "request",
+  "question": "What economic or social topic would you like us to break down next?",
+  "onscreen": "WHAT ECONOMIC OR SOCIAL TOPIC WOULD YOU LIKE US TO BREAK DOWN NEXT",
+  "comment": "What economic or social topic would you like us to break down next?"
+ }
+}

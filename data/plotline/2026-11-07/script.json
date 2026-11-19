@@ -1,0 +1,404 @@
+{
+ "title": "Why Did Millions of People Quit Their Jobs?",
+ "description": "Following 2020, millions of workers voluntarily left their jobs in what became known as the Great Resignation. Driven by unprecedented labor market tightness, record wage growth for job switchers, and shifting workplace priorities, this wave reshaped the modern economy.\n\nUsing official data from the U.S. Bureau of Labor Statistics via FRED, we break down how quit rates, unemployment figures, and hourly earnings evolved to create a unique moment in labor history.",
+ "tags": [
+  "Great Resignation",
+  "Labor Market",
+  "US Economy",
+  "Job Market",
+  "Quit Rate",
+  "Wage Growth",
+  "Unemployment Rate",
+  "Economics Data",
+  "Workplace Trends",
+  "Plotline Data"
+ ],
+ "thumbnail": {
+  "number": "3.0%",
+  "words": "Why Millions Quit"
+ },
+ "scenes": [
+  {
+   "narration": "In late 2021, something historic happened across the labor market. Millions of workers handed in their notices, walking away from their jobs at a record pace.",
+   "visual": {
+    "type": "title",
+    "text": "Why Did Millions of People Quit Their Jobs?",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "By November 2021, the monthly quit rate hit 3.0%. That was the highest level ever recorded by the Bureau of Labor Statistics.",
+   "visual": {
+    "type": "counter",
+    "series": "JTSQUR",
+    "stat": "max",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "To put that in perspective, 3.0% of the entire voluntary workforce handed in their notice in just a single month.",
+   "visual": {
+    "type": "waffle",
+    "series": "JTSQUR",
+    "stat": "max"
+   }
+  },
+  {
+   "narration": "Just eighteen months earlier, in April 2020, fear had frozen the market. The quit rate plummeted to a record low of 1.5%.",
+   "visual": {
+    "type": "line",
+    "series": "JTSQUR",
+    "start": "2015",
+    "annotate": "min"
+   }
+  },
+  {
+   "narration": "As lockdowns lifted, that fear turned into unprecedented mobility. Commentators quickly gave this massive wave a name: The Great Resignation.",
+   "visual": {
+    "type": "statement",
+    "text": "A massive wave called the Great Resignation",
+    "highlight": [
+     "Great"
+    ]
+   }
+  },
+  {
+   "narration": "Compared to the pre-pandemic rate of 2.3% in January 2020, workers were jumping ship at unheard-of speeds.",
+   "visual": {
+    "type": "heatmap",
+    "series": "JTSQUR",
+    "years": 7
+   }
+  },
+  {
+   "narration": "Why did so many people quit all at once? The answer lies in a complete shift in leverage and worker priorities.",
+   "visual": {
+    "type": "gauge",
+    "series": "JTSQUR",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "To understand the historic wave of resignations, we must first look at how turnover and hiring behaved during a typical economic expansion.",
+   "visual": {
+    "type": "statement",
+    "text": "Pre-2020 Labor Market Turnover Trends",
+    "highlight": "Turnover"
+   }
+  },
+  {
+   "narration": "In January 2015, the voluntary monthly quit rate sat at just 2.0%.",
+   "visual": {
+    "type": "counter",
+    "series": "JTSQUR",
+    "stat": "at",
+    "date": "2015-01",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Meanwhile, according to the U.S. Bureau of Labor Statistics, the overall US unemployment rate stood at 5.7%.",
+   "visual": {
+    "type": "line",
+    "series": "UNRATE",
+    "start": "2015",
+    "end": "2020"
+   }
+  },
+  {
+   "narration": "As the economic expansion deepened, falling joblessness began boosting confidence across the workforce.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "JTSQUR",
+     "UNRATE"
+    ],
+    "since": "2015",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "By February 2019, an earlier spike pushed the quit rate to 2.4%, marking a 9% increase in the year before it.",
+   "visual": {
+    "type": "compare",
+    "series": "JTSQUR",
+    "from": "2018-02",
+    "to": "2019-02"
+   }
+  },
+  {
+   "narration": "The labor market continued tightening right up to the pandemic, bringing unemployment down to 3.6% in January 2020.",
+   "visual": {
+    "type": "counter",
+    "series": "UNRATE",
+    "stat": "at",
+    "date": "2020-01"
+   }
+  },
+  {
+   "narration": "Looking across the entire period from January 2020 to October 2026, unemployment ultimately saw a change of +14%.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "UNRATE",
+     "JTSQUR"
+    ]
+   }
+  },
+  {
+   "narration": "Then came the spring of 2020. Lockdowns shut down entire industries, sending economic shockwaves everywhere. By April 2020, US unemployment skyrocketed to a peak of 14.8%.",
+   "visual": {
+    "type": "counter",
+    "series": "UNRATE",
+    "stat": "at",
+    "date": "2020-04"
+   }
+  },
+  {
+   "narration": "Workers prioritized stability over new opportunities. Quitting ground to a halt as health risks and economic uncertainty took hold.",
+   "visual": {
+    "type": "statement",
+    "text": "Fear frozen worker mobility stopped overnight",
+    "highlight": [
+     "frozen"
+    ]
+   }
+  },
+  {
+   "narration": "Yet beneath the immediate chaos, wage dynamics were quietly shifting. In January 2020, average hourly pay sat at $23.91.",
+   "visual": {
+    "type": "line",
+    "series": "AHETPI",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "As federal aid arrived and businesses reopened, hiring roared back. From that record peak down to October 2026, the unemployment rate collapsed by -72%.",
+   "visual": {
+    "type": "compare",
+    "series": "UNRATE",
+    "from": "2020-04",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Worker demand quickly outpaced supply. By April 2023, unemployment dropped to a record low of 3.4%.",
+   "visual": {
+    "type": "line",
+    "series": "UNRATE",
+    "start": "2020",
+    "annotate": "min"
+   }
+  },
+  {
+   "narration": "Employers suddenly faced severe labor shortages, forcing companies to compete aggressively for talent.",
+   "visual": {
+    "type": "statement",
+    "text": "Desperate shortages forced companies to raise pay",
+    "highlight": [
+     "Desperate"
+    ]
+   }
+  },
+  {
+   "narration": "By October 2026, average hourly pay reached $32.75, up +37% from January 2020. That sudden surge in leverage set off a historic chain reaction.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "AHETPI",
+     "UNRATE"
+    ]
+   }
+  },
+  {
+   "narration": "As businesses reopened after lockdowns, desperation to hire sparked intense wage competition across nearly every industry. Employers suddenly fought fiercely for available workers.",
+   "visual": {
+    "type": "statement",
+    "text": "Hiring competition drove post-lockdown wage growth",
+    "highlight": "competition"
+   }
+  },
+  {
+   "narration": "Pay had already been climbing before the crisis. Back in January 2015, average hourly pay for non-managers sat at $20.80.",
+   "visual": {
+    "type": "counter",
+    "series": "AHETPI",
+    "stat": "at",
+    "date": "2015-01"
+   }
+  },
+  {
+   "narration": "That baseline grew rapidly over the following decade. From January 2015 to October 2026, average hourly pay surged by +57%.",
+   "visual": {
+    "type": "line",
+    "series": "AHETPI",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Job switchers gained unprecedented leverage over stayers. Quitting handed workers immediate bargaining power, making job hopping the fastest shortcut to higher pay.",
+   "visual": {
+    "type": "statement",
+    "text": "Quitting became the fastest shortcut to higher pay",
+    "highlight": "shortcut"
+   }
+  },
+  {
+   "narration": "Even as economic conditions normalized, pay kept grinding higher. Between January 2025 and October 2026, average hourly pay increased another +6%.",
+   "visual": {
+    "type": "compare",
+    "series": "AHETPI",
+    "from": "2025-01",
+    "to": "2026"
+   }
+  },
+  {
+   "narration": "Meanwhile, joblessness remained low by historical standards. By October 2026, the US unemployment rate sat at 4.1%.",
+   "visual": {
+    "type": "line",
+    "series": "UNRATE",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "As extreme labor shortages finally eased, voluntary turnover cooled off. From its historic high in November 2021 to September 2026, the quit rate fell -30%.",
+   "visual": {
+    "type": "heatmap",
+    "series": "JTSQUR",
+    "years": 5
+   }
+  },
+  {
+   "narration": "As the extreme churn of previous years faded, a far more balanced labor market gradually took shape across the country.",
+   "visual": {
+    "type": "statement",
+    "text": "A balanced labor market takes shape",
+    "highlight": "balanced"
+   }
+  },
+  {
+   "narration": "By September 2026, the voluntary monthly quit rate had settled down to 2.1%.",
+   "visual": {
+    "type": "counter",
+    "series": "JTSQUR",
+    "stat": "last"
+   }
+  },
+  {
+   "narration": "Even with that broader cooling, turnover edged back up over the final stretch. From September 2025 to September 2026, the quit rate increased +10.5%.",
+   "visual": {
+    "type": "line",
+    "series": "JTSQUR",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "That gentle uptick showed that workers still felt confident enough to pursue better career opportunities.",
+   "visual": {
+    "type": "gauge",
+    "series": "JTSQUR",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "Unemployment also maintained a healthy baseline. Between November 2025 and October 2026, the US unemployment rate dropped -8.9%.",
+   "visual": {
+    "type": "line",
+    "series": "UNRATE",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Looking across the longer horizon from January 2015 to October 2026, overall unemployment saw a net change of -28%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "UNRATE",
+     "JTSQUR"
+    ],
+    "since": "2015"
+   }
+  },
+  {
+   "narration": "At the same time, pay growth normalized into a steady pattern, with average hourly pay reaching $32.75 by October 2026.",
+   "visual": {
+    "type": "counter",
+    "series": "AHETPI",
+    "stat": "last"
+   }
+  },
+  {
+   "narration": "The wave of resignations did not just disrupt workplaces for a few crazy years; it fundamentally rewrote the rules of employment.",
+   "visual": {
+    "type": "statement",
+    "text": "A permanent shift in the labor landscape",
+    "highlight": "shift"
+   }
+  },
+  {
+   "narration": "Even as hiring normalized, mobility stayed resilient. From January 2025 to September 2026, the quit rate climbed another +5%.",
+   "visual": {
+    "type": "line",
+    "series": "JTSQUR",
+    "start": "2025",
+    "end": "2026",
+    "annotate": []
+   }
+  },
+  {
+   "narration": "Workers secured permanent baseline pay gains and lasting expectations for flexibility. Higher compensation is now baked into the broader labor market.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "JTSQUR",
+     "UNRATE",
+     "AHETPI"
+    ],
+    "since": "2015",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "The dynamic between employer power and employee choice has permanently shifted, giving workers far more leverage than previous generations enjoyed.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "JTSQUR",
+     "UNRATE",
+     "AHETPI"
+    ],
+    "since": "2015"
+   }
+  },
+  {
+   "narration": "Ultimately, mass quitting peaked at 3.0% in November 2021\u202f\u2014\u202fnot as a temporary panic, but as the opening chapter of a brand new labor landscape where the entire economy adapts.",
+   "visual": {
+    "type": "gauge",
+    "series": "JTSQUR",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Which data topic would you like us to explain next? Tell us in the comments.",
+   "visual": {
+    "type": "statement",
+    "text": "What topic should we cover next",
+    "highlight": "cover"
+   }
+  },
+  {
+   "narration": "Subscribe to Plotline Data for more deep, data-driven insights every week.",
+   "visual": {
+    "type": "statement",
+    "text": "Subscribe for more data-driven stories",
+    "highlight": "Subscribe"
+   }
+  }
+ ],
+ "engage": {
+  "kind": "request",
+  "question": "Which data topic would you like us to explain next?",
+  "onscreen": "WHICH DATA TOPIC WOULD YOU LIKE US TO EXPLAIN NEXT",
+  "comment": "Which data topic would you like us to explain next?"
+ }
+}

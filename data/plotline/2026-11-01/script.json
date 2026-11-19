@@ -1,0 +1,427 @@
+{
+ "title": "Why TVs Stay Cheap While Food Prices Skyrocket",
+ "description": "Have you ever wondered why upgrading your home television gets more affordable over time, while your weekly grocery bill constantly increases? We break down official consumer price index data to explore how manufacturing innovations decouple consumer electronics from baseline inflation.\n\nFrom long-term price trends to recent inflationary spikes, we examine what official numbers tell us about consumer purchasing power over the last quarter-century. Subscribe for data-driven deep dives into everyday economics.",
+ "tags": [
+  "inflation",
+  "economics",
+  "food prices",
+  "consumer price index",
+  "CPI",
+  "tech prices",
+  "groceries",
+  "us economy",
+  "data story",
+  "personal finance"
+ ],
+ "thumbnail": {
+  "number": "+94%",
+  "words": "Groceries vs Tech"
+ },
+ "scenes": [
+  {
+   "narration": "Every time you step into a grocery store, your checkout total feels heavier than ever before. Since January 2000, grocery prices in the US have climbed by 94%.",
+   "visual": {
+    "type": "title",
+    "text": "Why TVs Stay Cheap While Food Prices Skyrocket",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "That unrelenting surge brought grocery prices to 94% above their January 2000 level by September 2026.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SAF11",
+    "stat": "last",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Unlike luxury purchases, food is a non-negotiable daily expense. Higher grocery bills hit household budgets immediately.",
+   "visual": {
+    "type": "statement",
+    "text": "Grocery costs hit household budgets immediately",
+    "highlight": "budgets"
+   }
+  },
+  {
+   "narration": "Look at the acceleration since January 2020 alone. Grocery prices jumped 32%, tracking right alongside all consumer items which rose 30%.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CUSR0000SAF11",
+     "CPIAUCSL"
+    ],
+    "since": "2020",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Where do food prices sit relative to their peak? They remain practically unchanged at 0% from their high reached in June 2026.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2000",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Since 2000, general consumer prices have doubled, while food at home rose by 1.9 times. Yet electronics have seen a much more modest cumulative increase.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CPIAUCSL",
+     "CUSR0000SAF11",
+     "CUSR0000SERA"
+    ],
+    "since": "2000",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Looking closer at recent months from January 2025 to September 2026, grocery costs pushed up another 3%, while TV, video, and audio prices grew 4%.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "CUSR0000SAF11",
+     "CUSR0000SERA"
+    ]
+   }
+  },
+  {
+   "narration": "To understand why electronics feel surprisingly affordable, we have to examine two decades of broad price changes. According to the Bureau of Labor Statistics, overall consumer prices by September 2026 reached 2.0 times their level in January 2000.",
+   "visual": {
+    "type": "line",
+    "series": "CPIAUCSL",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "That upward trajectory was persistent across every decade, driving overall consumer items up 76% since January 2005.",
+   "visual": {
+    "type": "counter",
+    "series": "CPIAUCSL",
+    "stat": "last",
+    "start": "2005"
+   }
+  },
+  {
+   "narration": "Momentum accelerated during specific economic shocks, such as an earlier spike of 9% in the single year leading to June 2022.",
+   "visual": {
+    "type": "statement",
+    "text": "Annual inflation spiked in 2022",
+    "highlight": [
+     "spiked"
+    ]
+   }
+  },
+  {
+   "narration": "Yet home entertainment tells a completely different story. TV, video, and audio tech prices rose just 23% between January 2000 and September 2026.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SERA",
+    "stat": "last",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Placing these two paths side by side highlights a massive structural gap in how technology and everyday living costs behave over time.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CPIAUCSL",
+     "CUSR0000SERA"
+    ],
+    "since": "2000",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Evaluating medium-term trends shows the exact same split. Since January 2010, general consumer prices climbed 55%, while TV and audio tech grew 23%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CPIAUCSL",
+     "CUSR0000SERA"
+    ],
+    "since": "2010"
+   }
+  },
+  {
+   "narration": "Even looking over the last year, from September 2025 to September 2026, general inflation increased 3.7% while tech items edged up 3.6%.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "CPIAUCSL",
+     "CUSR0000SERA"
+    ]
+   }
+  },
+  {
+   "narration": "To fully grasp how these price shocks accumulated over time, we must look back to January 2015. Overall consumer prices climbed 43% by September 2026.",
+   "visual": {
+    "type": "counter",
+    "series": "CPIAUCSL",
+    "stat": "last",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Global supply disruptions, rising ocean freight rates, and volatile fuel prices fundamentally altered cost structures for goods manufacturing and international distribution across every single market.",
+   "visual": {
+    "type": "statement",
+    "text": "Global supply shocks rewritten manufacturing costs.",
+    "highlight": "supply"
+   }
+  },
+  {
+   "narration": "Yet home entertainment electronics reacted far more mildly to broader economic pressures. From January 2015 to September 2026, tech prices rose up by only 25%.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SERA",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Food costs absorbed the heavy brunt of broad economic inflation. Looking across a longer horizon back to January 2005, grocery prices logged a 71% increase.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Agricultural production depends heavily on expensive diesel fuel, synthetic fertilizers, and manual labor, creating input expenses that transfer directly onto daily consumer grocery checkout receipts.",
+   "visual": {
+    "type": "statement",
+    "text": "Agriculture carries unavoidable physical input costs.",
+    "highlight": "input"
+   }
+  },
+  {
+   "narration": "Even as wider global consumer markets experienced severe post-2020 supply bottlenecks, tech goods continuously maintained surprising price stability, edging up just 17% since January 2020.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SERA",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "These price shocks clearly expose how daily essential costs compound relentlessly over time, while advanced consumer electronics hardware continues benefiting from persistent, long-term manufacturing efficiencies.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CPIAUCSL",
+     "CUSR0000SAF11",
+     "CUSR0000SERA"
+    ],
+    "since": "2015"
+   }
+  },
+  {
+   "narration": "Why do food and electronics diverge structurally during severe global supply shocks? Agriculture relies heavily on physical land, seasonal weather, and human labor that cannot instantly scale.",
+   "visual": {
+    "type": "statement",
+    "text": "Agricultural supply chains face physical limits",
+    "highlight": "Agricultural"
+   }
+  },
+  {
+   "narration": "When severe drought or logistics bottlenecks hit, crop yields drop while transport costs surge. Farm supply chains absorb these expensive disruptions directly.",
+   "visual": {
+    "type": "heatmap",
+    "series": "CUSR0000SAF11",
+    "years": 16
+   }
+  },
+  {
+   "narration": "Because physical agricultural inputs accumulate cost pressures continuously, grocery prices climbed 50% from January 2010 to September 2026.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SAF11",
+    "stat": "last",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "Consumer electronics operate under completely different industrial dynamics. Automated factories, high-density silicon engineering, and robotic assembly steadily drive unit costs down.",
+   "visual": {
+    "type": "statement",
+    "text": "Automated manufacturing scales microchips continuously",
+    "highlight": "Automated"
+   }
+  },
+  {
+   "narration": "Even when shipping rates rise during global logistical crunches, high-tech manufacturers offset freight spikes through denser component packaging and higher automated yields.",
+   "visual": {
+    "type": "heatmap",
+    "series": "CUSR0000SAF11",
+    "years": 5
+   }
+  },
+  {
+   "narration": "Look at the resilience of consumer tech prices over time. Between January 2005 and September 2026, home video and audio prices increased just 19%.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SERA",
+    "start": "2005"
+   }
+  },
+  {
+   "narration": "This structural divide is permanent. Biological goods remain vulnerable to nature and physical transport, while silicon electronics continuously scale downward through automation.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SAF11",
+     "CUSR0000SERA"
+    ],
+    "since": "2010"
+   }
+  },
+  {
+   "narration": "Over the last year, grocery price inflation cooled down to 1.8%. This brought welcome, brief relief to weekly supermarket checkout receipts after years of relentless gains.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "Yet broader cost pressures remain firm across the wider economy. Total consumer prices climbed 5% since January 2025, steadily eroding real household purchasing power.",
+   "visual": {
+    "type": "counter",
+    "series": "CPIAUCSL",
+    "stat": "last",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "Analyzing recent monthly trends shows how minor dips in grocery prices get swallowed by the relentless, long-term climb of broader consumer costs.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAF11",
+    "start": "2023",
+    "annotate": [
+     "min"
+    ]
+   }
+  },
+  {
+   "narration": "Plotting these three datasets across recent months underscores the structural split. While tech hardware stays muted, everyday necessities continue marching steadily higher.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CPIAUCSL",
+     "CUSR0000SAF11",
+     "CUSR0000SERA"
+    ],
+    "since": "2025",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Purchase frequency transforms these economic numbers into daily reality. Consumers visit grocery stores weekly, meaning even small price hikes compound instantly in monthly budgets.",
+   "visual": {
+    "type": "statement",
+    "text": "WEEKLY FOOD COSTS COMPOUND INSTANTLY IN BUDGETS",
+    "highlight": [
+     "COMPOUND"
+    ]
+   }
+  },
+  {
+   "narration": "Viewing current indicators across all three sectors confirms that non-discretionary expenses absorb the vast majority of family paychecks.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CUSR0000SAF11",
+     "CPIAUCSL",
+     "CUSR0000SERA"
+    ],
+    "since": "2000",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Buying a cheap flat screen offers a moment of relief, but hardware discounts cannot neutralize the compounding cost of daily meals, which have risen 3% since January 2025.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SAF11",
+    "stat": "last",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "At its core, this economic divergence comes down to structural realities. Advanced factory automation steadily drives down unit manufacturing costs for microchips and television displays.",
+   "visual": {
+    "type": "statement",
+    "text": "Tech scales down, food costs rise",
+    "highlight": "scales"
+   }
+  },
+  {
+   "narration": "Meanwhile, agricultural production remains firmly anchored to the physical world. Weather patterns, arable land, transportation fuel, and farm labor continuously exert upward cost pressure.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CUSR0000SERA",
+     "CUSR0000SAF11",
+     "CPIAUCSL"
+    ],
+    "since": "2000",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "That is why home audio and video hardware maintains incredible long-term price stability. High-density component design and scalable manufacturing shield consumer tech from inflationary surges.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SERA",
+    "start": "2000",
+    "end": "2026"
+   }
+  },
+  {
+   "narration": "Supermarket checkouts tell a completely different story. Essential food items absorb relentless compounding cost increases, taking a larger cut of household paychecks every single month.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "CUSR0000SERA",
+     "CUSR0000SAF11"
+    ]
+   }
+  },
+  {
+   "narration": "Since 2010, the gap has widened significantly; while TV prices are up 23%, groceries have surged by 50%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SERA",
+     "CUSR0000SAF11"
+    ],
+    "since": "2010"
+   }
+  },
+  {
+   "narration": "Understanding this structural split helps decode where your paycheck actually goes. Technological innovation keeps discretionary hardware cheap, while physical realities keep basic life necessities expensive.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SERA",
+     "CUSR0000SAF11"
+    ],
+    "since": "2000"
+   }
+  },
+  {
+   "narration": "That is the real story behind today's divergent economy. Subscribe to Plotline Data for more deep visual dives into the numbers shaping our everyday world.",
+   "visual": {
+    "type": "counter",
+    "series": "CPIAUCSL",
+    "stat": "last",
+    "start": "2000"
+   }
+  }
+ ]
+}

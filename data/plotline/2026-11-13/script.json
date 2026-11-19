@@ -1,0 +1,415 @@
+{
+ "title": "How Much Shopping Has Actually Moved Online?",
+ "description": "Despite decades of e-commerce growth and endless headlines about traditional retail dying, online purchases still represent a surprisingly small fraction of total retail spending in the United States. We analyze Official Census Bureau data to reveal the true share of digital commerce.\n\nFrom the dot-com era to the sudden shift during pandemic lockdowns, we track how monthly spending evolved and compare digital order totals against overall retail volume. Subscribe to Plotline Data for clear, data-driven breakdowns of major economic trends.",
+ "tags": [
+  "e-commerce",
+  "retail sales",
+  "online shopping",
+  "economics",
+  "data visualization",
+  "consumer spending",
+  "FRED data",
+  "US economy",
+  "shopping trends",
+  "retail industry"
+ ],
+ "thumbnail": {
+  "number": "17.1%",
+  "words": "The E-Commerce Myth"
+ },
+ "scenes": [
+  {
+   "narration": "It feels like everyone buys everything online now. From daily essentials to late-night impulse buys, digital storefronts seem to dominate modern shopping.",
+   "visual": {
+    "type": "title",
+    "text": "How Much Shopping Has Actually Moved Online?",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "Yet, digital storefronts claim a surprisingly small slice of the pie. As of April 2026, online shopping accounts for just 17.1% of total retail sales.",
+   "visual": {
+    "type": "waffle",
+    "series": "ECOMPCTSA",
+    "stat": "last"
+   }
+  },
+  {
+   "narration": "That means more than four out of every five dollars are still spent inside physical stores.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "ECOMPCTSA",
+     "RSAFS"
+    ]
+   }
+  },
+  {
+   "narration": "This current standing is not due to a lack of momentum. In January 2000, e-commerce made up a mere 0.8% of sales.",
+   "visual": {
+    "type": "line",
+    "series": "ECOMPCTSA",
+    "start": "2000",
+    "end": "2026",
+    "annotate": "min"
+   }
+  },
+  {
+   "narration": "Between January 2000 and April 2026, the online share expanded by an extraordinary 2038%.",
+   "visual": {
+    "type": "counter",
+    "series": "ECOMPCTSA",
+    "stat": "last",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "That rise puts the April 2026 level at 17.1%, its highest value on record.",
+   "visual": {
+    "type": "gauge",
+    "series": "ECOMPCTSA",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Despite decades of continuous growth, e-commerce remains under a fifth of total retail. Let me explain what is really happening.",
+   "visual": {
+    "type": "statement",
+    "text": "Online shopping remains under one fifth",
+    "highlight": [
+     "fifth"
+    ]
+   }
+  },
+  {
+   "narration": "Early on, digital commerce expanded quietly at a deliberate pace. According to the U.S. Census Bureau, online shopping accounted for 2.3% of retail in January 2005.",
+   "visual": {
+    "type": "counter",
+    "series": "ECOMPCTSA",
+    "stat": "at",
+    "date": "2005-01"
+   }
+  },
+  {
+   "narration": "By January 2010, that footprint nearly doubled to 4.2% as home internet access became widespread.",
+   "visual": {
+    "type": "counter",
+    "series": "ECOMPCTSA",
+    "stat": "at",
+    "date": "2010-01"
+   }
+  },
+  {
+   "narration": "Faster broadband speed and early smartphone adoption transformed browsing online from a novelty into a daily convenience.",
+   "visual": {
+    "type": "statement",
+    "text": "Broadband and smartphones turned online shopping into routine habits",
+    "highlight": "smartphones"
+   }
+  },
+  {
+   "narration": "This steady upward momentum continued without pause, pushing online retail share to 6.9% by January 2015.",
+   "visual": {
+    "type": "line",
+    "series": "ECOMPCTSA",
+    "start": "2000",
+    "end": "2015"
+   }
+  },
+  {
+   "narration": "Non-store dollar volume grew along with it, climbing from $18.6 billion in January 2005 up to $37.7 billion in January 2015.",
+   "visual": {
+    "type": "compare",
+    "series": "RSNSR",
+    "from": "2005",
+    "to": "2015"
+   }
+  },
+  {
+   "narration": "While overall commerce expanded, digital storefronts consistently grew faster than traditional brick-and-mortar retail.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "RSNSR",
+     "RSAFS"
+    ],
+    "since": "2005",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "By January 2020, right before global shocks accelerated trends, e-commerce reached 11.9%, carrying $61.0 billion in monthly online spending.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "ECOMPCTSA",
+     "RSNSR"
+    ]
+   }
+  },
+  {
+   "narration": "When global lockdowns hit, physical store doors shut overnight. Shopping habits were forced to adapt immediately to digital channels.",
+   "visual": {
+    "type": "statement",
+    "text": "Lockdowns forced shopping online almost overnight.",
+    "highlight": [
+     "overnight"
+    ]
+   }
+  },
+  {
+   "narration": "By April 2020, e-commerce market share surged to 16.3%. That was a massive 58% jump in just a single year.",
+   "visual": {
+    "type": "counter",
+    "series": "ECOMPCTSA",
+    "stat": "at",
+    "date": "2020-04",
+    "start": "2019"
+   }
+  },
+  {
+   "narration": "Yet that dramatic spike did not keep accelerating forever. As lockdowns lifted and physical stores reopened, online growth temporarily cooled as consumers returned to aisles.",
+   "visual": {
+    "type": "line",
+    "series": "ECOMPCTSA",
+    "start": "2020",
+    "end": "2025"
+   }
+  },
+  {
+   "narration": "By January 2025, digital commerce share stabilized at 16.0%. Between January 2025 and April 2026, it logged a steady 7% increase.",
+   "visual": {
+    "type": "counter",
+    "series": "ECOMPCTSA",
+    "stat": "at",
+    "date": "2025-01"
+   }
+  },
+  {
+   "narration": "Over the last year, from April 2025 to April 2026, online retail share grew by 4.9%, resuming a smooth trajectory.",
+   "visual": {
+    "type": "compare",
+    "series": "ECOMPCTSA",
+    "from": "2025-04",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "The pandemic accelerated digital adoption by several years, but physical retail never vanished. Instead, shoppers blended online convenience with in-store browsing.",
+   "visual": {
+    "type": "statement",
+    "text": "Shoppers blended online convenience with physical stores.",
+    "highlight": [
+     "blended"
+    ]
+   }
+  },
+  {
+   "narration": "This balance turned short-term panic buying into a mature, stable baseline for modern digital commerce.",
+   "visual": {
+    "type": "heatmap",
+    "series": "ECOMPCTSA",
+    "years": 6
+   }
+  },
+  {
+   "narration": "Why does physical store shopping remain dominant? Most consumers demand instant gratification, taking items home immediately without waiting days for delivery.",
+   "visual": {
+    "type": "statement",
+    "text": "Instant gratification keeps physical stores dominant",
+    "highlight": [
+     "instant"
+    ]
+   }
+  },
+  {
+   "narration": "Grocery buying habits also anchor shoppers to local aisles. Inspecting fresh produce in person is a ritual digital storefronts struggle to replace.",
+   "visual": {
+    "type": "heatmap",
+    "series": "RSNSR",
+    "years": 5
+   }
+  },
+  {
+   "narration": "Heavy bulk goods face high shipping costs, favoring local showrooms. Back in January 2000, monthly non-store sales were just $12.6 billion.",
+   "visual": {
+    "type": "counter",
+    "series": "RSNSR",
+    "stat": "at",
+    "date": "2000-01"
+   }
+  },
+  {
+   "narration": "Fulfillment networks expanded over the following decade. By January 2010, non-store retail spending rose to $25.7 billion per month.",
+   "visual": {
+    "type": "counter",
+    "series": "RSNSR",
+    "stat": "at",
+    "date": "2010-01"
+   }
+  },
+  {
+   "narration": "That baseline laid the groundwork for long-term growth. From January 2010 to September 2026, non-store commerce grew by 383%.",
+   "visual": {
+    "type": "compare",
+    "series": "RSNSR",
+    "from": "2010",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Accelerated adoption pushed digital volume even higher. From January 2020 to September 2026, non-store monthly spending increased by 104%.",
+   "visual": {
+    "type": "line",
+    "series": "RSNSR",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "By September 2026, non-store sales reached $124.3 billion per month. Yet traditional storefronts still hold the vast majority of consumer spending.",
+   "visual": {
+    "type": "counter",
+    "series": "RSNSR",
+    "stat": "at",
+    "date": "2026-09"
+   }
+  },
+  {
+   "narration": "To understand physical retail's massive scale, we must evaluate total consumer spending across all channels. Back in January 2000, monthly retail sales stood at $261.5 billion.",
+   "visual": {
+    "type": "line",
+    "series": "RSAFS",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "That overall pie expanded over two decades. By January 2020, total monthly retail expenditure reached $515.4 billion as both physical and digital commerce grew.",
+   "visual": {
+    "type": "line",
+    "series": "RSAFS",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Total monthly retail sales reached $745.0 billion by September 2026, setting a record high for consumer spending.",
+   "visual": {
+    "type": "line",
+    "series": "RSAFS",
+    "start": "2000",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "Traditional storefronts continue to capture hundreds of billions in sales every single month.",
+   "visual": {
+    "type": "statement",
+    "text": "Physical storefronts retain massive monthly volume",
+    "highlight": [
+     "Physical"
+    ]
+   }
+  },
+  {
+   "narration": "Driven by steady demand, total monthly retail spending grew 45% between January 2020 and September 2026.",
+   "visual": {
+    "type": "line",
+    "series": "RSAFS",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "Over the last year, from September 2025 to September 2026, total retail sales grew by 6.3%, while non-store sales increased 8.2%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "RSAFS",
+     "RSNSR"
+    ],
+    "since": "2025"
+   }
+  },
+  {
+   "narration": "Digital channels consistently outpace traditional stores. But because overall consumer expenditure keeps rising, physical storefronts still retain their immense lead in absolute dollars.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "RSAFS",
+     "RSNSR"
+    ],
+    "since": "2000",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Despite decades of rapid digital growth, physical storefronts still hold the vast majority of consumer spending. Overall retail and restaurant sales expanded 185% from January 2000 to September 2026.",
+   "visual": {
+    "type": "line",
+    "series": "RSAFS",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "At the same time, online shopping grew dramatically, reaching 21.4 times its original market share over that quarter century.",
+   "visual": {
+    "type": "line",
+    "series": "ECOMPCTSA",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Traditional stores stay dominant because consumers want immediate pickup, physical inspection of goods, and local availability.",
+   "visual": {
+    "type": "statement",
+    "text": "Physical stores endure through touch and instant availability",
+    "highlight": "Physical"
+   }
+  },
+  {
+   "narration": "Even during quieter market shifts, digital commerce kept expanding, with its share rising 148% since January 2015.",
+   "visual": {
+    "type": "counter",
+    "series": "ECOMPCTSA",
+    "stat": "at",
+    "date": "2026-04",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Monthly non-store sales surged 887% since January 2000. But total retail spending grew 2.8 times larger, giving physical stores a massive advantage in absolute dollars.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "RSNSR",
+     "RSAFS"
+    ],
+    "from": "2000",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "E-commerce continues to reshape retail, but real-world storefronts remain king. Do you shop mostly online or in person? Tell us in the comments.",
+   "visual": {
+    "type": "waffle",
+    "series": "ECOMPCTSA",
+    "stat": "last"
+   }
+  },
+  {
+   "narration": "Subscribe to Plotline Data for more data stories.",
+   "visual": {
+    "type": "line",
+    "series": "RSNSR",
+    "start": "2000",
+    "annotate": [
+     "max"
+    ]
+   }
+  }
+ ],
+ "engage": {
+  "kind": "pick",
+  "question": "Do you shop mostly online or in person?",
+  "onscreen": "DO YOU SHOP MOSTLY ONLINE OR IN PERSON",
+  "comment": "Do you shop mostly online or in person?"
+ }
+}

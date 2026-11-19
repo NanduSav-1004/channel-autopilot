@@ -1,0 +1,423 @@
+{
+ "title": "Why Hospital Bills Outpaced Regular Inflation",
+ "description": "Over the past three decades, hospital service costs in the United States have climbed far faster than general consumer prices. While overall inflation raised the cost of living significantly, hospital care expenses surged at more than double that rate, reshaping household budgets across the country.\n\nWe examine thirty years of data from the U.S. Bureau of Labor Statistics to unpack how healthcare costs diverged from everyday goods, what structural forces driven hospital pricing upwards, and what this gap means for standard consumer purchasing power.",
+ "tags": [
+  "Plotline Data",
+  "Healthcare Costs",
+  "Hospital Bills",
+  "Inflation",
+  "US Economy",
+  "CPI",
+  "Economics Data",
+  "Personal Finance",
+  "Medical Care",
+  "Data Story"
+ ],
+ "thumbnail": {
+  "number": "+385%",
+  "words": "Hospital Bills Exploded"
+ },
+ "scenes": [
+  {
+   "narration": "If you feel like a simple trip to the hospital leaves a far bigger dent in your wallet than it used to, you are not imagining things.",
+   "visual": {
+    "type": "title",
+    "text": "Why Hospital Bills Outpaced Regular Inflation",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "Between January 1995 and October 2026, hospital service prices in the United States surged by a staggering 385%.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SEMD",
+    "stat": "last",
+    "start": "1995"
+   }
+  },
+  {
+   "narration": "To put that in context, overall consumer prices grew by just 124% across those exact same three decades.",
+   "visual": {
+    "type": "line",
+    "series": "CPIAUCSL",
+    "start": "1995"
+   }
+  },
+  {
+   "narration": "That means medical service costs expanded at more than three times the rate of everyday goods and services.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ],
+    "since": "1995",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Even if we look from January 2000 onward, hospital bills jumped 298%, while overall consumer inflation rose 99%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ],
+    "since": "2000"
+   }
+  },
+  {
+   "narration": "In just the single year from November 2025 to October 2026, hospital service prices rose another 5.4%.",
+   "visual": {
+    "type": "heatmap",
+    "series": "CUSR0000SEMD",
+    "years": 5
+   }
+  },
+  {
+   "narration": "So why did hospital care become so relentlessly expensive compared to the rest of the economy? Let us unpack the data.",
+   "visual": {
+    "type": "statement",
+    "text": "Why medical bill inflation detached from normal reality",
+    "highlight": [
+     "detached"
+    ]
+   }
+  },
+  {
+   "narration": "This widening gap was not a brief or sudden economic shock. According to data from the Bureau of Labor Statistics, the trajectory took shape steadily across whole decades.",
+   "visual": {
+    "type": "statement",
+    "text": "A compounding structural trajectory built over decades",
+    "highlight": [
+     "decades"
+    ]
+   }
+  },
+  {
+   "narration": "If we look at price trends beginning in January 2005, hospital service costs rose 185% by October 2026.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEMD",
+    "start": "2005"
+   }
+  },
+  {
+   "narration": "Over that exact same period from 2005, general consumer inflation registered a far smaller increase of 76%.",
+   "visual": {
+    "type": "counter",
+    "series": "CPIAUCSL",
+    "stat": "last",
+    "start": "2005"
+   }
+  },
+  {
+   "narration": "Charting both trajectories side by side from 2005 highlights how hospital care persistently separated itself from typical cost-of-living increases.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ],
+    "since": "2005",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Even if we move our baseline up to January 2010, hospital service prices still surged 109%.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SEMD",
+    "stat": "last",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "Meanwhile, broader consumer inflation grew by only 55% between January 2010 and October 2026.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ],
+    "since": "2010"
+   }
+  },
+  {
+   "narration": "This decade-spanning pattern demonstrates that hospital price growth remained a relentless structural pressure year after year without stopping.",
+   "visual": {
+    "type": "statement",
+    "text": "Hospital bills compounded faster than baseline inflation",
+    "highlight": [
+     "compounded"
+    ]
+   }
+  },
+  {
+   "narration": "General inflation dominated headlines when overall consumer prices spiked by 9% in the single year leading up to June 2022.",
+   "visual": {
+    "type": "line",
+    "series": "CPIAUCSL",
+    "start": "2021",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "Yet as broader economic shocks subsided, hospital care costs refused to follow suit. Structural pressures kept medical prices climbing continuously.",
+   "visual": {
+    "type": "statement",
+    "text": "Hospital bills outlasted broader inflation shocks",
+    "highlight": [
+     "outlasted"
+    ]
+   }
+  },
+  {
+   "narration": "Looking from January 2020 through October 2026, total consumer inflation registered a 30% increase.",
+   "visual": {
+    "type": "counter",
+    "series": "CPIAUCSL",
+    "stat": "last",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "Across that exact same window starting in January 2020, hospital service bills pulled ahead with a 35% gain.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ],
+    "since": "2020",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "This divergence persisted into more recent periods. Between January 2025 and October 2026, overall consumer price growth slowed to 6%.",
+   "visual": {
+    "type": "line",
+    "series": "CPIAUCSL",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "Yet over those same months from January 2025, hospital care prices escalated by 11%. That rate nearly doubled general economic growth.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ],
+    "since": "2025"
+   }
+  },
+  {
+   "narration": "Over the last year, general consumer inflation eased further to 3.8%. But hospital care prices continue to expand their lead over typical household expenses.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ]
+   }
+  },
+  {
+   "narration": "So what structural engine powered this continuous price divergence? First, widespread hospital consolidation transformed healthcare markets across the nation.",
+   "visual": {
+    "type": "statement",
+    "text": "Hospital consolidation reduced local healthcare competition.",
+    "highlight": "consolidation"
+   }
+  },
+  {
+   "narration": "As independent facilities merged into mega-systems, local competition vanished. That gave regional health networks immense leverage to command higher prices.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEMD",
+    "start": "2015",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "Second, administrative overhead exploded. Year after year, complex billing systems and expanding managerial tiers diverted massive financial resources away from direct bedside care.",
+   "visual": {
+    "type": "heatmap",
+    "series": "CUSR0000SEMD",
+    "years": 10
+   }
+  },
+  {
+   "narration": "Third, rapid adoption of expensive specialized medical technology pushed baseline costs upward. Cutting-edge diagnostic machinery carries enormous acquisition and upkeep costs.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEMD",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Fourth, severe nursing labor shortages forced hospitals to rely heavily on expensive contract staffing and travel nurses, driving payroll expenses higher.",
+   "visual": {
+    "type": "statement",
+    "text": "Severe nursing shortages drove labor costs sharply higher.",
+    "highlight": "shortages"
+   }
+  },
+  {
+   "narration": "Looking from 2015 to 2026, hospital service prices climbed 64%. Meanwhile, broader consumer inflation grew 44% over those same years.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ],
+    "since": "2015"
+   }
+  },
+  {
+   "narration": "By late 2026, hospital service costs reached 4.8 times their 1995 baseline. General consumer prices expanded to just 2.2 times.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ]
+   }
+  },
+  {
+   "narration": "Since 1995, hospital service costs soared by 385 percent compared to a 124 percent increase in overall consumer prices, putting severe pressure on family budgets.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ],
+    "since": "1995"
+   }
+  },
+  {
+   "narration": "Rising healthcare expenditures force families to reallocate funds away from retirement accounts and homeownership. Medical bills steadily absorb a larger portion of disposable income.",
+   "visual": {
+    "type": "statement",
+    "text": "Medical bills absorb a growing income share",
+    "highlight": "income"
+   }
+  },
+  {
+   "narration": "Even insured workers face mounting out-of-pocket deductibles and higher co-pays. Healthcare expenses eat into wages that would otherwise support standard living costs.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ],
+    "since": "1995"
+   }
+  },
+  {
+   "narration": "General consumer inflation steadily pushed up the baseline prices of ordinary goods and services over the decades. Yet broader economic gains provided little buffer.",
+   "visual": {
+    "type": "line",
+    "series": "CPIAUCSL",
+    "start": "1995"
+   }
+  },
+  {
+   "narration": "Since 1995, hospital service prices have climbed 385 percent, a sustained gap that compounds financial strain year after year.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SEMD",
+    "stat": "last",
+    "start": "1995"
+   }
+  },
+  {
+   "narration": "Since 2010 alone, hospital costs have surged 109 percent, significantly outpacing the 55 percent rise in general consumer prices.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ],
+    "since": "2010"
+   }
+  },
+  {
+   "narration": "Unexpected medical emergencies frequently convert into long-term financial liabilities. High hospital bills fundamentally alter household stability for entire generations of patients.",
+   "visual": {
+    "type": "statement",
+    "text": "Unexpected medical bills strain household savings",
+    "highlight": "savings"
+   }
+  },
+  {
+   "narration": "Decades of relentless cost divergence have fundamentally reshaped household financial planning across the entire nation.",
+   "visual": {
+    "type": "statement",
+    "text": "Hospital bills consistently outpace standard inflation",
+    "highlight": "outpace"
+   }
+  },
+  {
+   "narration": "Since 2000, baseline hospital service prices jumped 298 percent, far outstripping the 99 percent increase in general consumer prices as hospital networks consolidated.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ],
+    "since": "2000"
+   }
+  },
+  {
+   "narration": "Looking at the last decade alone, hospital service prices have climbed 64 percent since 2015, driven by structural shifts in the industry.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEMD",
+    "start": "1995"
+   }
+  },
+  {
+   "narration": "Since the turn of the millennium, costs for hospital services have surged 298 percent.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEMD",
+    "start": "2002"
+   }
+  },
+  {
+   "narration": "By October 2026, hospital services became 4.8 times more expensive than they were in 1995.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEMD",
+    "start": "1995",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "Without comprehensive reform, medical costs will continue to outpace the 99% increase seen in general consumer prices since 2000.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SEMD",
+     "CPIAUCSL"
+    ],
+    "since": "2000"
+   }
+  },
+  {
+   "narration": "How have rising medical care costs affected household financial choices where you live? Tell us in the comments. Subscribe to Plotline Data for more economic insights.",
+   "visual": {
+    "type": "statement",
+    "text": "Subscribe to Plotline Data for economic insights",
+    "highlight": "Subscribe"
+   }
+  }
+ ],
+ "engage": {
+  "kind": "personal",
+  "question": "How have rising medical care costs affected household financial choices where you live?",
+  "onscreen": "HOW HAVE RISING MEDICAL CARE COSTS AFFECTED HOUSEHOLD FINANCIAL CHOICES WHERE YOU LIVE",
+  "comment": "How have rising medical care costs affected household financial choices where you live?"
+ }
+}

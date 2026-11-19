@@ -1,0 +1,442 @@
+{
+ "title": "Do Richer Countries Actually Work Less?",
+ "description": "As nations become wealthier, annual working hours per person have dropped across much of the world. However, economic output and work culture create vast divides in how much time people actually spend on the job.\n\nFrom Western Europe to East Asia and North America, we examine data tracking annual working hours and national wealth to see where work-life balance is improving fastest.",
+ "tags": [
+  "working hours",
+  "work life balance",
+  "gdp per capita",
+  "economics",
+  "data visualization",
+  "labor market",
+  "global economy",
+  "plotline data",
+  "united states economy",
+  "united kingdom economy"
+ ],
+ "thumbnail": {
+  "number": "1,335",
+  "words": "Annual Hours Worked"
+ },
+ "scenes": [
+  {
+   "narration": "Depending on where you live in the world, a full year on the job can look radically, almost shockingly, different.",
+   "visual": {
+    "type": "title",
+    "text": "Do Richer Countries Actually Work Less?",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "In Sudan, the average worker logged 2,658 hours in 2023, making it the highest recorded workload among all 124 nations.",
+   "visual": {
+    "type": "statement",
+    "text": "Sudan logged 2,658 hours in 2023",
+    "highlight": [
+     "2,658"
+    ]
+   }
+  },
+  {
+   "narration": "At the opposite extreme sits Germany, where workers logged just 1,335 hours in 2023, the lowest overall.",
+   "visual": {
+    "type": "world_map",
+    "highlight": "Germany"
+   }
+  },
+  {
+   "narration": "Across developed and developing economies, annual hours have shifted dramatically over the past several decades.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "united-states",
+     "germany",
+     "united-kingdom",
+     "mexico",
+     "south-korea"
+    ],
+    "from": "1970",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "In the United States, workers put in 1,789 hours in 2023, which is a 7% decline since 1970.",
+   "visual": {
+    "type": "compare",
+    "series": "united-states",
+    "from": "1970",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Across the Atlantic, United Kingdom workers logged 1,523 hours in 2023, dropping 12% over that same span.",
+   "visual": {
+    "type": "line",
+    "series": "united-kingdom",
+    "start": "1970"
+   }
+  },
+  {
+   "narration": "These striking global contrasts bring us to a fundamental question: do richer countries actually work less?",
+   "visual": {
+    "type": "scatter",
+    "trails": false
+   }
+  },
+  {
+   "narration": "According to Our World in Data, mapping annual working schedules across continents reveals striking regional patterns. High workloads cluster heavily in specific parts of the world.",
+   "visual": {
+    "type": "world_map"
+   }
+  },
+  {
+   "narration": "In Central Africa, workers in Congo log 2,534 hours per year. Meanwhile, the United Arab Emirates averages 2,514 hours annually.",
+   "visual": {
+    "type": "countries_bars"
+   }
+  },
+  {
+   "narration": "Jordan follows closely with 2,483 annual hours per worker, while Pakistan logs 2,471 hours.",
+   "visual": {
+    "type": "countries_bars"
+   }
+  },
+  {
+   "narration": "In East Asia, long working schedules remain prominent. South Korea logs 1,910 hours per year, whereas workers in Japan average 1,654 hours.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "south-korea",
+     "japan"
+    ],
+    "from": "2010",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Looking across the ocean to Latin America, workers in Mexico record 1,629 hours a year.",
+   "visual": {
+    "type": "compare",
+    "series": "mexico",
+    "from": "1990",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "By contrast, Northern European nations sit near the bottom. Denmark averages 1,380 hours, Norway stands at 1,412, and Sweden logs 1,432.",
+   "visual": {
+    "type": "line",
+    "series": "united-states",
+    "start": "1970"
+   }
+  },
+  {
+   "narration": "Intriguingly, Yemen also ranks among the lowest at 1,382 hours. Geography alone clearly does not tell the whole story.",
+   "visual": {
+    "type": "statement",
+    "text": "Geography alone does not tell the whole story",
+    "highlight": [
+     "geography"
+    ]
+   }
+  },
+  {
+   "narration": "Historically, rapid development reshaped national labor patterns. Back in 1970, South Korea's bustling workforce logged a staggering 2,919 hours per worker.",
+   "visual": {
+    "type": "line",
+    "series": "south-korea",
+    "start": "1970",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "As industrialization matured and living standards rose, South Korea recorded a massive 35% reduction in annual working time through 2023.",
+   "visual": {
+    "type": "compare",
+    "series": "south-korea",
+    "from": "1970",
+    "to": "2023"
+   }
+  },
+  {
+   "narration": "Japan experienced a comparable shift. Workers there logged 2,185 hours annually in 1970 during its postwar economic boom.",
+   "visual": {
+    "type": "gauge",
+    "series": "japan",
+    "start": "1970"
+   }
+  },
+  {
+   "narration": "By 2023, Japan's annual workload had fallen by 24% as services grew and labor laws adapted.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "south-korea",
+     "germany",
+     "japan"
+    ],
+    "since": "1970"
+   }
+  },
+  {
+   "narration": "Western Europe saw dramatic reductions as well. Germany stood at 1,972 hours per year in 1970, subsequently dropping by 32%.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "germany",
+     "japan",
+     "south-korea"
+    ],
+    "from": "1970",
+    "to": "2023"
+   }
+  },
+  {
+   "narration": "Rising productivity and modern labor policies systematically allowed advanced economies to turn wealth into leisure.",
+   "visual": {
+    "type": "statement",
+    "text": "Rising productivity systematically transforms economic gains into leisure.",
+    "highlight": "leisure"
+   }
+  },
+  {
+   "narration": "Across these major industrialized nations, the overall trajectory over the last half-century points toward shorter working lives.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "south-korea",
+     "germany",
+     "japan"
+    ],
+    "since": "1970",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "What is driving this steady decline in annual working hours across advanced economies? Higher productivity plays a fundamental role.",
+   "visual": {
+    "type": "statement",
+    "text": "Productivity gains drive shorter working hours",
+    "highlight": "Productivity"
+   }
+  },
+  {
+   "narration": "As technology and automation boost hourly efficiency, workers can produce identical output in significantly fewer hours.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "france",
+     "germany",
+     "united-kingdom"
+    ],
+    "since": "1970",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Statutory vacation expansion also reshaped schedules. Governments across Western Europe codified mandatory paid time off and strict overtime caps into national law.",
+   "visual": {
+    "type": "statement",
+    "text": "Labor laws expanded mandatory statutory vacation",
+    "highlight": "vacation"
+   }
+  },
+  {
+   "narration": "France offers a clear example. In 1970, average French workers logged 1,993 hours per year, falling to 1,487 by 2023.",
+   "visual": {
+    "type": "line",
+    "series": "france",
+    "start": "1970"
+   }
+  },
+  {
+   "narration": "That transformation marks a 25% reduction in annual workload, driven by legal workweek limits and generous holiday policies.",
+   "visual": {
+    "type": "counter",
+    "series": "france",
+    "stat": "last",
+    "start": "1970"
+   }
+  },
+  {
+   "narration": "The United Kingdom experienced a similar shift. British workers logged 1,733 hours in 1970 before labor reforms reshaped the modern schedule.",
+   "visual": {
+    "type": "line",
+    "series": "united-kingdom",
+    "start": "1970",
+    "end": "2023"
+   }
+  },
+  {
+   "narration": "Ultimately, rising national prosperity allowed developed countries to convert economic efficiency into more free time for workers.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "france",
+     "united-kingdom",
+     "germany",
+     "japan"
+    ],
+    "since": "1970",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "So, does wealth actually buy leisure time? Mapping 126 nations reveals a clear, inverse relationship.",
+   "visual": {
+    "type": "scatter",
+    "trails": false
+   }
+  },
+  {
+   "narration": "As national GDP per person rises, hours worked tend to fall. This correlation sits at -0.40.",
+   "visual": {
+    "type": "statement",
+    "text": "Richer nations often trade work for free time.",
+    "highlight": [
+     "leisure"
+    ]
+   }
+  },
+  {
+   "narration": "Take the United States. With a GDP per person of $74,352, workers log 1,789 hours annually.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "united-states",
+     "germany",
+     "south-korea"
+    ]
+   }
+  },
+  {
+   "narration": "Compare that to Germany. Their GDP per person is $63,140, yet workers put in just 1,335 hours.",
+   "visual": {
+    "type": "line",
+    "series": "germany",
+    "start": "1970",
+    "annotate": [
+     "min"
+    ]
+   }
+  },
+  {
+   "narration": "Meanwhile, Mexico maintains a different balance. At $21,865 per person, the annual workload is 1,629 hours.",
+   "visual": {
+    "type": "counter",
+    "series": "mexico",
+    "stat": "last",
+    "start": "1970"
+   }
+  },
+  {
+   "narration": "South Korea illustrates how this evolves. Despite a GDP per person of $54,029, its historical intensity persists at 1,910 hours.",
+   "visual": {
+    "type": "line",
+    "series": "south-korea",
+    "start": "1970",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Ultimately, the data shows that while wealth enables shorter hours, institutional norms define the actual pace of life.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "united-states",
+     "united-kingdom",
+     "germany",
+     "mexico",
+     "south-korea",
+     "japan",
+     "france"
+    ],
+    "since": "1970",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "In the United States, annual work hours have finally stabilized. After decades of change, the trend has flattened out.",
+   "visual": {
+    "type": "line",
+    "series": "united-states",
+    "start": "1970",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Since 1970, the average American worker has seen a total reduction of 7% in their annual workload.",
+   "visual": {
+    "type": "gauge",
+    "series": "united-states",
+    "start": "1970"
+   }
+  },
+  {
+   "narration": "This shift isn't just an American story. Across high-income nations, annual hours have reached a new, consistent baseline.",
+   "visual": {
+    "type": "statement",
+    "text": "Wealth enables leisure, but norms define the pace.",
+    "highlight": [
+     "norms"
+    ]
+   }
+  },
+  {
+   "narration": "The data suggests that the push for shorter hours is now a structural feature of modern, developed economies.",
+   "visual": {
+    "type": "race",
+    "series": [
+     "united-states",
+     "united-kingdom",
+     "germany",
+     "france"
+    ],
+    "since": "1990"
+   }
+  },
+  {
+   "narration": "While individual paths differ, the era of rapidly declining work hours has transitioned into a period of stability.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "united-states",
+     "united-kingdom",
+     "germany",
+     "france"
+    ],
+    "since": "1990",
+    "as": "value"
+   }
+  },
+  {
+   "narration": "What economic or social topic should we explore next? Tell us in the comments.",
+   "visual": {
+    "type": "statement",
+    "text": "What should we analyze next?",
+    "highlight": [
+     "next"
+    ]
+   }
+  },
+  {
+   "narration": "Subscribe for more data-driven stories on how the world works.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "united-states",
+     "germany"
+    ]
+   }
+  }
+ ],
+ "engage": {
+  "kind": "request",
+  "question": "What economic or social topic should we explore next?",
+  "onscreen": "WHAT ECONOMIC OR SOCIAL TOPIC SHOULD WE EXPLORE NEXT",
+  "comment": "What economic or social topic should we explore next?"
+ }
+}

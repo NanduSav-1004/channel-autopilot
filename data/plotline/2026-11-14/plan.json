@@ -1,0 +1,15 @@
+{
+ "title": "Why Has the Federal Minimum Wage Lost So Much Value?",
+ "angle": "While prices and overall wages have risen steadily, the federal minimum wage has remained fixed for over a decade, severely eroding its real purchasing power.",
+ "series": [
+  "FEDMINNFRWG",
+  "AHETPI",
+  "CPIAUCSL"
+ ],
+ "states": null,
+ "owid": null,
+ "countries": null,
+ "owid2": null,
+ "states2": null,
+ "start": "1970"
+}

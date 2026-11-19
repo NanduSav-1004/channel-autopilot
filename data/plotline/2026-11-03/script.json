@@ -1,0 +1,438 @@
+{
+ "title": "Why Electricity Bills Are Surging Across America",
+ "description": "American households are seeing residential electricity rates reach historic highs. From rising utility maintenance expenditures and grid modernization investments to volatile natural gas markets and surging power demand, utility costs are outstripping broader inflation trends across the nation.\n\nWe examine official Bureau of Labor Statistics datasets tracking consumer prices, household energy expenses, and residential power rates over the past decade to reveal what is driving high electric bills.",
+ "tags": [
+  "Electricity Bills",
+  "Energy Prices",
+  "US Inflation",
+  "Utility Costs",
+  "Power Grid",
+  "Consumer Prices",
+  "Economic Data",
+  "Plotline Data",
+  "Personal Finance",
+  "Economics"
+ ],
+ "thumbnail": {
+  "number": "$0.198",
+  "words": "POWER PRICE PEAK"
+ },
+ "scenes": [
+  {
+   "narration": "Your monthly power bill is feeling heavier than ever. Residential electricity prices have reached a staggering peak in recent months.",
+   "visual": {
+    "type": "title",
+    "text": "Why Electricity Bills Are Surging Across America",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "As of September 2026, the average cost sits at $0.196 per kilowatt-hour. This follows an all-time high of $0.198 just back in June.",
+   "visual": {
+    "type": "line",
+    "series": "APU000072610",
+    "start": "2020",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Compared to just one year ago, households are paying 4.3% more for their electricity. It is a persistent climb that hits every budget.",
+   "visual": {
+    "type": "compare",
+    "series": "APU000072610",
+    "from": "2025-09",
+    "to": "2026-09"
+   }
+  },
+  {
+   "narration": "To understand the scale, look at the long-term trend. Since 2010, electricity prices have surged by 58%.",
+   "visual": {
+    "type": "statement",
+    "text": "Electricity costs have surged 58% since 2010",
+    "highlight": [
+     "58%"
+    ]
+   }
+  },
+  {
+   "narration": "General consumer prices have risen too, but energy is moving faster. Household energy index prices are up 57% since 2010.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "APU000072610",
+     "CUSR0000SAH21",
+     "CPIAUCSL"
+    ],
+    "since": "2010",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "In the last year alone, energy costs have outpaced overall inflation. While general prices rose 3.7%, household energy jumped 6.2%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CPIAUCSL",
+     "CUSR0000SAH21"
+    ],
+    "since": "2025"
+   }
+  },
+  {
+   "narration": "The trend is clear: electricity is becoming a larger part of our financial reality. Why is this happening now?",
+   "visual": {
+    "type": "gauge",
+    "series": "APU000072610",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "Cast your mind back to the 2010s. For years, electricity prices remained remarkably steady.",
+   "visual": {
+    "type": "line",
+    "series": "APU000072610",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "According to the Bureau of Labor Statistics, the cost per kilowatt-hour hovered near $0.124 in early 2010.",
+   "visual": {
+    "type": "counter",
+    "series": "APU000072610",
+    "stat": "at",
+    "date": "2010-01",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "It was a decade of predictability. In February 2010, we saw the lowest price at $0.123.",
+   "visual": {
+    "type": "gauge",
+    "series": "APU000072610",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "Even by 2015, the price had only moved to $0.138. That is a modest change over those five years.",
+   "visual": {
+    "type": "compare",
+    "series": "APU000072610",
+    "from": "2010-01",
+    "to": "2015-01"
+   }
+  },
+  {
+   "narration": "Compared to that 2015 baseline, we are now looking at a 42% increase.",
+   "visual": {
+    "type": "statement",
+    "text": "Prices have jumped 42% since 2015",
+    "highlight": [
+     "42%"
+    ]
+   }
+  },
+  {
+   "narration": "Even as recently as 2020, the cost was just $0.134. Stability was still our reality then.",
+   "visual": {
+    "type": "counter",
+    "series": "APU000072610",
+    "stat": "at",
+    "date": "2020-01",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "Then, the trend broke. The era of cheap, stable power effectively came to an end.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "APU000072610",
+     "CPIAUCSL"
+    ],
+    "since": "2010",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "The turning point arrived quickly. By September 2022, electricity prices hit a sharp spike of $0.167.",
+   "visual": {
+    "type": "counter",
+    "series": "APU000072610",
+    "stat": "at",
+    "date": "2022-09"
+   }
+  },
+  {
+   "narration": "That single year saw prices jump 16%. It was a sudden, unwelcome shift for families across the country.",
+   "visual": {
+    "type": "statement",
+    "text": "Energy prices jumped 16% in one year",
+    "highlight": [
+     "16%"
+    ]
+   }
+  },
+  {
+   "narration": "Since 2020, the cost of power has surged 46%. This acceleration represents a permanent step up in utility expenses.",
+   "visual": {
+    "type": "line",
+    "series": "APU000072610",
+    "start": "2020",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "The climb didn't stop there. By January 2025, prices moved again, rising 9% from those levels.",
+   "visual": {
+    "type": "compare",
+    "series": "APU000072610",
+    "from": "2025-01",
+    "to": "2026-09"
+   }
+  },
+  {
+   "narration": "Even when prices peaked in June 2026, the relief was negligible. By September, they had retreated only 1%.",
+   "visual": {
+    "type": "line",
+    "series": "APU000072610",
+    "start": "2026-01",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "The price index for electricity shows a 43% climb since 2020. This vastly outpaces general consumer inflation.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CUSR0000SEHF01",
+     "CPIAUCSL"
+    ],
+    "since": "2020",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "The new reality is settled. Household energy costs are significantly higher than they were just five years ago.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAH21",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "What is driving these costs higher? The grid is undergoing a massive, expensive transformation.",
+   "visual": {
+    "type": "statement",
+    "text": "Grid hardening is expensive",
+    "highlight": [
+     "hardening"
+    ]
+   }
+  },
+  {
+   "narration": "Weather is becoming more extreme. Utilities are investing heavily to protect the system.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEHF01",
+    "start": "2010",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Fuel market volatility plays a major role. Natural gas costs drive the price of power.",
+   "visual": {
+    "type": "statement",
+    "text": "Natural gas costs drive utility bills",
+    "highlight": [
+     "gas"
+    ]
+   }
+  },
+  {
+   "narration": "We see this volatility in the electricity index, which is up 60% since 2010.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SEHF01",
+    "stat": "last",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "Demand is also surging. Huge new data centers require massive, constant amounts of energy.",
+   "visual": {
+    "type": "statement",
+    "text": "Data centers demand massive new power",
+    "highlight": [
+     "demand"
+    ]
+   }
+  },
+  {
+   "narration": "Electricity prices have risen 8% since January 2025 alone, reflecting these structural pressures.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SEHF01",
+    "stat": "last",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "We are paying 4.4% more than this time last year. The shift is systemic and persistent.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SEHF01",
+     "CUSR0000SAH21",
+     "CPIAUCSL"
+    ],
+    "since": "2025-09"
+   }
+  },
+  {
+   "narration": "Since 2010, the price of electricity has climbed 58%, significantly outpacing the 55% increase in the broader cost of living.",
+   "visual": {
+    "type": "line",
+    "series": "APU000072610",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "Since 2010, the total Consumer Price Index for everything has climbed 55%.",
+   "visual": {
+    "type": "counter",
+    "series": "CPIAUCSL",
+    "stat": "last",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "Meanwhile, the price of household energy has surged by 57% in that same timeframe.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SAH21",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "Inflation is widespread, but utility costs have proven particularly aggressive.",
+   "visual": {
+    "type": "statement",
+    "text": "Energy costs are outpacing general inflation",
+    "highlight": [
+     "Energy"
+    ]
+   }
+  },
+  {
+   "narration": "Just look at the last year alone. Overall consumer prices rose 3.7%.",
+   "visual": {
+    "type": "line",
+    "series": "CPIAUCSL",
+    "start": "2025"
+   }
+  },
+  {
+   "narration": "In contrast, household energy prices jumped 6.2% over that same twelve-month period.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SAH21",
+     "CUSR0000SEHF01"
+    ],
+    "since": "2025-09"
+   }
+  },
+  {
+   "narration": "The financial strain is real. Since 2015, electricity prices have climbed 42% for the average household.",
+   "visual": {
+    "type": "counter",
+    "series": "APU000072610",
+    "stat": "at",
+    "date": "2026-09",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "What does this mean for your long-term budget? Expect electricity to remain a volatile, premium expense.",
+   "visual": {
+    "type": "statement",
+    "text": "Electricity remains a premium, volatile expense.",
+    "highlight": [
+     "volatile"
+    ]
+   }
+  },
+  {
+   "narration": "Since 2015, household energy costs have jumped 49%, rising faster than the 43% increase in general consumer prices.",
+   "visual": {
+    "type": "line",
+    "series": "APU000072610",
+    "start": "2014"
+   }
+  },
+  {
+   "narration": "Since 2015, household energy costs have jumped 49%, rising faster than the 43% increase in general consumer prices.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CUSR0000SAH21",
+     "CPIAUCSL"
+    ],
+    "since": "2015",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "The grid is aging, and demand is accelerating. These systemic pressures make lower prices unlikely for the foreseeable future.",
+   "visual": {
+    "type": "statement",
+    "text": "Structural grid pressures make lower prices unlikely.",
+    "highlight": [
+     "unlikely"
+    ]
+   }
+  },
+  {
+   "narration": "Rising utility costs are now a permanent fixture of our economy. You must plan for higher energy baselines moving forward.",
+   "visual": {
+    "type": "gauge",
+    "series": "APU000072610",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "Do you expect your utility bills to rise or fall next year? Tell us in the comments.",
+   "visual": {
+    "type": "statement",
+    "text": "Will your utility bills rise or fall next year?",
+    "highlight": [
+     "rise"
+    ]
+   }
+  },
+  {
+   "narration": "Subscribe to Plotline Data for more insights into the trends shaping your financial reality.",
+   "visual": {
+    "type": "statement",
+    "text": "Subscribe for more data-driven insights.",
+    "highlight": [
+     "Subscribe"
+    ]
+   }
+  }
+ ],
+ "engage": {
+  "kind": "pick",
+  "question": "Do you expect your utility bills to rise or fall next year?",
+  "onscreen": "DO YOU EXPECT YOUR UTILITY BILLS TO RISE OR FALL NEXT YEAR",
+  "comment": "Do you expect your utility bills to rise or fall next year?"
+ }
+}

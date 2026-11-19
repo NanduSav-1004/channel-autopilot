@@ -1,0 +1,134 @@
+[
+ {
+  "title": "Why the US lags in life expectancy",
+  "scenes": [
+   {
+    "narration": "Did you know the US started with the same life expectancy as other wealthy nations?",
+    "visual": {
+     "type": "title",
+     "text": "Why the US lags in life expectancy",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "In 1980, the United States was right there with Germany.",
+    "visual": {
+     "type": "slope",
+     "series": [
+      "united-states",
+      "germany"
+     ],
+     "from": "1980",
+     "to": "2023"
+    }
+   },
+   {
+    "narration": "But while they soared, American progress slowed down.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "united-states",
+      "germany",
+      "france",
+      "australia"
+     ],
+     "since": "1980",
+     "as": "value"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "US progress fell behind",
+     "highlight": [
+      "behind"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "Wealth doesn't always buy longer lives",
+  "scenes": [
+   {
+    "narration": "Does having a stronger economy guarantee you a longer life?",
+    "visual": {
+     "type": "title",
+     "text": "Wealth doesn't always buy longer lives",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "The US is the wealthiest, yet ranks lower in life expectancy.",
+    "visual": {
+     "type": "scatter",
+     "trails": false
+    }
+   },
+   {
+    "narration": "Japan proves that even with less GDP, people live longer.",
+    "visual": {
+     "type": "kpi",
+     "series": [
+      "united-states",
+      "japan"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Efficiency matters more",
+     "highlight": [
+      "Efficiency"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "The 1980 baseline divergence",
+  "scenes": [
+   {
+    "narration": "How much has life expectancy actually grown since 1980?",
+    "visual": {
+     "type": "title",
+     "text": "The 1980 baseline divergence",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Australia saw a 13 percent increase in average lifespan.",
+    "visual": {
+     "type": "counter",
+     "series": "australia",
+     "stat": "max",
+     "start": "1980"
+    }
+   },
+   {
+    "narration": "The United States only managed an 8 percent gain.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "australia",
+      "france",
+      "united-kingdom",
+      "united-states"
+     ],
+     "since": "1980"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "gauge",
+     "series": "united-states",
+     "start": "1980"
+    }
+   }
+  ]
+ }
+]

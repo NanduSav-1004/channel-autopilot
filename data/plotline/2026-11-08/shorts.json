@@ -1,0 +1,130 @@
+[
+ {
+  "title": "Why Gas Prices Feel So Expensive",
+  "scenes": [
+   {
+    "narration": "Have you noticed your wallet getting lighter every time you fill up?",
+    "visual": {
+     "type": "title",
+     "text": "Why Gas Prices Feel So Expensive",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since January 2000, while general consumer inflation rose 99%, regular gas prices surged 222%.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "GASREGW",
+      "CPIAUCSL"
+     ],
+     "since": "2000",
+     "as": "change"
+    }
+   },
+   {
+    "narration": "Fuel costs are rising much faster than the price of your everyday goods.",
+    "visual": {
+     "type": "statement",
+     "text": "Gas outpaces inflation",
+     "highlight": [
+      "outpaces"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "counter",
+     "series": "GASREGW",
+     "stat": "last",
+     "start": "2000"
+    }
+   }
+  ]
+ },
+ {
+  "title": "The Brutal Truth About Oil Spikes",
+  "scenes": [
+   {
+    "narration": "Why do gas prices jump so aggressively year after year?",
+    "visual": {
+     "type": "title",
+     "text": "The Brutal Truth About Oil Spikes",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Over the last year alone, crude oil surged by 66.2% to reach $100 per barrel.",
+    "visual": {
+     "type": "compare",
+     "series": "DCOILWTICO",
+     "from": "2025-11",
+     "to": "last"
+    }
+   },
+   {
+    "narration": "This volatility ripples directly from global oil markets to your local station.",
+    "visual": {
+     "type": "line",
+     "series": "DCOILWTICO",
+     "start": "2020",
+     "annotate": [
+      "max"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "gauge",
+     "series": "DCOILWTICO",
+     "start": "1990"
+    }
+   }
+  ]
+ },
+ {
+  "title": "Gas Prices: A 30 Year Look Back",
+  "scenes": [
+   {
+    "narration": "Do you remember when gas was barely over a dollar?",
+    "visual": {
+     "type": "title",
+     "text": "Gas Prices: A 30 Year Look Back",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Back in August 1990, gas averaged $1.22 per gallon.",
+    "visual": {
+     "type": "counter",
+     "series": "GASREGW",
+     "stat": "at",
+     "date": "1990-08",
+     "start": "1990"
+    }
+   },
+   {
+    "narration": "Today, that price has climbed 241%, standing at $4.15 per gallon.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "GASREGW",
+      "DCOILWTICO"
+     ],
+     "since": "1990",
+     "as": "change"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "line",
+     "series": "GASREGW",
+     "start": "1990"
+    }
+   }
+  ]
+ }
+]

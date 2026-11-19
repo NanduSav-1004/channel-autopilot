@@ -1,0 +1,419 @@
+{
+ "title": "Why the Federal Minimum Wage Has Lost So Much Purchasing Power",
+ "description": "For over a decade and a half, the US federal minimum wage has remained frozen at $7.25 per hour. Meanwhile, the cost of living and average hourly earnings across the economy have climbed dramatically, creating an unprecedented gap in real purchasing power.\n\nThis video breaks down the data behind the wage freeze, comparing historical minimum wage adjustments against overall consumer price inflation and non-managerial wage growth from 1970 through late 2026.",
+ "tags": [
+  "minimum wage",
+  "us economy",
+  "inflation",
+  "purchasing power",
+  "economics",
+  "data visualization",
+  "wages",
+  "personal finance",
+  "labor market",
+  "economic history"
+ ],
+ "thumbnail": {
+  "number": "+0%",
+  "words": "17 Years Unchanged"
+ },
+ "scenes": [
+  {
+   "narration": "Imagine working under a wage floor set over a decade ago. The U.S. federal minimum wage reached $7.25 per hour back in July 2009.",
+   "visual": {
+    "type": "title",
+    "text": "Why the Federal Minimum Wage Has Lost So Much Purchasing Power",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "From July 2009 to October 2026, the total legal increase for baseline workers was +0%.",
+   "visual": {
+    "type": "compare",
+    "series": "FEDMINNFRWG",
+    "from": "2009-07",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "This marks an unprecedented wage freeze. In October 2026, the federal rate remains stuck at $7.25 per hour.",
+   "visual": {
+    "type": "gauge",
+    "series": "FEDMINNFRWG",
+    "start": "1970"
+   }
+  },
+  {
+   "narration": "While the minimum wage stood still, typical earnings kept rising. Average hourly pay for non-managers reached $32.75 in October 2026.",
+   "visual": {
+    "type": "line",
+    "series": "AHETPI",
+    "start": "2009"
+   }
+  },
+  {
+   "narration": "Looking at pay growth since July 2009, average worker pay climbed significantly while minimum wage recorded +0% growth.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "AHETPI",
+     "FEDMINNFRWG"
+    ],
+    "since": "2009",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Living costs also expanded, punctuated by an earlier spike in June 2022 when annual consumer price growth hit +9%.",
+   "visual": {
+    "type": "statement",
+    "text": "Inflation spiked +9% in June 2022",
+    "highlight": "spiked"
+   }
+  },
+  {
+   "narration": "Over the last year from October 2025 to October 2026, minimum wage growth was +0.0%. The federal floor remains frozen.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "FEDMINNFRWG",
+     "AHETPI"
+    ]
+   }
+  },
+  {
+   "narration": "To understand how the federal floor separated from typical worker pay, we turn to January 1970, according to data from the U.S. Department of Labor. Back then, the federal minimum wage was $1.60 per hour.",
+   "visual": {
+    "type": "counter",
+    "series": "FEDMINNFRWG",
+    "stat": "at",
+    "date": "1970-01"
+   }
+  },
+  {
+   "narration": "During that same month in January 1970, average hourly pay for non-managerial workers was $3.31.",
+   "visual": {
+    "type": "counter",
+    "series": "AHETPI",
+    "stat": "at",
+    "date": "1970-01"
+   }
+  },
+  {
+   "narration": "At this baseline, minimum earnings sat much closer to what typical workers brought home each hour.",
+   "visual": {
+    "type": "statement",
+    "text": "Minimum earnings aligned closely with typical worker pay",
+    "highlight": [
+     "aligned"
+    ]
+   }
+  },
+  {
+   "narration": "Between January 1970 and October 2026, the statutory federal minimum wage recorded a cumulative rise of +353%.",
+   "visual": {
+    "type": "line",
+    "series": "FEDMINNFRWG",
+    "start": "1970"
+   }
+  },
+  {
+   "narration": "That overall growth means the October 2026 value is 4.5 times the January 1970 value.",
+   "visual": {
+    "type": "line",
+    "series": "FEDMINNFRWG",
+    "start": "1970"
+   }
+  },
+  {
+   "narration": "Over that exact same timeframe, average hourly pay grew far faster, achieving a +889% total increase.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "AHETPI",
+     "FEDMINNFRWG"
+    ],
+    "since": "1970"
+   }
+  },
+  {
+   "narration": "Mapping both trajectories since 1970 reveals how the baseline minimum wage gradually lost pace with general wage expansion.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "FEDMINNFRWG",
+     "AHETPI"
+    ],
+    "since": "1970",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Wage growth alone doesn't tell the full story. The true test of a minimum wage is its real purchasing power against everyday expenses.",
+   "visual": {
+    "type": "statement",
+    "text": "Purchasing power defines real value",
+    "highlight": "Purchasing"
+   }
+  },
+  {
+   "narration": "Between January 1970 and October 2026, consumer prices exploded by +790%, drastically altering the cost of living.",
+   "visual": {
+    "type": "counter",
+    "series": "CPIAUCSL",
+    "stat": "last",
+    "start": "1970"
+   }
+  },
+  {
+   "narration": "That overall expansion means the October 2026 price level sits at 8.9 times its January 1970 baseline value.",
+   "visual": {
+    "type": "line",
+    "series": "CPIAUCSL",
+    "start": "1970"
+   }
+  },
+  {
+   "narration": "Look at how pay rules lagged behind. Since January 1980, consumer prices climbed +333%, while the federal minimum wage rose just +134%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CPIAUCSL",
+     "FEDMINNFRWG",
+     "AHETPI"
+    ],
+    "since": "1980"
+   }
+  },
+  {
+   "narration": "That erosion accelerated in recent years. From January 2020 to October 2026 alone, consumer prices spiked by another +30%.",
+   "visual": {
+    "type": "line",
+    "series": "CPIAUCSL",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "Even looking over the last year from November 2025 to October 2026, consumer prices added an additional +3.8%.",
+   "visual": {
+    "type": "heatmap",
+    "series": "CPIAUCSL",
+    "years": 5
+   }
+  },
+  {
+   "narration": "While price tags keep climbing across the country, a static statutory floor forces minimum wage workers to stretch every dollar significantly further.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CPIAUCSL",
+     "FEDMINNFRWG"
+    ],
+    "since": "2015",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Why does the federal baseline lag so drastically behind overall economic growth? Unlike indexed social programs, changing this legal floor requires explicit statutory action by Congress.",
+   "visual": {
+    "type": "statement",
+    "text": "Federal baseline requires explicit statutory legislation",
+    "highlight": "statutory"
+   }
+  },
+  {
+   "narration": "Without automatic cost-of-living adjustments, consumer prices expanded by +55% between January 2010 and October 2026.",
+   "visual": {
+    "type": "line",
+    "series": "CPIAUCSL",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "Because statutory pay rules lack built-in inflation triggers, purchasing power quietly erodes whenever prices rise.",
+   "visual": {
+    "type": "statement",
+    "text": "Lacks automatic cost of living inflation adjustments",
+    "highlight": "automatic"
+   }
+  },
+  {
+   "narration": "Meanwhile, market pay continued moving upward. Average hourly earnings for non-managerial workers jumped +73% over that same timeframe since January 2010.",
+   "visual": {
+    "type": "compare",
+    "series": "AHETPI",
+    "from": "2010-01",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Looking back at January 2020, average pay stood at $23.91 per hour before surging another +37% through October 2026.",
+   "visual": {
+    "type": "line",
+    "series": "AHETPI",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "Since 2010, average hourly pay surged +73% while the federal minimum wage recorded +0% change, widening the economic rift.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "AHETPI",
+     "FEDMINNFRWG"
+    ],
+    "since": "2010"
+   }
+  },
+  {
+   "narration": "Even over the last year, average hourly earnings climbed +3.3%, while the statutory federal floor remained unchanged.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "AHETPI",
+     "FEDMINNFRWG"
+    ]
+   }
+  },
+  {
+   "narration": "To see how these trends affect everyday life, we must look at household budgets after 2020. Rapidly rising bills created severe real-world challenges for working families across the country.",
+   "visual": {
+    "type": "statement",
+    "text": "Household budgets faced severe pressure after 2020",
+    "highlight": "budgets"
+   }
+  },
+  {
+   "narration": "Looking back at January 2010, average non-managerial pay was $18.88 per hour. Over subsequent years, market compensation for typical employees continued expanding steadily.",
+   "visual": {
+    "type": "counter",
+    "series": "AHETPI",
+    "stat": "at",
+    "date": "2010-01"
+   }
+  },
+  {
+   "narration": "By October 2026, typical worker earnings reached $32.75 per hour, 9.9 times their January 1970 level. General market pay kept compounding over decades.",
+   "visual": {
+    "type": "counter",
+    "series": "AHETPI",
+    "stat": "at",
+    "date": "2026-10"
+   }
+  },
+  {
+   "narration": "Since January 2020, average hourly pay rose +37% while consumer prices increased +30%, eroding real wage gains for ordinary households.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "AHETPI",
+     "CPIAUCSL"
+    ],
+    "since": "2020",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Since January 2015, overall consumer prices climbed +44%, continuously raising the minimum income required to cover essential daily expenses.",
+   "visual": {
+    "type": "line",
+    "series": "CPIAUCSL",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Market pay climbed to $20.80 in January 2015, pulling typical compensation well beyond statutory wage floors.",
+   "visual": {
+    "type": "counter",
+    "series": "AHETPI",
+    "stat": "at",
+    "date": "2015-01"
+   }
+  },
+  {
+   "narration": "For workers trapped at the unchanged federal baseline, inflation steadily shrinks purchasing power, forcing families to squeeze every single dollar just to cover basic needs.",
+   "visual": {
+    "type": "statement",
+    "text": "Unchanged wage floors leave low earners behind",
+    "highlight": "behind"
+   }
+  },
+  {
+   "narration": "Decades of steady inflation have fundamentally reshaped the true purchasing power of low-wage workers. Since January 1975, overall consumer prices jumped by +545%.",
+   "visual": {
+    "type": "counter",
+    "series": "CPIAUCSL",
+    "stat": "last",
+    "start": "1975"
+   }
+  },
+  {
+   "narration": "At the same time, policy inertia kept federal minimum pay static, showing zero upward movement since July 2009.",
+   "visual": {
+    "type": "line",
+    "series": "FEDMINNFRWG",
+    "start": "2009"
+   }
+  },
+  {
+   "narration": "By contrast, broader labor markets moved forward. Back in January 2000, statutory floor pay sat at $5.15 while average non-managerial compensation was $13.74.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "FEDMINNFRWG",
+     "AHETPI"
+    ],
+    "from": "2000",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Because the statutory floor lacks automatic inflation indexing, price spikes permanently shrink what entry-level pay can purchase.",
+   "visual": {
+    "type": "statement",
+    "text": "Unindexed wage floors erode during inflation",
+    "highlight": [
+     "erode"
+    ]
+   }
+  },
+  {
+   "narration": "The long-term lesson is clear: unindexed wage floors turn price inflation into a silent pay cut for minimum wage earners.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "FEDMINNFRWG",
+     "AHETPI"
+    ],
+    "from": "1970",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Do you think statutory wage floors should be automatically tied to price inflation or left to legislative votes? Tell us in the comments.",
+   "visual": {
+    "type": "statement",
+    "text": "Automatic indexing or legislative updates?",
+    "highlight": [
+     "indexing"
+    ]
+   }
+  },
+  {
+   "narration": "Subscribe to Plotline Data for more clear, data-driven insights into the economic forces shaping daily life.",
+   "visual": {
+    "type": "statement",
+    "text": "Subscribe for more data insights",
+    "highlight": [
+     "Subscribe"
+    ]
+   }
+  }
+ ],
+ "engage": {
+  "kind": "pick",
+  "question": "Do you think statutory wage floors should be automatically tied to price inflation or left to legislative votes?",
+  "onscreen": "DO YOU THINK STATUTORY WAGE FLOORS SHOULD BE AUTOMATICALLY TIED TO PRICE INFLATION OR LEFT TO LEGISLATIVE VOTES",
+  "comment": "Do you think statutory wage floors should be automatically tied to price inflation or left to legislative votes?"
+ }
+}

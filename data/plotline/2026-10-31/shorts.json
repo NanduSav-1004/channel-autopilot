@@ -1,0 +1,153 @@
+[
+ {
+  "title": "Why Buying a Home Feels Impossible",
+  "scenes": [
+   {
+    "narration": "Have you ever wondered why home prices feel so out of reach?",
+    "visual": {
+     "type": "title",
+     "text": "Why Buying a Home Feels Impossible",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since 1985, the median price of a new home in the US has skyrocketed.",
+    "visual": {
+     "type": "line",
+     "series": "MSPUS",
+     "start": "1985"
+    }
+   },
+   {
+    "narration": "We are talking about a total increase of 375%.",
+    "visual": {
+     "type": "counter",
+     "series": "MSPUS",
+     "stat": "last",
+     "start": "1985"
+    }
+   },
+   {
+    "narration": "Today, a new home costs 4.8 times what it did in 1985.",
+    "visual": {
+     "type": "line",
+     "series": "MSPUS",
+     "start": "1985"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Data reveals the truth about housing",
+     "highlight": [
+      "truth"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "The Brutal Reality of Mortgage Rates",
+  "scenes": [
+   {
+    "narration": "Is the era of cheap money officially over for good?",
+    "visual": {
+     "type": "title",
+     "text": "The Brutal Reality of Mortgage Rates",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "In December 2020, mortgage rates hit a record low of 2.68%.",
+    "visual": {
+     "type": "counter",
+     "series": "MORTGAGE30US",
+     "stat": "min",
+     "start": "1985"
+    }
+   },
+   {
+    "narration": "But the pendulum has swung back with force.",
+    "visual": {
+     "type": "line",
+     "series": "MORTGAGE30US",
+     "start": "2020"
+    }
+   },
+   {
+    "narration": "By October 2026, those rates climbed all the way to 7.33%.",
+    "visual": {
+     "type": "counter",
+     "series": "MORTGAGE30US",
+     "stat": "at",
+     "date": "2026-10",
+     "start": "1985"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Borrowing costs are fundamentally changing",
+     "highlight": [
+      "changing"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "Wages vs. House Prices",
+  "scenes": [
+   {
+    "narration": "Are your paychecks keeping up with the property market?",
+    "visual": {
+     "type": "title",
+     "text": "Wages vs. House Prices",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since 1985, average hourly pay for workers has grown by 279%.",
+    "visual": {
+     "type": "counter",
+     "series": "AHETPI",
+     "stat": "last",
+     "start": "1985"
+    }
+   },
+   {
+    "narration": "That sounds like progress, but it is not the full picture.",
+    "visual": {
+     "type": "statement",
+     "text": "Wage growth is lagging behind",
+     "highlight": [
+      "lagging"
+     ]
+    }
+   },
+   {
+    "narration": "Property prices have surged 375% over that same timeline.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "AHETPI",
+      "MSPUS"
+     ],
+     "since": "1985"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Understand the structural divide",
+     "highlight": [
+      "divide"
+     ]
+    }
+   }
+  ]
+ }
+]

@@ -1,0 +1,14 @@
+{
+ "title": "Why Hospital Bills Outpaced Regular Inflation",
+ "angle": "Hospital service costs in the United States grew at more than double the rate of overall consumer prices over the past thirty years.",
+ "series": [
+  "CUSR0000SEMD",
+  "CPIAUCSL"
+ ],
+ "states": null,
+ "owid": null,
+ "countries": null,
+ "owid2": null,
+ "states2": null,
+ "start": "1995"
+}

@@ -1,0 +1,160 @@
+[
+ {
+  "title": "The 160% Job Explosion",
+  "scenes": [
+   {
+    "narration": "Did you know private education and healthcare jobs exploded by 160% since 1990?",
+    "visual": {
+     "type": "title",
+     "text": "The 160% Job Explosion",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "In January 1990, this sector accounted for 10.8 million jobs in America.",
+    "visual": {
+     "type": "line",
+     "series": "USEHS",
+     "start": "1990",
+     "end": "2026",
+     "annotate": "min"
+    }
+   },
+   {
+    "narration": "Today, it has surged to a record peak of 28.1 million jobs in October 2026.",
+    "visual": {
+     "type": "compare",
+     "series": "USEHS",
+     "from": "1990",
+     "to": "last"
+    }
+   },
+   {
+    "narration": "Over the last year, private education and health hiring grew by another 1.9%.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "USEHS",
+      "USCONS",
+      "MANEMP",
+      "USINFO"
+     ],
+     "since": "2025"
+    }
+   },
+   {
+    "narration": "While traditional sectors shift, human-centric care is driving modern employment growth. The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Care services lead modern hiring",
+     "highlight": [
+      "Care"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "What Happened to Tech Jobs?",
+  "scenes": [
+   {
+    "narration": "Why are information sector jobs down 26% from their historic peak?",
+    "visual": {
+     "type": "title",
+     "text": "What Happened to Tech Jobs?",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Back in March 2001, information jobs hit an all-time high of 3.72 million.",
+    "visual": {
+     "type": "counter",
+     "series": "USINFO",
+     "stat": "max",
+     "start": "1990"
+    }
+   },
+   {
+    "narration": "Fast forward to October 2026, and that total has fallen to 2.73 million jobs.",
+    "visual": {
+     "type": "line",
+     "series": "USINFO",
+     "start": "1990",
+     "end": "2026"
+    }
+   },
+   {
+    "narration": "Over the last year alone, information employment contracted by 4.2%.",
+    "visual": {
+     "type": "kpi",
+     "series": [
+      "USINFO",
+      "MANEMP"
+     ]
+    }
+   },
+   {
+    "narration": "Volatility defined the tech era, leaving total headcount largely stagnant since 1990. The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Information headcount remains largely flat",
+     "highlight": [
+      "flat"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "Manufacturing Drop vs Construction Surge",
+  "scenes": [
+   {
+    "narration": "Can America still build when manufacturing jobs dropped 29% since 1990?",
+    "visual": {
+     "type": "title",
+     "text": "Manufacturing Drop vs Construction Surge",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "In February 1990, factory employment peaked at 17.9 million before falling to 12.7 million today.",
+    "visual": {
+     "type": "compare",
+     "series": "MANEMP",
+     "from": "1990",
+     "to": "last"
+    }
+   },
+   {
+    "narration": "Meanwhile, construction jobs climbed 54% since 1990 to hit 8.4 million in October 2026.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "MANEMP",
+      "USCONS"
+     ],
+     "since": "1990",
+     "as": "change"
+    }
+   },
+   {
+    "narration": "Manufacturing hit a historic low of 11.4 million jobs back in April 2020.",
+    "visual": {
+     "type": "gauge",
+     "series": "MANEMP",
+     "start": "1990"
+    }
+   },
+   {
+    "narration": "The American economy is trading traditional assembly for physical expansion and infrastructure. The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Construction grows as manufacturing shifts",
+     "highlight": [
+      "grows"
+     ]
+    }
+   }
+  ]
+ }
+]

@@ -1,0 +1,432 @@
+{
+ "title": "Why Did Cheap New Cars Disappear?",
+ "description": "For decades, entry-level cars offered young buyers and families an affordable route to reliable transportation. Today, showroom floors look completely different, dominated by oversized SUVs and pickups carrying premium price tags.\n\nWe look through the federal vehicle sales and price data to trace how production bottlenecks, corporate profit priorities, and shift away from compact sedans permanently altered the automotive market.",
+ "tags": [
+  "car prices",
+  "cheap cars",
+  "automotive industry",
+  "inflation",
+  "economy",
+  "car buying",
+  "used cars",
+  "wages",
+  "personal finance",
+  "data analysis"
+ ],
+ "thumbnail": {
+  "number": "8.9 million",
+  "words": "New Cars Sold"
+ },
+ "scenes": [
+  {
+   "narration": "There was a time when American dealerships were moving cars at a staggering pace. In October 2001, annual sales surged to an all-time peak of 22.1 million vehicles.",
+   "visual": {
+    "type": "title",
+    "text": "Why Did Cheap New Cars Disappear?",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "Generous automaker incentives and packed showroom floors kept buyers happily trading in keys year after year, sustaining massive transaction volumes.",
+   "visual": {
+    "type": "line",
+    "series": "TOTALSA",
+    "start": "2000",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "But the unthinkable arrived in April 2020, when the market completely crashed to just 8.9 million vehicles.",
+   "visual": {
+    "type": "counter",
+    "series": "TOTALSA",
+    "stat": "min",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Global supply chains broke, factories went dark, and dealership lots emptied out almost overnight.",
+   "visual": {
+    "type": "statement",
+    "text": "Assembly lines froze overnight",
+    "highlight": [
+     "froze"
+    ]
+   }
+  },
+  {
+   "narration": "That collapse permanently reshaped the market. By October 2026, vehicle sales were still down 27% from that October 2001 peak.",
+   "visual": {
+    "type": "compare",
+    "series": "TOTALSA",
+    "from": "2001-10",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Volume never truly returned to its glory days, sitting well below its historical ceiling.",
+   "visual": {
+    "type": "gauge",
+    "series": "TOTALSA",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "While sales dropped 14% since January 2000, new car prices climbed 26%. Automakers learned they could sell fewer cars and still make record profits. So what happened to the affordable car?",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "TOTALSA",
+     "CUSR0000SETA01"
+    ],
+    "since": "2000",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "At the turn of the millennium, high volume was standard. In January 2000, Americans bought cars at an annual pace of 18.6 million.",
+   "visual": {
+    "type": "counter",
+    "series": "TOTALSA",
+    "stat": "at",
+    "date": "2000-01"
+   }
+  },
+  {
+   "narration": "Dealerships kept the party going with aggressive rebates, sparking another boom to 21.1 million in July 2005 after climbing 22% over twelve months.",
+   "visual": {
+    "type": "line",
+    "series": "TOTALSA",
+    "start": "2000",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Even after the Great Recession hammered sales to 10.9 million in January 2010, demand fought back, rising 47% into October 2026.",
+   "visual": {
+    "type": "compare",
+    "series": "TOTALSA",
+    "from": "2010-01",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "For decades, business models depended on pumping out affordable entry-level models at wafer-thin margins.",
+   "visual": {
+    "type": "statement",
+    "text": "Volume was king for automaker profits.",
+    "highlight": [
+     "Volume"
+    ]
+   }
+  },
+  {
+   "narration": "Yet underneath that sales rhythm, broader living costs were quietly decoupling from car sticker prices, according to the Bureau of Labor Statistics.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CPIAUCSL",
+     "CUSR0000SETA01"
+    ],
+    "since": "2000",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Take the stretch since January 2005. New car prices rose 30% by October 2026, while overall consumer inflation jumped 76%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CPIAUCSL",
+     "CUSR0000SETA01"
+    ],
+    "since": "2005"
+   }
+  },
+  {
+   "narration": "Over the full span since 2000, overall consumer prices climbed 99%, making everyday life 2.0 times as expensive.",
+   "visual": {
+    "type": "counter",
+    "series": "CPIAUCSL",
+    "stat": "last",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "For two decades, new car prices remained remarkably flat across showroom floors, giving buyers predictable affordability year after year.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SETA01",
+    "start": "2000",
+    "end": "2020"
+   }
+  },
+  {
+   "narration": "Even as life grew more expensive, vehicles lagged behind: from January 2015 to October 2026, overall inflation climbed 44%, while new cars rose just 23%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CPIAUCSL",
+     "CUSR0000SETA01"
+    ],
+    "since": "2015"
+   }
+  },
+  {
+   "narration": "Then the pandemic hit in 2020, bringing severe supply chain paralysis and computer chip shortages that crippled auto assembly plants.",
+   "visual": {
+    "type": "statement",
+    "text": "Pandemic bottlenecks paralyzed global auto assembly",
+    "highlight": [
+     "paralyzed"
+    ]
+   }
+  },
+  {
+   "narration": "General inflation exploded worldwide, highlighted by an earlier spike in June 2022 when prices jumped 9% in a single year.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CPIAUCSL",
+     "AHETPI"
+    ],
+    "since": "2020",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Automakers faced steeper production costs everywhere, with average hourly worker pay rising from $23.91 in January 2020 to $32.75 by October 2026.",
+   "visual": {
+    "type": "compare",
+    "series": "AHETPI",
+    "from": "2020",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Factory output stayed constrained, leaving annual vehicle sales at 16.0 million by October 2026, down 5% compared to January 2020.",
+   "visual": {
+    "type": "line",
+    "series": "TOTALSA",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "With wages up 57% since January 2015 from $20.80, cheap entry-level cars were quietly priced out of existence.",
+   "visual": {
+    "type": "counter",
+    "series": "AHETPI",
+    "stat": "at",
+    "date": "2015-01"
+   }
+  },
+  {
+   "narration": "When global chip shortages crippled assembly lines, automakers faced severe rationing. With microchips limited, factories could not build every vehicle.",
+   "visual": {
+    "type": "statement",
+    "text": "When microchips vanished, carmakers prioritized profits.",
+    "highlight": [
+     "profits"
+    ]
+   }
+  },
+  {
+   "narration": "For decades, profits depended on volume. In January 2005, January 2015, and January 2020, sales ran at that steady 16.9 million pace.",
+   "visual": {
+    "type": "counter",
+    "series": "TOTALSA",
+    "stat": "at",
+    "date": "2020-01"
+   }
+  },
+  {
+   "narration": "Faced with shortages, carmakers favored high-margin products. Scarce semiconductors went into profitable trucks and SUVs, starving basic hatchbacks of parts.",
+   "visual": {
+    "type": "statement",
+    "text": "Scarce chips went straight into luxury trims.",
+    "highlight": [
+     "luxury"
+    ]
+   }
+  },
+  {
+   "narration": "Rising labor expenses reinforced the pivot. Average hourly pay reached $32.75 in October 2026, erasing thin margins on inexpensive compacts.",
+   "visual": {
+    "type": "counter",
+    "series": "AHETPI",
+    "stat": "last"
+   }
+  },
+  {
+   "narration": "Sales stood at just 16.3 million in January 2025, dipping 0.1% over the past year. Carmakers realized scarcity was far more profitable.",
+   "visual": {
+    "type": "line",
+    "series": "TOTALSA",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "Between January 2025 and October 2026, general prices rose 6%, while car prices moved just 1%. The shift was finalized.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CPIAUCSL",
+     "CUSR0000SETA01"
+    ],
+    "since": "2025"
+   }
+  },
+  {
+   "narration": "Cheap commuter cars did not just cost more. Automakers deleted entry-level nameplates entirely, shutting out budget-conscious drivers for good.",
+   "visual": {
+    "type": "statement",
+    "text": "Budget subcompacts were quietly eliminated forever.",
+    "highlight": [
+     "eliminated"
+    ]
+   }
+  },
+  {
+   "narration": "On paper, American worker paychecks seem to have easily won the affordability race. Rising wages should mean cars are more attainable than ever.",
+   "visual": {
+    "type": "statement",
+    "text": "Worker pay seemingly outpaced car inflation",
+    "highlight": [
+     "outpaced"
+    ]
+   }
+  },
+  {
+   "narration": "At the start of the millennium in January 2000, average hourly pay for non-supervisory workers stood at $13.74.",
+   "visual": {
+    "type": "counter",
+    "series": "AHETPI",
+    "stat": "at",
+    "date": "2000-01"
+   }
+  },
+  {
+   "narration": "From that starting point, hourly earnings climbed steadily across every expansion, ultimately surging 138% into late 2026.",
+   "visual": {
+    "type": "line",
+    "series": "AHETPI",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Even measuring from January 2010, when typical pay reached $18.88, worker wages still advanced 73%.",
+   "visual": {
+    "type": "gauge",
+    "series": "AHETPI",
+    "start": "2010"
+   }
+  },
+  {
+   "narration": "Since January 2020 alone, worker earnings jumped 37%, outpacing nominal car price tags on showroom windows.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "AHETPI",
+     "CUSR0000SETA01"
+    ],
+    "since": "2020",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Yet over the last year, pay grew 3.3%, while overall consumer inflation climbed 3.8%. Everyday necessities drained household cash before car shopping even started.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "AHETPI",
+     "CPIAUCSL"
+    ]
+   }
+  },
+  {
+   "narration": "New vehicle prices edged up just 0.7% over the past year, but budget models were already wiped out. Families earned higher wages, yet the cheap new car had completely disappeared from lots.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SETA01",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "Today, the automotive market has reached a quiet plateau. The pandemic chaos has passed, but showroom lots never returned to normal.",
+   "visual": {
+    "type": "heatmap",
+    "series": "TOTALSA",
+    "years": 5
+   }
+  },
+  {
+   "narration": "Instead of flooding showrooms with affordable hatchbacks, manufacturers across the country settled into a permanent, highly profitable low volume strategy.",
+   "visual": {
+    "type": "line",
+    "series": "TOTALSA",
+    "start": "2000",
+    "annotate": [
+     "min"
+    ]
+   }
+  },
+  {
+   "narration": "Dealership inventories have stabilized, yet overall vehicle sales remain locked well below their historical peaks.",
+   "visual": {
+    "type": "gauge",
+    "series": "TOTALSA",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "With consumer inflation cooling and vehicle prices leveling off, this elevated price floor has quietly become the permanent new baseline.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SETA01",
+    "start": "2020",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Carmakers discovered they could build fewer vehicles, charge much higher sticker prices, and bank record profits without looking back.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "TOTALSA",
+     "CUSR0000SETA01",
+     "AHETPI"
+    ]
+   }
+  },
+  {
+   "narration": "The affordable entry level car was not merely paused during a temporary crisis. It was permanently retired.",
+   "visual": {
+    "type": "statement",
+    "text": "Cheap commuter cars are gone for good",
+    "highlight": [
+     "gone"
+    ]
+   }
+  },
+  {
+   "narration": "Have you given up on buying a new vehicle, or are you holding onto your current ride longer? Tell us in the comments. Subscribe to Plotline Data for more real world economic stories.",
+   "visual": {
+    "type": "statement",
+    "text": "Share your story in the comments below",
+    "highlight": [
+     "comments"
+    ]
+   }
+  }
+ ],
+ "engage": {
+  "kind": "personal",
+  "question": "Have you given up on buying a new vehicle, or are you holding onto your current ride longer?",
+  "onscreen": "HAVE YOU GIVEN UP ON BUYING A NEW VEHICLE, OR ARE YOU HOLDING ONTO YOUR CURRENT RIDE LONGER",
+  "comment": "Have you given up on buying a new vehicle, or are you holding onto your current ride longer?"
+ }
+}

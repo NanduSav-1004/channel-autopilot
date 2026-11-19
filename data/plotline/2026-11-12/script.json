@@ -1,0 +1,446 @@
+{
+ "title": "Why Are Bananas Still So Cheap?",
+ "description": "Over the past quarter-century, prices for standard grocery staples have surged dramatically across supermarket aisles. Yet through inflation waves, global supply chain shocks, and rising farm costs, banana prices have remained remarkably constant.\n\nWe dive into U.S. Bureau of Labor Statistics data from 2000 to 2026 to compare banana price trends against grocery inflation, bread, and milk, uncovering the unique economic forces keeping this fruit so inexpensive.",
+ "tags": [
+  "banana prices",
+  "grocery inflation",
+  "food prices",
+  "economy",
+  "inflation data",
+  "cost of living",
+  "us economics",
+  "fred data",
+  "supermarket pricing",
+  "data story"
+ ],
+ "thumbnail": {
+  "number": "+34%",
+  "words": "Banana Price Defiance"
+ },
+ "scenes": [
+  {
+   "narration": "Walk into any supermarket today, and you will quickly notice almost everything costs significantly more than it used to. Yet tucked away in the produce aisle, one favorite staple seems almost completely immune to modern inflation.",
+   "visual": {
+    "type": "title",
+    "text": "Why Are Bananas Still So Cheap?",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "Since January 2000, overall US grocery prices nearly doubled, jumping 95%.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SAF11",
+    "stat": "last",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "For example, white bread skyrocketed 105%, going from $0.91 per pound in January 2000 to $1.86 by October 2026.",
+   "visual": {
+    "type": "compare",
+    "series": "APU0000702111",
+    "from": "2000",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "A gallon of whole milk climbed 47% across that same timeframe, rising to $4.10.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000709112",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Meanwhile, banana prices rose just 34% from January 2000 to October 2026.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "APU0000702111",
+     "CUSR0000SAF11",
+     "APU0000709112",
+     "APU0000711211"
+    ],
+    "since": "2000"
+   }
+  },
+  {
+   "narration": "Back in January 2000, bananas cost $0.49 a pound, and by October 2026, they reached just $0.66.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "APU0000711211",
+     "CUSR0000SAF11"
+    ],
+    "since": "2000",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Even when checking where prices sit today relative to historical ranges, bananas remain remarkably frozen in time. How has this fragile tropical fruit defied global supply shocks for a quarter century?",
+   "visual": {
+    "type": "gauge",
+    "series": "APU0000711211",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "To understand this stability, look at how little the price moved over twenty-six years. According to the U.S. Bureau of Labor Statistics, bananas dropped to a low of $0.47 in November 2004.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000711211",
+    "start": "2000",
+    "end": "2026",
+    "annotate": "min"
+   }
+  },
+  {
+   "narration": "Even at their peak in September 2025, bananas reached just $0.67 per pound. That creates a price range of just twenty cents across a quarter century.",
+   "visual": {
+    "type": "gauge",
+    "series": "APU0000711211",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "In January 2010, bananas cost $0.59 per pound. By January 2020, they fell to $0.57.",
+   "visual": {
+    "type": "compare",
+    "series": "APU0000711211",
+    "from": "2010",
+    "to": "2020"
+   }
+  },
+  {
+   "narration": "Spikes were rare. In February 2009, prices jumped 19% in a single year to hit $0.64.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000711211",
+    "stat": "at",
+    "date": "2009-02",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Ultra-efficient supply chains and supermarket pricing strategies keep retail costs frozen.",
+   "visual": {
+    "type": "statement",
+    "text": "Ultra-efficient supply chains keep retail costs frozen",
+    "highlight": "frozen"
+   }
+  },
+  {
+   "narration": "Since January 2010, banana prices rose just 12%. Over that same span, overall grocery prices climbed 50% and white bread rose 37%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "APU0000711211",
+     "CUSR0000SAF11",
+     "APU0000702111"
+    ],
+    "since": "2010"
+   }
+  },
+  {
+   "narration": "Over the last year from November 2025 to October 2026, banana prices fell 1.4%, even as milk peaked at $4.32 in June 2026.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "APU0000711211",
+     "APU0000709112"
+    ],
+    "since": "2025",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Consider what happened to white bread over that same quarter century. By October 2026, its average price reached 2.1 times its starting level in January 2000.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000702111",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Bread prices hit a record peak of $2.03 per pound in January 2024. Even over the last year, bread managed a +4.0% bump.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000702111",
+    "start": "2000",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "Whole milk followed a similarly turbulent path across American grocery stores. Back in March 2003, a gallon dropped to a low of $2.66.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000709112",
+    "stat": "min",
+    "start": "2000"
+   }
+  },
+  {
+   "narration": "Milk later surged to $4.22 per gallon in November 2022 after climbing +15% in just twelve months.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000709112",
+    "stat": "at",
+    "date": "2022-11"
+   }
+  },
+  {
+   "narration": "Looking back to January 2005, white bread surged +87% and whole milk gained +24%.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "APU0000702111",
+     "APU0000709112"
+    ],
+    "since": "2005"
+   }
+  },
+  {
+   "narration": "Yet over that exact same span from January 2005 to October 2026, banana prices rose just +35%.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "APU0000702111",
+     "APU0000711211"
+    ],
+    "from": "2005",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Why do basic bakery and dairy items fluctuate wildly while tropical fruit pricing remains remarkably tethered?",
+   "visual": {
+    "type": "statement",
+    "text": "Bakery and dairy fluctuate while bananas stay flat",
+    "highlight": "flat"
+   }
+  },
+  {
+   "narration": "Supermarkets strategically keep banana prices artificially low to attract store traffic. Retailers treat the fresh fruit as a primary loss leader.",
+   "visual": {
+    "type": "statement",
+    "text": "Supermarkets use bananas as a primary loss leader",
+    "highlight": [
+     "loss"
+    ]
+   }
+  },
+  {
+   "narration": "Since 2005, overall grocery costs jumped 71%. Yet bananas stayed far more stable than dairy or bakery items over that same stretch.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "APU0000711211",
+     "CUSR0000SAF11",
+     "APU0000702111",
+     "APU0000709112"
+    ],
+    "since": "2005",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "White bread traded at $1.00 per pound in January 2005. Retailers willingly accept razor-thin produce margins while marking up packaged goods.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000702111",
+    "stat": "at",
+    "date": "2005-01"
+   }
+  },
+  {
+   "narration": "Beyond retail strategy, global logistics shield tropical fruit. Optimized cold chain container ships and rigid supply contracts insulate importers from cost swings.",
+   "visual": {
+    "type": "statement",
+    "text": "Cold chain logistics protect banana supply chains",
+    "highlight": [
+     "Cold"
+    ]
+   }
+  },
+  {
+   "narration": "Other fresh foods face volatile domestic inputs. Whole milk reached $3.76 per gallon in January 2015 as feed and energy costs surged.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000709112",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Since 2015, total grocery prices expanded 33%. Over that same period, white bread gained 26%, while whole milk grew 9%.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000711211",
+    "start": "2006"
+   }
+  },
+  {
+   "narration": "By January 2025, bananas averaged just $0.62 per pound. Highly integrated supply chains keep landed costs remarkably steady.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000711211",
+    "stat": "at",
+    "date": "2025-01"
+   }
+  },
+  {
+   "narration": "For household budgets, post-2020 price divergences created a dramatic split across standard grocery aisles, reshaping weekly shopping bills.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "APU0000702111",
+     "APU0000709112",
+     "APU0000711211"
+    ],
+    "from": "2020",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Take white bread, which stood at $1.35 back in January 2020. Driven by surging food processing, logistics, and energy expenses, white bread prices jumped 38% through October 2026.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000702111",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "Across the entire store, overall grocery costs climbed 32% post-2020, steadily eroding real purchasing power for everyday working families.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SAF11",
+    "stat": "last",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "When you compare these major kitchen staples on one chart, tropical produce visibly decouples from volatile domestic agricultural benchmarks.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "APU0000711211",
+     "APU0000702111",
+     "APU0000709112",
+     "CUSR0000SAF11"
+    ],
+    "since": "2020"
+   }
+  },
+  {
+   "narration": "Whole milk sat at $3.25 per gallon in January 2020 before elevated feed costs, dairy processing, and distribution pushed prices higher.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "APU0000709112",
+     "APU0000702111"
+    ],
+    "from": "2020",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Because grocery stores treat fresh bananas as key loss leaders, stable banana pricing actively counterbalances inflation on essential packaged goods.",
+   "visual": {
+    "type": "statement",
+    "text": "Bananas cushion inflation on grocery bills",
+    "highlight": [
+     "cushion"
+    ]
+   }
+  },
+  {
+   "narration": "This predictable price tag provides a vital buffer for lower-income shoppers, proving that store strategy can shield key family staples.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "APU0000711211",
+     "CUSR0000SAF11",
+     "APU0000702111",
+     "APU0000709112"
+    ]
+   }
+  },
+  {
+   "narration": "Looking back across more than two decades, the contrast across grocery aisles remains staggering. While standard white bread more than doubled in cost, yellow bananas stayed remarkably grounded.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "APU0000711211",
+     "APU0000702111"
+    ],
+    "since": "2000",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Retailers continuously sacrificed produce margins, using low pricing to attract foot traffic while marking up processed goods.",
+   "visual": {
+    "type": "statement",
+    "text": "Loss leaders drive retail store traffic",
+    "highlight": [
+     "Loss"
+    ]
+   }
+  },
+  {
+   "narration": "Even during recent pullbacks, when white bread dropped 8% from its record peak, packaged staples remained far higher than their historic baselines.",
+   "visual": {
+    "type": "compare",
+    "series": "APU0000702111",
+    "from": "2024-01",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Meanwhile, whole milk eased 5% from its June 2026 high, yet dairy costs still fluctuated far more than imported fruit.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000709112",
+    "start": "2020",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "Ultimately, tight supply chains and deliberate store pricing shielded an essential fruit, proving that retail strategy can buffer consumers from broad inflation.",
+   "visual": {
+    "type": "statement",
+    "text": "Retail strategy buffers consumers from inflation",
+    "highlight": [
+     "buffers"
+    ]
+   }
+  },
+  {
+   "narration": "Which economic topic or chart would you like explained next? Tell us in the comments.",
+   "visual": {
+    "type": "statement",
+    "text": "Which topic should we explain next?",
+    "highlight": [
+     "next"
+    ]
+   }
+  },
+  {
+   "narration": "Subscribe to Plotline Data for more visual data stories every week.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "APU0000711211",
+     "APU0000702111",
+     "APU0000709112"
+    ]
+   }
+  }
+ ],
+ "engage": {
+  "kind": "request",
+  "question": "Which economic topic or chart would you like explained next?",
+  "onscreen": "WHICH ECONOMIC TOPIC OR CHART WOULD YOU LIKE EXPLAINED NEXT",
+  "comment": "Which economic topic or chart would you like explained next?"
+ }
+}

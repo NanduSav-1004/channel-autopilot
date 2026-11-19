@@ -1,0 +1,163 @@
+[
+ {
+  "title": "Why Bananas Are Still So Cheap",
+  "scenes": [
+   {
+    "narration": "Have you noticed how expensive your grocery bill has become lately?",
+    "visual": {
+     "type": "title",
+     "text": "Why Bananas Are Still So Cheap",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since the year 2000, overall grocery prices in the US have skyrocketed by 95%.",
+    "visual": {
+     "type": "counter",
+     "series": "CUSR0000SAF11",
+     "stat": "last",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "Yet, during that exact same period, banana prices increased by only 34%.",
+    "visual": {
+     "type": "line",
+     "series": "APU0000711211",
+     "start": "2000",
+     "annotate": [
+      "min"
+     ]
+    }
+   },
+   {
+    "narration": "This fruit has essentially defied the massive inflation seen elsewhere.",
+    "visual": {
+     "type": "statement",
+     "text": "Bananas defy modern inflation trends.",
+     "highlight": [
+      "defy"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "compare",
+     "series": "APU0000711211",
+     "from": "2000",
+     "to": "last"
+    }
+   }
+  ]
+ },
+ {
+  "title": "The Strange Price of White Bread",
+  "scenes": [
+   {
+    "narration": "Why has the price of a simple loaf of bread more than doubled?",
+    "visual": {
+     "type": "title",
+     "text": "The Strange Price of White Bread",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "In January 2000, a pound of white bread cost just $0.91.",
+    "visual": {
+     "type": "counter",
+     "series": "APU0000702111",
+     "stat": "at",
+     "date": "2000-01",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "By October 2026, that same loaf reached an average of $1.86.",
+    "visual": {
+     "type": "counter",
+     "series": "APU0000702111",
+     "stat": "last",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "That is an increase of 105% over the last quarter century.",
+    "visual": {
+     "type": "slope",
+     "series": [
+      "APU0000702111",
+      "APU0000711211"
+     ],
+     "from": "2000",
+     "to": "last"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Bread prices surged 105%.",
+     "highlight": [
+      "105%"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "Are Bananas Actually Frozen in Time?",
+  "scenes": [
+   {
+    "narration": "How stable is the price of your favorite tropical fruit?",
+    "visual": {
+     "type": "title",
+     "text": "Are Bananas Actually Frozen in Time?",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Bananas hit a record high of just $0.67 in September 2025.",
+    "visual": {
+     "type": "gauge",
+     "series": "APU0000711211",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "Since January 2010, banana prices have risen only 12%.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "APU0000711211",
+      "CUSR0000SAF11",
+      "APU0000702111"
+     ],
+     "since": "2010"
+    }
+   },
+   {
+    "narration": "Compare that to the 50% jump in overall grocery costs.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "APU0000711211",
+      "CUSR0000SAF11"
+     ],
+     "since": "2010",
+     "as": "change"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Bananas remain remarkably grounded.",
+     "highlight": [
+      "grounded"
+     ]
+    }
+   }
+  ]
+ }
+]

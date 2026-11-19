@@ -1,0 +1,434 @@
+{
+ "title": "Is Renting Getting Worse? The Data Behind the Squeeze",
+ "description": "Over the past three decades, rental housing costs have dramatically reshaped household finances across the country. We analyze official government data tracking rent inflation, apartment vacancy rates, and real household incomes to reveal whether tenant conditions are genuinely deteriorating.\n\nFrom post-recession surges to modern vacancy crunches, discover how structural shifts in the housing supply created a widening divide between tenant paychecks and monthly rent obligations.",
+ "tags": [
+  "rent prices",
+  "housing market",
+  "rental crisis",
+  "inflation data",
+  "household income",
+  "us economy",
+  "housing affordability",
+  "economics explained",
+  "fred data",
+  "cost of living"
+ ],
+ "thumbnail": {
+  "number": "+232%",
+  "words": "Rent Outpacing Wages"
+ },
+ "scenes": [
+  {
+   "narration": "Renting has become an increasingly heavy burden for the typical household. The cost of having a place to call home has quietly reached a historic peak.",
+   "visual": {
+    "type": "title",
+    "text": "Is Renting Getting Worse? The Data Behind the Squeeze",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "If we look back to January 1990, residential rent prices have surged by 232%.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SEHA",
+    "stat": "last",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "In fact, today's rent index sits at 3.3 times what it was at the start of that decade.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEHA",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "This shift isn't just about the long term; it's a persistent, compounding pressure.",
+   "visual": {
+    "type": "statement",
+    "text": "Rising costs are creating constant financial pressure.",
+    "highlight": [
+     "pressure"
+    ]
+   }
+  },
+  {
+   "narration": "Even over the last five years, rent has climbed by 33%.",
+   "visual": {
+    "type": "counter",
+    "series": "CUSR0000SEHA",
+    "stat": "last",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "And in just the past year alone, prices ticked up another 2.8%.",
+   "visual": {
+    "type": "heatmap",
+    "series": "CUSR0000SEHA",
+    "years": 3
+   }
+  },
+  {
+   "narration": "The math is clear: the path of rent prices is moving consistently upward, outpacing many other household concerns.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CUSR0000SEHA",
+     "MEHOINUSA672N"
+    ],
+    "since": "2010",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "To understand why rent feels heavier, we must look at the long-term trend. According to the Bureau of Labor Statistics, costs have compounded relentlessly.",
+   "visual": {
+    "type": "statement",
+    "text": "The compounding cost of housing.",
+    "highlight": [
+     "compounding"
+    ]
+   }
+  },
+  {
+   "narration": "If we look back to January 1995, rent prices have climbed 189% by today. This marks a steady, decades-long rise in what tenants pay.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEHA",
+    "start": "1995",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "By the turn of the millennium in January 2000, that cumulative growth sits at 149%. The climb never seems to plateau.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEHA",
+    "start": "2000",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Looking at January 2005, the increase since then is 110%. Each interval consistently shows this mounting pressure.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEHA",
+    "start": "2005",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Even by January 2010, after the housing crisis, rent prices have still grown 81% against today's levels.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CUSR0000SEHA",
+     "RRVRUSQ156N"
+    ],
+    "since": "2010",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Moving to January 2015, we see a 60% jump since that point. The data reveals a clear, persistent upward trajectory.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CUSR0000SEHA",
+     "RRVRUSQ156N"
+    ],
+    "since": "2015"
+   }
+  },
+  {
+   "narration": "Every decade brings higher thresholds. Rent isn't just rising; it is compounding across every major benchmark we analyze.",
+   "visual": {
+    "type": "heatmap",
+    "series": "CUSR0000SEHA",
+    "years": 10
+   }
+  },
+  {
+   "narration": "To understand this squeeze, we look at vacancy rates. These numbers reveal how much breathing room exists in the rental market.",
+   "visual": {
+    "type": "line",
+    "series": "RRVRUSQ156N",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "In October 2021, availability hit a historic low of 5.6%. Apartments vanished from the market almost instantly.",
+   "visual": {
+    "type": "counter",
+    "series": "RRVRUSQ156N",
+    "stat": "min",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Low vacancy acts as a pressure cooker for prices. When supply drops, competition among renters inevitably intensifies.",
+   "visual": {
+    "type": "statement",
+    "text": "Low supply creates high rent pressure",
+    "highlight": [
+     "supply"
+    ]
+   }
+  },
+  {
+   "narration": "By July 2026, the vacancy rate had crept back up to 7.6%. This is barely a 1% change from 1990 levels.",
+   "visual": {
+    "type": "counter",
+    "series": "RRVRUSQ156N",
+    "stat": "at",
+    "date": "2026-07",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Even with this slight easing, the market remains tight compared to the 11.1% peak seen in 2009.",
+   "visual": {
+    "type": "compare",
+    "series": "RRVRUSQ156N",
+    "from": "2009-07",
+    "to": "2026-07"
+   }
+  },
+  {
+   "narration": "This scarcity has lasting effects. Since January 2020, vacancy rates have risen 15%, reflecting a very different landscape.",
+   "visual": {
+    "type": "counter",
+    "series": "RRVRUSQ156N",
+    "stat": "at",
+    "date": "2026-07",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "The math is simple: fewer available units mean landlords hold the leverage. Rent becomes a buyer's market for the owner.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "RRVRUSQ156N",
+     "CUSR0000SEHA"
+    ],
+    "since": "2020",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Why has renting become such a volatile game? To understand, we have to look back at the 2008 financial crisis.",
+   "visual": {
+    "type": "statement",
+    "text": "The 2008 crisis fundamentally altered housing supply.",
+    "highlight": [
+     "supply"
+    ]
+   }
+  },
+  {
+   "narration": "Back in July 2009, the market was flooded with vacancies, hitting a peak of 11.1%.",
+   "visual": {
+    "type": "counter",
+    "series": "RRVRUSQ156N",
+    "stat": "max",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Developers essentially stopped building for years. The ripple effect of that slowdown created a massive supply deficit.",
+   "visual": {
+    "type": "line",
+    "series": "RRVRUSQ156N",
+    "start": "2009",
+    "end": "2020",
+    "annotate": [
+     "min"
+    ]
+   }
+  },
+  {
+   "narration": "Then, the pandemic hit. In January 2020, vacancy rates were already tight at 6.6%.",
+   "visual": {
+    "type": "counter",
+    "series": "RRVRUSQ156N",
+    "stat": "at",
+    "date": "2020-01",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Suddenly, everyone scrambled for space, pushing vacancy rates down to 5.6% by October 2021.",
+   "visual": {
+    "type": "line",
+    "series": "RRVRUSQ156N",
+    "start": "2020",
+    "end": "2021"
+   }
+  },
+  {
+   "narration": "Recent apartment building booms have finally begun to help, as vacancy rates rose 7% over the last year.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "RRVRUSQ156N",
+     "MEHOINUSA672N"
+    ]
+   }
+  },
+  {
+   "narration": "Even with this progress, we are still 32% lower than the vacancy highs we saw in 2009.",
+   "visual": {
+    "type": "compare",
+    "series": "RRVRUSQ156N",
+    "from": "2009-07",
+    "to": "2026-07"
+   }
+  },
+  {
+   "narration": "But while rents surged, what happened to our paychecks? That is the real test of affordability.",
+   "visual": {
+    "type": "statement",
+    "text": "Are wages keeping up with the rent?",
+    "highlight": [
+     "wages"
+    ]
+   }
+  },
+  {
+   "narration": "In January 1990, the median household income was $67,050. By January 2025, it reached $87,460.",
+   "visual": {
+    "type": "counter",
+    "series": "MEHOINUSA672N",
+    "stat": "at",
+    "date": "2025-01",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "That is a total growth of 30% since 1990. It is a modest gain for the average family.",
+   "visual": {
+    "type": "counter",
+    "series": "MEHOINUSA672N",
+    "stat": "last",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Compare that 30% wage growth to the 232% surge in rent over the exact same period.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEHA",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Rent has been climbing much faster than income. The burden on household budgets has expanded significantly.",
+   "visual": {
+    "type": "statement",
+    "text": "Housing costs have far outpaced income growth.",
+    "highlight": [
+     "outpaced"
+    ]
+   }
+  },
+  {
+   "narration": "Since January 2020, inflation-adjusted median household income has grown 5%, while rent prices have climbed 33%.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "MEHOINUSA672N",
+     "CUSR0000SEHA"
+    ],
+    "since": "2020",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "This divergence is why renting feels increasingly unaffordable. Rent is taking a larger slice of the pie.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEHA",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "So, where does that leave the average renter today? The data shows a persistent, heavy drag on household finances.",
+   "visual": {
+    "type": "statement",
+    "text": "The Rent Squeeze Continues",
+    "highlight": [
+     "Squeeze"
+    ]
+   }
+  },
+  {
+   "narration": "In the last year alone, median household income grew by 2.6%. It's a positive step, but look at how it compares to rent.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "MEHOINUSA672N",
+     "CUSR0000SEHA"
+    ]
+   }
+  },
+  {
+   "narration": "Rent prices have outpaced those gains, climbing 2.8% over that same recent twelve-month window.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEHA",
+    "start": "1999"
+   }
+  },
+  {
+   "narration": "Looking at the period since January 2025, rent is up 5%. The momentum hasn't broken yet.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEHA",
+    "start": "2008"
+   }
+  },
+  {
+   "narration": "Since 1995, rent has surged by 189%, outpacing income growth significantly.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "CUSR0000SEHA",
+     "MEHOINUSA672N"
+    ],
+    "since": "1995",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Ultimately, rent is consuming more of our earnings than ever. It's a structural imbalance that isn't correcting itself.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEHA",
+    "start": "1990"
+   }
+  },
+  {
+   "narration": "Have you seen rent prices flatten out in your own neighborhood? Tell us in the comments. Subscribe for more data stories.",
+   "visual": {
+    "type": "line",
+    "series": "CUSR0000SEHA",
+    "start": "1990"
+   }
+  }
+ ],
+ "engage": {
+  "kind": "personal",
+  "question": "Have you seen rent prices flatten out in your own neighborhood?",
+  "onscreen": "HAVE YOU SEEN RENT PRICES FLATTEN OUT IN YOUR OWN NEIGHBORHOOD",
+  "comment": "Have you seen rent prices flatten out in your own neighborhood?"
+ }
+}

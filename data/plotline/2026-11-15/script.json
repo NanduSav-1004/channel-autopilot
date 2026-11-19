@@ -1,0 +1,438 @@
+{
+ "title": "Why US Life Expectancy Lagged Behind Other Rich Nations",
+ "description": "High average incomes typically correlate with longer life expectancy, but over the past four decades, American longevity has fallen significantly behind peer democracies.\n\nWe examine the global data comparing life expectancy and GDP per capita across major advanced economies from 1980 to 2023.",
+ "tags": [
+  "Plotline Data",
+  "Life Expectancy",
+  "US Healthcare",
+  "Demographics",
+  "Data Visualization",
+  "Economic Data",
+  "Global Health",
+  "Public Health Data"
+ ],
+ "thumbnail": {
+  "number": "79.3 years",
+  "words": "US Longevity Gap"
+ },
+ "scenes": [
+  {
+   "narration": "The United States is the wealthiest major economy on Earth, producing $74,352 per person. Yet, its average life expectancy is just 79.3 years.",
+   "visual": {
+    "type": "title",
+    "text": "Why US Life Expectancy Lagged Behind Other Rich Nations",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "In the United Kingdom, GDP per person is lower at $53,423. Yet life expectancy there reaches 81.3 years.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "united-states",
+     "united-kingdom",
+     "canada",
+     "germany"
+    ],
+    "from": "1980",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Japan tops the world's major economies, where people live to an average of 84.7 years.",
+   "visual": {
+    "type": "world_map",
+    "highlight": "Japan"
+   }
+  },
+  {
+   "narration": "Higher national wealth usually buys longer lives. But in America, that rule breaks down.",
+   "visual": {
+    "type": "statement",
+    "text": "Higher national wealth usually buys longer lives.",
+    "highlight": [
+     "wealth"
+    ]
+   }
+  },
+  {
+   "narration": "Other peers pull ahead too. Australia sits at 83.9 years, France reaches 83.3 years, and Canada hits 82.6 years.",
+   "visual": {
+    "type": "countries_bars"
+   }
+  },
+  {
+   "narration": "In 1980, the US stood at 73.7 years, right alongside Germany's 73.1 years. But four decades of slower progress widened the gap.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "united-states",
+     "japan",
+     "australia",
+     "germany"
+    ],
+    "since": "1980",
+    "as": "value"
+   }
+  },
+  {
+   "narration": "Despite reaching a high of 79.3 years in 2023, the American life span trails every comparable nation. Why?",
+   "visual": {
+    "type": "gauge",
+    "series": "united-states",
+    "start": "1980"
+   }
+  },
+  {
+   "narration": "Rewind four decades to 1980. Across the developed world, average lifespans clustered in a narrow band, according to data from Our World in Data.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "united-states",
+     "france",
+     "united-kingdom",
+     "germany",
+     "australia",
+     "canada"
+    ],
+    "from": "1980",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "In 1980, French citizens could expect to live to 74.2 years, showing how close European standards were at the time.",
+   "visual": {
+    "type": "compare",
+    "series": "france",
+    "from": "1980",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Australia was virtually indistinguishable from its global peers, with an average life expectancy of 74.6 years in 1980.",
+   "visual": {
+    "type": "line",
+    "series": "australia",
+    "start": "1980",
+    "end": "2023"
+   }
+  },
+  {
+   "narration": "Across the border, Canada held a slight lead among Western nations, recording an average lifespan of 75.1 years.",
+   "visual": {
+    "type": "counter",
+    "series": "canada",
+    "stat": "at",
+    "date": "1980",
+    "start": "1980"
+   }
+  },
+  {
+   "narration": "Japan was already leading the industrial world, setting the upper baseline back in 1980 at 76.1 years.",
+   "visual": {
+    "type": "gauge",
+    "series": "japan",
+    "start": "1980"
+   }
+  },
+  {
+   "narration": "America belonged squarely in this cohort. The United States started from the exact same baseline as its wealthiest global peers.",
+   "visual": {
+    "type": "statement",
+    "text": "America began on equal footing with peers",
+    "highlight": [
+     "equal"
+    ]
+   }
+  },
+  {
+   "narration": "This shared starting point set the stage for four decades of divergence, as peer nations steadily expanded their leads.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "united-states",
+     "united-kingdom",
+     "france",
+     "japan",
+     "canada"
+    ],
+    "since": "1980",
+    "as": "value"
+   }
+  },
+  {
+   "narration": "Over four decades, peer nations achieved remarkable gains in longevity. Australia expanded its average lifespan by +13% between 1980 and 2023.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "australia",
+     "france",
+     "united-kingdom",
+     "united-states"
+    ],
+    "since": "1980"
+   }
+  },
+  {
+   "narration": "France achieved a +12% increase over those same decades, steadily widening its advantage through persistent health investments.",
+   "visual": {
+    "type": "line",
+    "series": "france",
+    "start": "1980"
+   }
+  },
+  {
+   "narration": "The United Kingdom also registered a +10% gain from 1980 to 2023, maintaining steady upward momentum.",
+   "visual": {
+    "type": "compare",
+    "series": "united-kingdom",
+    "from": "1980",
+    "to": "2023"
+   }
+  },
+  {
+   "narration": "In contrast, total lifespan growth in the United States managed just +8% over the entire period from 1980 to 2023.",
+   "visual": {
+    "type": "counter",
+    "series": "united-states",
+    "stat": "last",
+    "start": "1980"
+   }
+  },
+  {
+   "narration": "The sharpest deceleration occurred after 2010, when US life expectancy reached 78.7 years. From 2010 to 2023, overall change was a mere +1%.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "united-states",
+     "united-kingdom",
+     "france",
+     "australia"
+    ],
+    "since": "2010",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "During the crisis in 2020, American lifespans fell to 77.0 years. The subsequent +3% change through 2023 barely restored lost ground.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "united-states",
+     "united-kingdom",
+     "france",
+     "australia"
+    ],
+    "from": "2010",
+    "to": "2023"
+   }
+  },
+  {
+   "narration": "Four decades of slower gains turned a once tightly bound group into a persistent trailing position for America.",
+   "visual": {
+    "type": "statement",
+    "text": "Four decades of slower growth created a wide chasm.",
+    "highlight": [
+     "chasm"
+    ]
+   }
+  },
+  {
+   "narration": "Multiple underlying causes drive America's health divergence. Chronic illness, unequal healthcare access, and substance abuse crises continuously pull lifespans down.",
+   "visual": {
+    "type": "statement",
+    "text": "Chronic illness and unequal access pull lifespans down",
+    "highlight": "unequal"
+   }
+  },
+  {
+   "narration": "Looking globally, average lifespans reveal extreme disparities. At the lowest end, Nigeria averages just 54.5 years in 2023.",
+   "visual": {
+    "type": "world_map",
+    "highlight": "Nigeria"
+   }
+  },
+  {
+   "narration": "Nearby nations face similar severe challenges. Lifespans in Chad reach only 55.1 years.",
+   "visual": {
+    "type": "countries_bars"
+   }
+  },
+  {
+   "narration": "Conditions remain equally grim across other developing nations. Both Lesotho and the Central African Republic record average lifespans of 57.4 years.",
+   "visual": {
+    "type": "line",
+    "series": "united-states",
+    "start": "1980"
+   }
+  },
+  {
+   "narration": "In South Sudan, life expectancy stands at 57.6 years. Persistent poverty and fragile health infrastructure keep survival rates low.",
+   "visual": {
+    "type": "statement",
+    "text": "Fragile health systems limit global longevity gains",
+    "highlight": "fragile"
+   }
+  },
+  {
+   "narration": "By contrast, wealthy European peers sustained major health progress for decades. The United Kingdom reached a high of 81.4 years in 2019.",
+   "visual": {
+    "type": "compare",
+    "series": "united-kingdom",
+    "from": "1980",
+    "to": "2019"
+   }
+  },
+  {
+   "narration": "Wealthy democracies protected public health through broad medical access. Without equitable coverage and targeted care, national health outcomes inevitably slip.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "japan",
+     "australia",
+     "france",
+     "canada",
+     "germany",
+     "united-states"
+    ],
+    "from": "2000",
+    "to": "2023"
+   }
+  },
+  {
+   "narration": "Does a stronger economy guarantee a longer life? Across 196 countries, wealth and longevity move together with a correlation of +0.75.",
+   "visual": {
+    "type": "scatter",
+    "trails": false
+   }
+  },
+  {
+   "narration": "Money builds better sanitation, nutrition, and medical infrastructure. But once a nation reaches high income, extra economic output yields diminishing returns.",
+   "visual": {
+    "type": "statement",
+    "text": "Higher wealth yields diminishing returns on longevity",
+    "highlight": [
+     "diminishing"
+    ]
+   }
+  },
+  {
+   "narration": "Consider Japan, which reaches world-leading longevity while operating on a GDP per person of $47,387.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "japan",
+     "germany"
+    ]
+   }
+  },
+  {
+   "narration": "France achieves outstanding health outcomes at a GDP per person of $54,297, while Canada delivers strong results at $58,088.",
+   "visual": {
+    "type": "scatter",
+    "trails": false
+   }
+  },
+  {
+   "narration": "Australia reaches a life expectancy of 83.9 years, while Germany reaches 81.4 years, proving peer nations convert prosperity into health efficiently.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "australia",
+     "germany"
+    ]
+   }
+  },
+  {
+   "narration": "Massive economic output fails to extend lives when care access is unequal and systemic health risks remain unaddressed.",
+   "visual": {
+    "type": "statement",
+    "text": "Economic scale fails without broad healthcare access",
+    "highlight": [
+     "healthcare"
+    ]
+   }
+  },
+  {
+   "narration": "Prosperity provides the foundation, but structural health investments ultimately decide whether high economic output translates into longer lives.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "united-states",
+     "japan",
+     "australia",
+     "canada",
+     "france",
+     "germany"
+    ],
+    "from": "1980",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "High national wealth creates the foundation for longevity, but money alone cannot protect public health. Converting economic prosperity into longer lives requires deliberate, systemic investment.",
+   "visual": {
+    "type": "statement",
+    "text": "National wealth alone cannot guarantee better health outcomes",
+    "highlight": "wealth"
+   }
+  },
+  {
+   "narration": "Even during recent recovery years, American progress remained limited. From 2022 to 2023, United States life expectancy managed a +1.7% increase.",
+   "visual": {
+    "type": "line",
+    "series": "united-states",
+    "start": "2022",
+    "end": "2023"
+   }
+  },
+  {
+   "narration": "By contrast, Japan consistently converted economic strength into lasting population health, increasing average lifespans by +9% from 1985 to 2023.",
+   "visual": {
+    "type": "line",
+    "series": "japan",
+    "start": "1985",
+    "end": "2023"
+   }
+  },
+  {
+   "narration": "Over that same period, United States lifespan growth reached just +6% from 1985 to 2023, leaving a widening gap.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "japan",
+     "united-states"
+    ],
+    "since": "1985"
+   }
+  },
+  {
+   "narration": "The key takeaway is straightforward. High GDP provides the tools, but universal access and preventative care determine whether a nation actually lives longer.",
+   "visual": {
+    "type": "statement",
+    "text": "Universal access and care determine longevity",
+    "highlight": "access"
+   }
+  },
+  {
+   "narration": "Which global data story would you like us to explain next? Tell us in the comments.",
+   "visual": {
+    "type": "statement",
+    "text": "What data story should we explore next",
+    "highlight": "explore"
+   }
+  },
+  {
+   "narration": "Subscribe to Plotline Data for more visual deep dives into the numbers shaping our world.",
+   "visual": {
+    "type": "world_map"
+   }
+  }
+ ],
+ "engage": {
+  "kind": "request",
+  "question": "Which global data story would you like us to explain next?",
+  "onscreen": "WHICH GLOBAL DATA STORY WOULD YOU LIKE US TO EXPLAIN NEXT",
+  "comment": "Which global data story would you like us to explain next?"
+ }
+}

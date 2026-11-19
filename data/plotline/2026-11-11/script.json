@@ -1,0 +1,447 @@
+{
+ "title": "Why Beef Prices Outpaced Every Other Meat",
+ "description": "Over the past decade, grocery shoppers have watched beef prices surge far beyond other staple meats like chicken and pork. While inflation affected the entire food industry, structural supply constraints and agricultural shocks unique to cattle ranching created a severe price divergence.\n\nIn this video, we analyze official economic data to examine how ground beef prices evolved over time compared to chicken breast and bacon, highlighting the underlying factors driving the cost of meat at the supermarket checkout.",
+ "tags": [
+  "Beef Prices",
+  "Meat Prices",
+  "Inflation Data",
+  "Economics",
+  "Food Prices",
+  "Grocery Shopping",
+  "Cattle Market",
+  "Ground Beef",
+  "Plotline Data",
+  "Data Story"
+ ],
+ "thumbnail": {
+  "number": "+74%",
+  "words": "BEEF PRICE EXPLOSION"
+ },
+ "scenes": [
+  {
+   "narration": "If your weekly grocery run feels noticeably more painful lately, you are definitely not imagining it. The staple of American dinners has quietly turned into a luxury.",
+   "visual": {
+    "type": "title",
+    "text": "Why Beef Prices Outpaced Every Other Meat",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "Back in January 2020, everyday ground beef was still an affordable family standby at just $3.89 a pound.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000703112",
+    "stat": "at",
+    "date": "2020-01"
+   }
+  },
+  {
+   "narration": "Fast forward to August 2026, and prices soared to an astonishing all-time peak of $6.92 per pound.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000703112",
+    "stat": "max",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "That marks an eye-watering 74% surge between early 2020 and late 2026, reshaping household budgets across the country.",
+   "visual": {
+    "type": "compare",
+    "series": "APU0000703112",
+    "from": "2020-01",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Even after edging down just 2% to $6.75 in October 2026, beef remains locked near historic highs.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000703112",
+    "start": "2020",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "Other meats faced inflation too, but nothing compares. Since January 2020, chicken breast rose 34% and bacon gained 21%.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "APU0000703112",
+     "APU0000FF1101",
+     "APU0000704111"
+    ],
+    "since": "2020",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Ground beef completely decoupled from the rest of the meat aisle. To understand why, we have to look behind the grocery shelf.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "APU0000703112",
+     "APU0000FF1101",
+     "APU0000704111"
+    ],
+    "since": "2020"
+   }
+  },
+  {
+   "narration": "To understand today's squeeze, we have to look back a full decade. In January 2015, ground beef averaged $4.24 a pound, according to the Bureau of Labor Statistics.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000703112",
+    "stat": "at",
+    "date": "2015-01"
+   }
+  },
+  {
+   "narration": "Over the following years, expanding cattle herds kept supermarket coolers well-stocked, giving shoppers several seasons of welcome price relief at the register.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000703112",
+    "start": "2015",
+    "end": "2019"
+   }
+  },
+  {
+   "narration": "In fact, prices bottomed out at just $3.55 per pound in April 2017, establishing the decade's lowest baseline.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000703112",
+    "stat": "at",
+    "date": "2017-04"
+   }
+  },
+  {
+   "narration": "Yet that affordability marked a cyclical low rather than a permanent return to cheap grocery bills.",
+   "visual": {
+    "type": "statement",
+    "text": "A decade-long structural shift takes hold",
+    "highlight": [
+     "shift"
+    ]
+   }
+  },
+  {
+   "narration": "From January 2015 through October 2026, ground beef posted a staggering 60% increase, completely transforming everyday household budgets.",
+   "visual": {
+    "type": "compare",
+    "series": "APU0000703112",
+    "from": "2015-01",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "By contrast, other popular meats grew far more modestly: chicken breast rose 19%, while bacon gained 20% over that exact timeframe.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "APU0000703112",
+     "APU0000FF1101",
+     "APU0000704111"
+    ],
+    "since": "2015"
+   }
+  },
+  {
+   "narration": "Instead of drifting back toward historical norms, beef prices stayed pinned near the very ceiling of their ten-year range.",
+   "visual": {
+    "type": "gauge",
+    "series": "APU0000703112",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "The price climb did not happen in a single sudden burst. It arrived through a series of relentless, compounding waves.",
+   "visual": {
+    "type": "statement",
+    "text": "Compounding waves drove beef ever higher",
+    "highlight": [
+     "Compounding"
+    ]
+   }
+  },
+  {
+   "narration": "The first major post-lockdown surge culminated in August 2022, when ground beef climbed 10% over the preceding year to touch $4.94 a pound.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000703112",
+    "stat": "at",
+    "date": "2022-08"
+   }
+  },
+  {
+   "narration": "Instead of retreating toward old baselines, prices built fresh momentum, jumping another 11% over the prior year to reach $5.67 by September 2024.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000703112",
+    "start": "2022",
+    "end": "2024"
+   }
+  },
+  {
+   "narration": "Month after month, steady inflationary pressure kept building, refusing to give supermarket shoppers any meaningful breathing room.",
+   "visual": {
+    "type": "heatmap",
+    "series": "APU0000703112",
+    "years": 5
+   }
+  },
+  {
+   "narration": "Every brief plateau simply established an elevated floor, standing at $5.54 in January 2025 before launching into another furious 22% surge.",
+   "visual": {
+    "type": "compare",
+    "series": "APU0000703112",
+    "from": "2025-01",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "During that same period, chicken edged up just 3% and bacon tumbled 5%, leaving beef entirely in a league of its own.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "APU0000703112",
+     "APU0000FF1101",
+     "APU0000704111"
+    ],
+    "from": "2025",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "By August 2026, ground beef peaked at $6.92 per pound, cementing its relentless upward climb.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000703112",
+    "stat": "at",
+    "date": "2026-08"
+   }
+  },
+  {
+   "narration": "The root of beef's surge lies in punishing drought across grazing country. Scorching weather wiped out native pastures and vital water supplies.",
+   "visual": {
+    "type": "statement",
+    "text": "Punishing drought shrank American cattle pastures",
+    "highlight": [
+     "drought"
+    ]
+   }
+  },
+  {
+   "narration": "Without cheap grass, ranchers faced crushing feed bills. They had to liquidate breeding cows, drastically shrinking the nation's cattle herd.",
+   "visual": {
+    "type": "heatmap",
+    "series": "APU0000703112",
+    "years": 5
+   }
+  },
+  {
+   "narration": "Here is where biology creates a deep divide. Other livestock bounce back quickly because poultry and pigs reproduce on rapid cycles.",
+   "visual": {
+    "type": "statement",
+    "text": "Cattle biology delays supply recovery",
+    "highlight": [
+     "biology"
+    ]
+   }
+  },
+  {
+   "narration": "Chicken producers rebounded fast. After hitting a peak of $4.75, boneless chicken breast dropped 14% as hatchery production caught up.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000FF1101",
+    "stat": "max",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "Bacon followed that relief track. After cresting at an all-time $7.61, sliced bacon fell 12% as hog supplies normalized.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000704111",
+    "start": "2020",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Over the past year alone, bacon eased 3.5% and chicken slipped 1.2%. Other meats cooled, but beef stubbornly resisted.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "APU0000703112",
+     "APU0000FF1101",
+     "APU0000704111"
+    ],
+    "since": "2022",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Cows produce calves slowly, requiring years to grow for market. Until herds rebuild, beef prices remain pinned near the ceiling.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000703112",
+    "start": "2015",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Step across the grocery aisle, and the contrast becomes immediately apparent. While beef surged relentlessly, alternative proteins told an entirely different story.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "APU0000703112",
+     "APU0000FF1101",
+     "APU0000704111"
+    ],
+    "since": "2015",
+    "as": "value"
+   }
+  },
+  {
+   "narration": "Take boneless chicken breast, the supermarket benchmark. In January 2015, shoppers paid an average of $3.44 per pound.",
+   "visual": {
+    "type": "counter",
+    "series": "APU0000FF1101",
+    "stat": "at",
+    "date": "2015-01"
+   }
+  },
+  {
+   "narration": "As commercial poultry production expanded steadily, chicken prices drifted lower, touching a decade trough of $2.90 in September 2018.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000FF1101",
+    "start": "2015",
+    "annotate": [
+     "min"
+    ]
+   }
+  },
+  {
+   "narration": "Even after post-pandemic inflation rippled across national supply chains, chicken breast settled at $4.10 by October 2026, offering reliable dinner table relief.",
+   "visual": {
+    "type": "compare",
+    "series": "APU0000FF1101",
+    "from": "2015",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Pork demonstrated that same underlying supply resilience. Sliced bacon started at $5.59 a pound in January 2015, tracking predictable seasonal supply patterns.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "APU0000703112",
+     "APU0000FF1101",
+     "APU0000704111"
+    ],
+    "from": "2015",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "While bacon climbed to $7.04 in January 2025, it swiftly cooled off, settling down at $6.69 by October 2026.",
+   "visual": {
+    "type": "compare",
+    "series": "APU0000704111",
+    "from": "2025-01",
+    "to": "2026-10"
+   }
+  },
+  {
+   "narration": "Because chickens and hogs produce offspring rapidly, livestock producers expanded output in months, keeping grocery shelves stocked and prices anchored.",
+   "visual": {
+    "type": "statement",
+    "text": "Rapid breeding cycles kept poultry and pork anchored",
+    "highlight": [
+     "anchored"
+    ]
+   }
+  },
+  {
+   "narration": "Ultimately, biological reality dictates grocery store economics. Poultry flocks and hog litters bounce back in mere months, but rebuilding cattle herds requires years of patience.",
+   "visual": {
+    "type": "statement",
+    "text": "Biological limits reshape meat prices",
+    "highlight": "limits"
+   }
+  },
+  {
+   "narration": "When drought and extreme weather scorch grazing pastures, the resulting livestock deficit caused ground beef prices to surge 60% since 2015.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000703112",
+    "start": "2015",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "That deep structural supply bottleneck permanently separated beef from every other protein across modern supermarket aisles.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "APU0000703112",
+     "APU0000FF1101",
+     "APU0000704111"
+    ],
+    "since": "2015"
+   }
+  },
+  {
+   "narration": "Ground beef prices hovered near record territory at $6.75 a pound in October 2026, down just two percent from their peak.",
+   "visual": {
+    "type": "line",
+    "series": "APU0000703112",
+    "start": "2020",
+    "annotate": [
+     "max"
+    ]
+   }
+  },
+  {
+   "narration": "Until cattle ranchers can safely restore their depleted pastures and restock breeding cows, beef will continue straining family dinner budgets.",
+   "visual": {
+    "type": "slope",
+    "series": [
+     "APU0000703112",
+     "APU0000FF1101",
+     "APU0000704111"
+    ],
+    "from": "2020",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "The humble family burger has fundamentally transformed from an everyday budget staple into an expensive household luxury.",
+   "visual": {
+    "type": "gauge",
+    "series": "APU0000703112",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Have soaring beef prices forced you to switch what you buy at your local supermarket? Tell us in the comments. Subscribe for more data-driven stories.",
+   "visual": {
+    "type": "statement",
+    "text": "Subscribe for more data-driven stories",
+    "highlight": "Subscribe"
+   }
+  }
+ ],
+ "engage": {
+  "kind": "personal",
+  "question": "Have soaring beef prices forced you to switch what you buy at your local supermarket?",
+  "onscreen": "HAVE SOARING BEEF PRICES FORCED YOU TO SWITCH WHAT YOU BUY AT YOUR LOCAL SUPERMARKET",
+  "comment": "Have soaring beef prices forced you to switch what you buy at your local supermarket?"
+ }
+}

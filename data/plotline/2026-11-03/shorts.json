@@ -1,0 +1,197 @@
+[
+ {
+  "title": "Electricity costs now hit $0.196/kWh",
+  "scenes": [
+   {
+    "narration": "Did you know the average US household is paying $0.196 per kilowatt\u2011hour?",
+    "visual": {
+     "type": "title",
+     "text": "Electricity costs now hit $0.196/kWh",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "That\u2019s the highest level since the series began in 2010.",
+    "visual": {
+     "type": "statement",
+     "text": "All\u2011time high",
+     "highlight": [
+      "high"
+     ]
+    }
+   },
+   {
+    "narration": "September\u202f2026: $0.196/kWh.",
+    "visual": {
+     "type": "counter",
+     "series": "APU000072610",
+     "stat": "last",
+     "date": "2026-09",
+     "start": "2010"
+    }
+   },
+   {
+    "narration": "From $0.124 in January\u202f2010, the price has climbed 58%.",
+    "visual": {
+     "type": "line",
+     "series": "APU000072610",
+     "start": "2010",
+     "end": "2026",
+     "annotate": [
+      "max"
+     ]
+    }
+   },
+   {
+    "narration": "Even the June\u202f2026 peak of $0.198 barely slipped to today\u2019s $0.196 \u2013 a 1% dip.",
+    "visual": {
+     "type": "gauge",
+     "series": "APU000072610",
+     "start": "2010"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Watch the full video",
+     "highlight": [
+      "full"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "Electricity outpaces inflation \u2013 58% rise since 2010",
+  "scenes": [
+   {
+    "narration": "How fast have power costs surged compared to everything else?",
+    "visual": {
+     "type": "title",
+     "text": "Electricity outpaces inflation \u2013 58% rise since 2010",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since 2010, electricity prices jumped 58%, while the overall CPI rose 55%.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "APU000072610",
+      "CPIAUCSL"
+     ],
+     "since": "2010",
+     "as": "change"
+    }
+   },
+   {
+    "narration": "Household energy indexes are up 57% \u2013 almost the same as power itself.",
+    "visual": {
+     "type": "statement",
+     "text": "Energy index +57%",
+     "highlight": [
+      "57%"
+     ]
+    }
+   },
+   {
+    "narration": "Bars show the relative climbs: electricity +58%, energy index +57%, CPI +55%.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "APU000072610",
+      "CUSR0000SAH21",
+      "CPIAUCSL"
+     ],
+     "since": "2010"
+    }
+   },
+   {
+    "narration": "That extra 3% gap means your electric bill is growing faster than the rest of your budget.",
+    "visual": {
+     "type": "statement",
+     "text": "Bills outpace inflation",
+     "highlight": [
+      "outpace"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Watch the full video",
+     "highlight": [
+      "full"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "Last year\u2019s electricity jump: +4.3%",
+  "scenes": [
+   {
+    "narration": "What\u2019s the most recent shock to your power bill?",
+    "visual": {
+     "type": "title",
+     "text": "Last year\u2019s electricity jump: +4.3%",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "From September\u202f2025 to September\u202f2026, electricity rose 4.3%.",
+    "visual": {
+     "type": "compare",
+     "series": "APU000072610",
+     "from": "2025-09",
+     "to": "last"
+    }
+   },
+   {
+    "narration": "That\u2019s a steeper climb than overall consumer prices, which only rose 3.7% in the same period.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "APU000072610",
+      "CPIAUCSL"
+     ],
+     "since": "2025"
+    }
+   },
+   {
+    "narration": "Energy\u2011specific indexes jumped even more \u2013 4.4% for the electricity index and 6.2% for household energy.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "CUSR0000SEHF01",
+      "CUSR0000SAH21"
+     ],
+     "since": "2025",
+     "as": "change"
+    }
+   },
+   {
+    "narration": "A quick look shows the gap widening each year.",
+    "visual": {
+     "type": "line",
+     "series": "CUSR0000SEHF01",
+     "start": "2025",
+     "end": "2026",
+     "annotate": []
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Watch the full video",
+     "highlight": [
+      "full"
+     ]
+    }
+   }
+  ]
+ }
+]

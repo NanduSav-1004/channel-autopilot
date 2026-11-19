@@ -1,0 +1,41 @@
+[llm] gemini:gemini-3.5-flash busy, trying next: gemini-3.5-flash HTTP 503
+[llm] gemini:gemini-3.6-flash busy, trying next: gemini-3.6-flash HTTP 503
+[llm] gemini:gemini-3.8-flash busy, trying next: gemini-3.8-flash HTTP 503
+[plotline] topic: Are We Getting Heavier? The Data Behind Global Obesity | data: []  obesity-prevalence-adults-who-gho
+[llm] gemini:gemini-3.5-flash busy, trying next: gemini-3.5-flash HTTP 503
+[plotline] script check 1: 14 problem(s): ['scene 2: bad visual {"type": "counter", "series": "bahamas", "stat": "last"}: \'bahamas\'', 'scene 3: bad visual {"type": "waffle", "series": "vietnam", "stat": "last"}: waffle needs 1 to 1 of the video\'s series ids', 'scene 10: the narration says 57 but the gauge chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number', 'scene 17: the narration says 2.3 but the counter chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number']
+[llm] gemini:gemini-3.6-flash busy, trying next: gemini-3.6-flash HTTP 503
+[plotline] script check 2: 14 problem(s): ['scene 39: the number 41 is repeated in scenes [6, 36, 39]; say each number at most twice, use other facts', 'scene 3: bad visual {"type": "waffle", "series": "vietnam", "stat": "last"}: waffle needs 1 to 1 of the video\'s series ids', 'scene 17: the narration says 2.3 but the compare chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number', 'scene 25: the narration says 3947, 40.7 but the gauge chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number']
+[plotline] script check 3: 10 problem(s): ['scene 3: bad visual {"type": "waffle", "series": "vietnam", "stat": "last"}: waffle needs 1 to 1 of the video\'s series ids', 'scene 17: the narration says 2.3 but the counter chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number', 'scene 27: the narration says 3590, 25.9 but the waffle chart shows something else; change the chart (e.g. counter with "stat": "at" and the month) so it shows that number', 'scene 37: bad visual {"type": "waffle", "series": "eritrea", "stat": "last"}: waffle needs 1 to 1 of the video\'s series ids']
+[plotline] still 10 problem(s) after 3 rewrites; settling by rule
+[plotline] settled by rule: 0 sentence(s) cut, 5 chart(s) replaced, 783 words left
+[0;93m2026-11-19 09:03:14.558946869 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+[readcheck] pauses added so text can be read: [(9, 0.1), (20, 2.0), (23, 0.3), (31, 0.5)]
+[readcheck] 41/42 scenes keep their text up long enough to read; short: scene 20 needs 8.2s has 7.5s
+[plotline] 42 scenes, 6.3 min; rendering charts
+[mix] audio: music ducked
+[sfx] 196 sound effects
+[master] loudness -17.4 -> -15.1 LUFS, true peak -0.3 -> -1.3 dBTP
+[qa-video] long 376.6s, -15.13 LUFS: ok
+[plotline] uploaded https://youtu.be/qyZs1S2iZtc (goes public 2026-11-19T19:00:00Z)
+[readcheck] 5/5 scenes keep their text up long enough to read
+[mix] Short audio: music ducked
+[sfx] 26 sound effects
+[master] loudness -16.6 -> -15.1 LUFS, true peak -0.5 -> -1.5 dBTP
+[qa-video] short 37.2s, -15.17 LUFS: ok
+[plotline] Short 1 uploaded https://youtu.be/44KnyspZZQk (goes public 2026-11-19T22:00:00Z)
+[readcheck] pauses added so text can be read: [(2, 0.8)]
+[readcheck] 5/5 scenes keep their text up long enough to read
+[mix] Short audio: music ducked
+[sfx] 15 sound effects
+[master] loudness -16.7 -> -15.2 LUFS, true peak -0.5 -> -1.4 dBTP
+[qa-video] short 40.6s, -15.26 LUFS: ok
+[plotline] Short 2 uploaded https://youtu.be/XQ0secQk28s (goes public 2026-11-20T03:00:00Z)
+[readcheck] pauses added so text can be read: [(2, 0.8)]
+[readcheck] 4/5 scenes keep their text up long enough to read; short: scene 2 needs 8.1s has 6.2s
+[mix] Short audio: music ducked
+[sfx] 20 sound effects
+[master] loudness -17.0 -> -15.0 LUFS, true peak -0.3 -> -1.4 dBTP
+[qa-video] short 38.2s, -15.11 LUFS: ok
+[plotline] Short 3 uploaded https://youtu.be/x9O62oT2lnw (goes public 2026-11-20T09:00:00Z)
+Plotline: Are We Getting Heavier? The Data Behind Global Obesity: video qyZs1S2iZtc, 3 Short(s)

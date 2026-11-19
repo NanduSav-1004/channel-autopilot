@@ -1,0 +1,15 @@
+{
+ "title": "How Much Shopping Has Actually Moved Online?",
+ "angle": "Despite the rapid growth of e-commerce during the pandemic, online purchases still represent a surprisingly small fraction of total retail spending.",
+ "series": [
+  "ECOMPCTSA",
+  "RSNSR",
+  "RSAFS"
+ ],
+ "states": null,
+ "owid": null,
+ "countries": null,
+ "owid2": null,
+ "states2": null,
+ "start": "2000"
+}

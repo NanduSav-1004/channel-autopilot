@@ -1,0 +1,166 @@
+[
+ {
+  "title": "The Hidden Cost of Healthcare",
+  "scenes": [
+   {
+    "narration": "Have you noticed your hospital bills seem to be skyrocketing?",
+    "visual": {
+     "type": "title",
+     "text": "The Hidden Cost of Healthcare",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since 1995, hospital service prices in the U.S. have surged by 385%.",
+    "visual": {
+     "type": "counter",
+     "series": "CUSR0000SEMD",
+     "stat": "last",
+     "start": "1995"
+    }
+   },
+   {
+    "narration": "In that same time, general consumer prices only grew by 124%.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "CUSR0000SEMD",
+      "CPIAUCSL"
+     ],
+     "since": "1995",
+     "as": "change"
+    }
+   },
+   {
+    "narration": "Medical costs are rising at over three times the rate of everyday goods.",
+    "visual": {
+     "type": "statement",
+     "text": "Medical costs are outpacing inflation",
+     "highlight": [
+      "outpacing"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "line",
+     "series": "CUSR0000SEMD",
+     "start": "1995"
+    }
+   }
+  ]
+ },
+ {
+  "title": "Why Hospital Bills Never Stop Rising",
+  "scenes": [
+   {
+    "narration": "Why do hospital costs keep climbing even when inflation slows down?",
+    "visual": {
+     "type": "title",
+     "text": "Why Hospital Bills Never Stop Rising",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Look at the data from just the last two years.",
+    "visual": {
+     "type": "heatmap",
+     "series": "CUSR0000SEMD",
+     "years": 3
+    }
+   },
+   {
+    "narration": "Between January 2025 and October 2026, hospital service prices jumped 11%.",
+    "visual": {
+     "type": "line",
+     "series": "CUSR0000SEMD",
+     "start": "2025"
+    }
+   },
+   {
+    "narration": "Meanwhile, overall consumer inflation was just 6% in that window.",
+    "visual": {
+     "type": "counter",
+     "series": "CPIAUCSL",
+     "stat": "last",
+     "start": "2025"
+    }
+   },
+   {
+    "narration": "Since 2025, hospital service costs have surged by 11%.",
+    "visual": {
+     "type": "counter",
+     "series": "CUSR0000SEMD",
+     "stat": "last",
+     "start": "2025"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "CUSR0000SEMD",
+      "CPIAUCSL"
+     ],
+     "since": "2025"
+    }
+   }
+  ]
+ },
+ {
+  "title": "Your Medical Bills vs The Economy",
+  "scenes": [
+   {
+    "narration": "Is your wallet feeling the pinch of modern healthcare?",
+    "visual": {
+     "type": "title",
+     "text": "Your Medical Bills vs The Economy",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "By October 2026, hospital services became 385% more expensive than in 1995.",
+    "visual": {
+     "type": "line",
+     "series": "CUSR0000SEMD",
+     "start": "1995"
+    }
+   },
+   {
+    "narration": "By comparison, everyday consumer prices are only 2.2 times the 1995 level.",
+    "visual": {
+     "type": "statement",
+     "text": "Costs are 4.8 times higher",
+     "highlight": [
+      "4.8"
+     ]
+    }
+   },
+   {
+    "narration": "This divergence is not a shock; it is a long-term trend.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "CUSR0000SEMD",
+      "CPIAUCSL"
+     ],
+     "since": "1995",
+     "as": "change"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "line",
+     "series": "CUSR0000SEMD",
+     "start": "1995",
+     "annotate": [
+      "max"
+     ]
+    }
+   }
+  ]
+ }
+]

@@ -1,0 +1,175 @@
+[
+ {
+  "title": "Why Your Rent Feels So Expensive",
+  "scenes": [
+   {
+    "narration": "Is your rent getting worse? The data reveals a massive squeeze.",
+    "visual": {
+     "type": "title",
+     "text": "Why Your Rent Feels So Expensive",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since 1990, residential rent prices have surged by 232%.",
+    "visual": {
+     "type": "line",
+     "series": "CUSR0000SEHA",
+     "start": "1990"
+    }
+   },
+   {
+    "narration": "That means today's rent index is 3.3 times higher than in 1990.",
+    "visual": {
+     "type": "line",
+     "series": "CUSR0000SEHA",
+     "start": "1990",
+     "annotate": [
+      "max"
+     ]
+    }
+   },
+   {
+    "narration": "Even in the last five years, rent has climbed by 33%.",
+    "visual": {
+     "type": "line",
+     "series": "CUSR0000SEHA",
+     "start": "2020"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Rent outpaces your household concerns.",
+     "highlight": [
+      "outpaces"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "The Hidden Truth About Apartment Vacancies",
+  "scenes": [
+   {
+    "narration": "Why is it so hard to find an apartment? The vacancy data explains it.",
+    "visual": {
+     "type": "title",
+     "text": "The Hidden Truth About Apartment Vacancies",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Back in 2009, vacancy rates hit a record high of 11.1%.",
+    "visual": {
+     "type": "counter",
+     "series": "RRVRUSQ156N",
+     "stat": "max",
+     "start": "1990"
+    }
+   },
+   {
+    "narration": "But by 2021, availability plummeted to a historic low of 5.6%.",
+    "visual": {
+     "type": "line",
+     "series": "RRVRUSQ156N",
+     "start": "1990",
+     "annotate": [
+      "min"
+     ]
+    }
+   },
+   {
+    "narration": "Today, vacancy sits at 7.6%, leaving the market much tighter than it used to be.",
+    "visual": {
+     "type": "gauge",
+     "series": "RRVRUSQ156N",
+     "start": "1990"
+    }
+   },
+   {
+    "narration": "Fewer available units mean landlords hold all the power.",
+    "visual": {
+     "type": "statement",
+     "text": "Scarcity drives higher costs.",
+     "highlight": [
+      "Scarcity"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "waffle",
+     "series": "RRVRUSQ156N",
+     "stat": "last"
+    }
+   }
+  ]
+ },
+ {
+  "title": "Rent vs Income: The Real Affordability Gap",
+  "scenes": [
+   {
+    "narration": "Why does renting take so much of your paycheck? Let's compare the growth.",
+    "visual": {
+     "type": "title",
+     "text": "Rent vs Income: The Real Affordability Gap",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Since 1990, median household income grew by 30% to reach $87,460.",
+    "visual": {
+     "type": "counter",
+     "series": "MEHOINUSA672N",
+     "stat": "last",
+     "start": "1990"
+    }
+   },
+   {
+    "narration": "Over that same period, rent prices have surged by 232%.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "CUSR0000SEHA",
+      "MEHOINUSA672N"
+     ],
+     "since": "1990",
+     "as": "change"
+    }
+   },
+   {
+    "narration": "Rent is climbing much faster than our take-home pay.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "CUSR0000SEHA",
+      "MEHOINUSA672N"
+     ],
+     "since": "1990"
+    }
+   },
+   {
+    "narration": "It is a structural imbalance that keeps eating your budget.",
+    "visual": {
+     "type": "statement",
+     "text": "Rent consumes more than ever.",
+     "highlight": [
+      "consumes"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "compare",
+     "series": "MEHOINUSA672N",
+     "from": "2020",
+     "to": "2025"
+    }
+   }
+  ]
+ }
+]

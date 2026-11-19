@@ -1,0 +1,19 @@
+{
+ "title": "Why US Life Expectancy Is Falling Behind Other Rich Nations",
+ "angle": "Despite higher average incomes, life expectancy in the United States has fallen significantly behind other wealthy democracies since the 1980s.",
+ "series": [],
+ "states": null,
+ "owid": "life-expectancy",
+ "countries": [
+  "United States",
+  "United Kingdom",
+  "Japan",
+  "Germany",
+  "France",
+  "Canada",
+  "Australia"
+ ],
+ "owid2": "gdp-per-capita-worldbank",
+ "states2": null,
+ "start": "1980"
+}

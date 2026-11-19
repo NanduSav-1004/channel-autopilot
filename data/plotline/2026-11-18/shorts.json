@@ -1,0 +1,179 @@
+[
+ {
+  "title": "South Korea's Staggering Drop in Working Hours",
+  "scenes": [
+   {
+    "narration": "Did you know South Korean workers logged 2,919 hours per year back in 1970?",
+    "visual": {
+     "type": "title",
+     "text": "South Korea's Staggering Drop in Working Hours",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "In 1970, South Korea recorded one of the most intense work schedules in the world.",
+    "visual": {
+     "type": "counter",
+     "series": "south-korea",
+     "stat": "max",
+     "start": "1970"
+    }
+   },
+   {
+    "narration": "But as industrialization matured and living standards rose, annual working hours dropped by 35% to 1,910 hours in 2023.",
+    "visual": {
+     "type": "line",
+     "series": "south-korea",
+     "start": "1970",
+     "end": "2023"
+    }
+   },
+   {
+    "narration": "Meanwhile, workers in the United States logged 1,789 hours in 2023, while the United Kingdom recorded 1,523 hours.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "south-korea",
+      "united-states",
+      "united-kingdom"
+     ],
+     "since": "1970",
+     "as": "value"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "The full story is on the channel.",
+     "highlight": [
+      "full"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "How Germany Built the Shortest Work Year",
+  "scenes": [
+   {
+    "narration": "How did Germany become the lowest-working nation in the world at just 1,335 hours per year?",
+    "visual": {
+     "type": "title",
+     "text": "How Germany Built the Shortest Work Year",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Back in 1970, German workers put in 1,972 hours annually.",
+    "visual": {
+     "type": "gauge",
+     "series": "germany",
+     "start": "1970"
+    }
+   },
+   {
+    "narration": "Over the next half-century, rising productivity and strong labor policies drove a 32% reduction in working hours.",
+    "visual": {
+     "type": "compare",
+     "series": "germany",
+     "from": "1970",
+     "to": "2023"
+    }
+   },
+   {
+    "narration": "By contrast, United Kingdom workers logged 1,523 hours in 2023, while American workers recorded 1,789 hours.",
+    "visual": {
+     "type": "slope",
+     "series": [
+      "germany",
+      "united-kingdom",
+      "united-states"
+     ],
+     "from": "1970",
+     "to": "2023"
+    }
+   },
+   {
+    "narration": "Germany shows how advanced economies turned economic efficiency into free time.",
+    "visual": {
+     "type": "world_map",
+     "highlight": "germany"
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "The full story is on the channel.",
+     "highlight": [
+      "channel"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "Does National Wealth Actually Buy Free Time?",
+  "scenes": [
+   {
+    "narration": "Does higher national wealth actually guarantee fewer working hours for citizens?",
+    "visual": {
+     "type": "title",
+     "text": "Does National Wealth Actually Buy Free Time?",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Data across 126 nations reveals an inverse relationship, with GDP per person and work hours moving in opposite directions at a correlation of -0.40.",
+    "visual": {
+     "type": "scatter",
+     "trails": false
+    }
+   },
+   {
+    "narration": "The United States boasts a GDP per person of $74,352 while workers log 1,789 hours per year.",
+    "visual": {
+     "type": "kpi",
+     "series": [
+      "united-states",
+      "germany"
+     ]
+    }
+   },
+   {
+    "narration": "Germany reaches $63,140 per person, yet its workers put in just 1,335 hours.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "germany",
+      "france",
+      "united-kingdom",
+      "united-states"
+     ],
+     "since": "1970"
+    }
+   },
+   {
+    "narration": "While wealth enables shorter schedules, local institutional norms set the pace of life.",
+    "visual": {
+     "type": "statement",
+     "text": "Wealth enables shorter work hours.",
+     "highlight": [
+      "Wealth"
+     ]
+    }
+   },
+   {
+    "narration": "The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "The full story is on the channel.",
+     "highlight": [
+      "full"
+     ]
+    }
+   }
+  ]
+ }
+]

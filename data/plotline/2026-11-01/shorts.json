@@ -1,0 +1,160 @@
+[
+ {
+  "title": "Why Tech Stayed Cheap While Groceries Doubled",
+  "scenes": [
+   {
+    "narration": "Why did TV and audio prices rise only 23% since 2000, while your weekly grocery bill nearly doubled?",
+    "visual": {
+     "type": "title",
+     "text": "Why Tech Stayed Cheap While Groceries Doubled",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Official data shows grocery costs skyrocketed by 94% between January 2000 and September 2026.",
+    "visual": {
+     "type": "counter",
+     "series": "CUSR0000SAF11",
+     "stat": "last",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "Over that exact same stretch, TV, video, and audio prices crept up by only 23%.",
+    "visual": {
+     "type": "line",
+     "series": "CUSR0000SERA",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "Silicon manufacturing scales effortlessly with automated factories, but farming cannot escape the rising costs of land, diesel fuel, and human labor.",
+    "visual": {
+     "type": "statement",
+     "text": "Automation slashes tech manufacturing costs relentlessly",
+     "highlight": [
+      "Automation"
+     ]
+    }
+   },
+   {
+    "narration": "That is why gadget prices barely budge while dinner keeps getting pricier. The full story is on the channel.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "CUSR0000SAF11",
+      "CUSR0000SERA"
+     ],
+     "since": "2000",
+     "as": "change"
+    }
+   }
+  ]
+ },
+ {
+  "title": "The 32% Grocery Price Shock",
+  "scenes": [
+   {
+    "narration": "Did your grocery bill really spike by 32% in just a few short years?",
+    "visual": {
+     "type": "title",
+     "text": "The 32% Grocery Price Shock",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Between January 2020 and September 2026, US grocery prices jumped 32%, pacing overall consumer inflation of 30%.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "CUSR0000SAF11",
+      "CPIAUCSL"
+     ],
+     "since": "2020"
+    }
+   },
+   {
+    "narration": "Yet home entertainment electronics stayed remarkably steady, edging up just 17% during the same turbulent period.",
+    "visual": {
+     "type": "line",
+     "series": "CUSR0000SERA",
+     "start": "2020"
+    }
+   },
+   {
+    "narration": "Physical harvests depend on unpredictable weather and expensive fertilizer, making food prices notoriously vulnerable to supply shocks.",
+    "visual": {
+     "type": "statement",
+     "text": "Biological supply chains cannot scale like microchips",
+     "highlight": [
+      "Biological"
+     ]
+    }
+   },
+   {
+    "narration": "You can delay buying a new television, but you cannot delay dinner. Since 2000, grocery prices climbed 94 percent, while TVs rose just 23 percent.",
+    "visual": {
+     "type": "bars",
+     "series": [
+      "CUSR0000SAF11",
+      "CUSR0000SERA"
+     ],
+     "since": "2000"
+    }
+   }
+  ]
+ },
+ {
+  "title": "Why Everything Doubled Except Electronics",
+  "scenes": [
+   {
+    "narration": "Did you know that overall US consumer prices jumped 99% since January 2000, literally doubling your living costs?",
+    "visual": {
+     "type": "title",
+     "text": "Why Everything Doubled Except Electronics",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "By September 2026, general consumer prices reached 2.0 times their 2000 baseline, driven by massive shocks like the 9% spike in June 2022.",
+    "visual": {
+     "type": "heatmap",
+     "series": "CPIAUCSL",
+     "years": 6
+    }
+   },
+   {
+    "narration": "Meanwhile, TV, video, and audio prices grew by just 23% from January 2000 to September 2026.",
+    "visual": {
+     "type": "counter",
+     "series": "CUSR0000SERA",
+     "stat": "last",
+     "start": "2000"
+    }
+   },
+   {
+    "narration": "High-density microchip engineering and rapid factory automation keep driving consumer tech prices down, even as broad inflation surges.",
+    "visual": {
+     "type": "statement",
+     "text": "Factory automation constantly lowers electronics production costs",
+     "highlight": [
+      "automation"
+     ]
+    }
+   },
+   {
+    "narration": "Discover why technology resists inflation while everyday living costs march higher. The full story is on the channel.",
+    "visual": {
+     "type": "multiline",
+     "series": [
+      "CPIAUCSL",
+      "CUSR0000SERA",
+      "CUSR0000SAF11"
+     ],
+     "since": "2000",
+     "as": "change"
+    }
+   }
+  ]
+ }
+]

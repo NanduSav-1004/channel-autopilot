@@ -1,0 +1,16 @@
+{
+ "title": "Why Did Cheap New Cars Disappear?",
+ "angle": "Automakers phased out entry-level sedans to prioritize high-margin SUVs and trucks, sending new vehicle prices surging far faster than typical wages.",
+ "series": [
+  "CUSR0000SETA01",
+  "CPIAUCSL",
+  "AHETPI",
+  "TOTALSA"
+ ],
+ "states": null,
+ "owid": null,
+ "countries": null,
+ "owid2": null,
+ "states2": null,
+ "start": "2000"
+}

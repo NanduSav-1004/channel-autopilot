@@ -1,0 +1,158 @@
+[
+ {
+  "title": "The 3.0% Resignation Wave",
+  "scenes": [
+   {
+    "narration": "Did 3.0% of all US workers really quit their jobs in one month?",
+    "visual": {
+     "type": "title",
+     "text": "The 3.0% Resignation Wave",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "In November 2021, the monthly quit rate spiked to 3.0%, the highest level ever recorded.",
+    "visual": {
+     "type": "waffle",
+     "series": "JTSQUR",
+     "stat": "max"
+    }
+   },
+   {
+    "narration": "Just eighteen months before that, lockdowns froze the market, plunging the quit rate to 1.5% in April 2020.",
+    "visual": {
+     "type": "line",
+     "series": "JTSQUR",
+     "start": "2015",
+     "annotate": [
+      "min"
+     ]
+    }
+   },
+   {
+    "narration": "By September 2026, the quit rate cooled by -30% from that historic high, settling back at 2.1%.",
+    "visual": {
+     "type": "compare",
+     "series": "JTSQUR",
+     "from": "2021-11",
+     "to": "2026-09"
+    }
+   },
+   {
+    "narration": "Workers traded uncertainty for massive career leverage. The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Workers grabbed historic leverage",
+     "highlight": [
+      "historic"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "The +57% Wage Surge",
+  "scenes": [
+   {
+    "narration": "Did workers actually win the wage war over the last decade?",
+    "visual": {
+     "type": "title",
+     "text": "The +57% Wage Surge",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "Between January 2015 and October 2026, average hourly pay surged by +57% for non-managers.",
+    "visual": {
+     "type": "counter",
+     "series": "AHETPI",
+     "stat": "last",
+     "start": "2015"
+    }
+   },
+   {
+    "narration": "Hourly wages climbed from $20.80 in January 2015 all the way to an all-time high of $32.75 in October 2026.",
+    "visual": {
+     "type": "line",
+     "series": "AHETPI",
+     "start": "2015",
+     "annotate": [
+      "max"
+     ]
+    }
+   },
+   {
+    "narration": "Even since January 2020, pay jumped +37%, fueled by intense competition for staff.",
+    "visual": {
+     "type": "compare",
+     "series": "AHETPI",
+     "from": "2020-01",
+     "to": "last"
+    }
+   },
+   {
+    "narration": "Quitting handed employees permanent bargaining power. The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Quitting paid off permanently",
+     "highlight": [
+      "permanently"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "title": "The Historic Job Turnaround",
+  "scenes": [
+   {
+    "narration": "How did US unemployment drop by -72% so quickly?",
+    "visual": {
+     "type": "title",
+     "text": "The Historic Job Turnaround",
+     "highlight": []
+    }
+   },
+   {
+    "narration": "In April 2020, US unemployment hit a terrifying peak of 14.8% as lockdowns shut down the economy.",
+    "visual": {
+     "type": "counter",
+     "series": "UNRATE",
+     "stat": "at",
+     "date": "2020-04"
+    }
+   },
+   {
+    "narration": "Yet hiring rebounded so fast that joblessness plummeted to a record low of 3.4% by April 2023.",
+    "visual": {
+     "type": "line",
+     "series": "UNRATE",
+     "start": "2015",
+     "annotate": [
+      "min"
+     ]
+    }
+   },
+   {
+    "narration": "By October 2026, the rate stood at 4.1%, a -72% collapse from that pandemic peak.",
+    "visual": {
+     "type": "kpi",
+     "series": [
+      "UNRATE",
+      "JTSQUR"
+     ]
+    }
+   },
+   {
+    "narration": "Extreme labor shortages completely flipped the balance of power. The full story is on the channel.",
+    "visual": {
+     "type": "statement",
+     "text": "Shortages flipped employer power",
+     "highlight": [
+      "flipped"
+     ]
+    }
+   }
+  ]
+ }
+]

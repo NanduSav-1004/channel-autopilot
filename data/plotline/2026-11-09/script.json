@@ -1,0 +1,415 @@
+{
+ "title": "Where Did American Savings Go? The $1.1 Trillion Credit Surge",
+ "description": "After reaching unprecedented highs during the pandemic, the US personal saving rate has plunged while credit card balances have climbed to historic levels. Even with steady gains in hourly pay, household budgets face shifting dynamics in post-pandemic reality.\n\nIn this video, we analyze official Federal Reserve, BEA, and BLS economic data to uncover where American savings went and how borrowing habits evolved over the last decade.",
+ "tags": [
+  "Plotline Data",
+  "US Economy",
+  "Personal Savings",
+  "Credit Card Debt",
+  "Personal Finance",
+  "Inflation",
+  "Economics Data",
+  "Federal Reserve",
+  "FRED Data",
+  "Household Debt"
+ ],
+ "thumbnail": {
+  "number": "$1.1 trillion",
+  "words": "Where Savings Went"
+ },
+ "scenes": [
+  {
+   "narration": "In early 2020, lockdown life sparked an unprecedented surge in household thrift across the country. In April 2020, the personal saving rate hit a staggering record of 31.8%.",
+   "visual": {
+    "type": "title",
+    "text": "Where Did American Savings Go? The $1.1 Trillion Credit Surge",
+    "highlight": []
+   }
+  },
+  {
+   "narration": "For a brief moment, American households sat on a massive financial shield of unspent cash.",
+   "visual": {
+    "type": "statement",
+    "text": "Unprecedented cash buffers built up fast",
+    "highlight": "buffers"
+   }
+  },
+  {
+   "narration": "But as life reopened and inflation took hold, those built-up reserves quickly melted away.",
+   "visual": {
+    "type": "waffle",
+    "series": "PSAVERT",
+    "stat": "last"
+   }
+  },
+  {
+   "narration": "Today, the economic script has flipped entirely. By October 2026, credit card balances at U.S. banks hit a record $1.1 trillion.",
+   "visual": {
+    "type": "counter",
+    "series": "CCLACBW027SBOG",
+    "stat": "last",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Rather than stashing money into bank accounts, consumers are increasingly relying on high-interest credit cards to make ends meet.",
+   "visual": {
+    "type": "compare",
+    "series": "CCLACBW027SBOG",
+    "from": "2020-01",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "While average pay has steadily climbed, borrowing balances expanded even faster over the exact same period.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "AHETPI",
+     "CCLACBW027SBOG"
+    ],
+    "since": "2020",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "How did America swing from the greatest saving frenzy in modern history to an unprecedented pile of debt? Let's unpack where the money actually went.",
+   "visual": {
+    "type": "gauge",
+    "series": "PSAVERT",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "To fully understand why savings dissolved, we need to trace where the pre-pandemic baseline originally started back in 2015.",
+   "visual": {
+    "type": "statement",
+    "text": "Tracing the pre-pandemic baseline from 2015",
+    "highlight": "baseline"
+   }
+  },
+  {
+   "narration": "In January 2015, the personal saving rate sat at 6.3% of disposable income, according to data from the U.S. Bureau of Economic Analysis.",
+   "visual": {
+    "type": "counter",
+    "series": "PSAVERT",
+    "stat": "at",
+    "date": "2015-01"
+   }
+  },
+  {
+   "narration": "Household saving was resilient. By September 2018, the saving rate climbed to 6.8%, marking a 15% increase over the preceding year.",
+   "visual": {
+    "type": "line",
+    "series": "PSAVERT",
+    "start": "2015",
+    "end": "2018"
+   }
+  },
+  {
+   "narration": "Wages laid a foundation for that growth. Non-managerial workers earned an average hourly pay of $20.80 in January 2015.",
+   "visual": {
+    "type": "compare",
+    "series": "AHETPI",
+    "from": "2015-01",
+    "to": "2020-01"
+   }
+  },
+  {
+   "narration": "Borrowing was also far lower than modern levels. U.S. banks held $625.5 billion in credit card balances in January 2015.",
+   "visual": {
+    "type": "gauge",
+    "series": "CCLACBW027SBOG",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Across this pre-2020 period, rising pay supported manageable debt levels without eroding everyday bank accounts.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "AHETPI",
+     "CCLACBW027SBOG"
+    ],
+    "since": "2015",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "This balanced dynamic established a stable financial environment for American households right before the shocks of 2020 arrived.",
+   "visual": {
+    "type": "statement",
+    "text": "A balanced baseline before the 2020 shocks",
+    "highlight": "balanced"
+   }
+  },
+  {
+   "narration": "As stimulus checks faded and post-pandemic inflation took hold, America's newfound financial safety net vanished rapidly.",
+   "visual": {
+    "type": "statement",
+    "text": "Post-pandemic savings crashed to record lows",
+    "highlight": [
+     "crashed"
+    ]
+   }
+  },
+  {
+   "narration": "By June 2022, the personal saving rate crashed to an historic low of just 2.4%.",
+   "visual": {
+    "type": "counter",
+    "series": "PSAVERT",
+    "stat": "at",
+    "date": "2022-06"
+   }
+  },
+  {
+   "narration": "That marked a devastating slide. From its record peak in April 2020 down to September 2026, the saving rate plunged 88%.",
+   "visual": {
+    "type": "compare",
+    "series": "PSAVERT",
+    "from": "2020-04",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "The momentum downwards has not stopped. Between September 2025 and September 2026, saving rates fell another 25.5% over that single year.",
+   "visual": {
+    "type": "heatmap",
+    "series": "PSAVERT",
+    "years": 4
+   }
+  },
+  {
+   "narration": "To fill the expanding gap, households turned heavily to plastic. Credit card balances at U.S. banks climbed 76% from January 2015 to October 2026.",
+   "visual": {
+    "type": "line",
+    "series": "CCLACBW027SBOG",
+    "start": "2015",
+    "annotate": "max"
+   }
+  },
+  {
+   "narration": "Borrowing kept accelerating up to the present day. Credit balances grew another 4.2% over the last year, between October 2025 and October 2026.",
+   "visual": {
+    "type": "compare",
+    "series": "CCLACBW027SBOG",
+    "from": "2025-10",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "Even as average hourly pay reached $32.75 in October 2026, high debt balances eroded the remaining buffer for everyday consumers.",
+   "visual": {
+    "type": "multiline",
+    "series": [
+     "PSAVERT",
+     "CCLACBW027SBOG",
+     "AHETPI"
+    ],
+    "since": "2020",
+    "as": "change"
+   }
+  },
+  {
+   "narration": "Government stimulus disbursements initially flooded household bank accounts with direct relief, creating an artificial surge in liquid cash.",
+   "visual": {
+    "type": "statement",
+    "text": "Government stimulus temporarily flooded bank accounts",
+    "highlight": "stimulus"
+   }
+  },
+  {
+   "narration": "Yet when economy-wide reopenings began, severe supply chain bottlenecks met intense consumer demand, unleashing widespread cost inflation.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CCLACBW027SBOG",
+     "AHETPI"
+    ],
+    "since": "2020"
+   }
+  },
+  {
+   "narration": "As everyday expenses climbed, liquid cushions evaporated. From January 2020 to September 2026, the personal saving rate plunged 44%.",
+   "visual": {
+    "type": "line",
+    "series": "PSAVERT",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "To sustain spending, consumers turned back to debt. In January 2020, before the crisis unfolded, credit card balances at U.S. banks stood at $848.5 billion.",
+   "visual": {
+    "type": "counter",
+    "series": "CCLACBW027SBOG",
+    "stat": "at",
+    "date": "2020-01",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "As price tags expanded across retail sectors, those total credit card balances surged 29% from January 2020 to October 2026.",
+   "visual": {
+    "type": "line",
+    "series": "CCLACBW027SBOG",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "On the earnings side, labor tightness pushed nominal pay upward. Non-managerial workers earned an average hourly pay of $23.91 back in January 2020.",
+   "visual": {
+    "type": "line",
+    "series": "AHETPI",
+    "start": "2020"
+   }
+  },
+  {
+   "narration": "Average pay climbed 37% by October 2026. However, because structural inflation eroded purchasing power, higher wages couldn't prevent savings from drying up.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "AHETPI",
+     "CCLACBW027SBOG"
+    ],
+    "since": "2020"
+   }
+  },
+  {
+   "narration": "Higher hourly wages provided essential relief to working families across America, yet mounting monthly obligations continuously squeezed household budgets.",
+   "visual": {
+    "type": "statement",
+    "text": "Rising pay meets persistent debt service burdens",
+    "highlight": [
+     "debt"
+    ]
+   }
+  },
+  {
+   "narration": "Non-managerial hourly pay expanded by 57% between January 2015 and October 2026, pushing nominal paychecks significantly higher over the decade.",
+   "visual": {
+    "type": "line",
+    "series": "AHETPI",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Despite those earnings gains, total household debt service payments still consumed 11.1% of disposable income in April 2026.",
+   "visual": {
+    "type": "waffle",
+    "series": "TDSP",
+    "stat": "last"
+   }
+  },
+  {
+   "narration": "Emergency stimulus measures and reduced spending temporarily drove that debt payment burden down to an historic low of 9.1% in January 2021.",
+   "visual": {
+    "type": "line",
+    "series": "TDSP",
+    "start": "2015",
+    "annotate": "min"
+   }
+  },
+  {
+   "narration": "As post-pandemic financial conditions stabilized, total debt burdens plateaued, dropping just 0.1% over the year to 11.1% in April 2026.",
+   "visual": {
+    "type": "counter",
+    "series": "TDSP",
+    "stat": "at",
+    "date": "2026-04"
+   }
+  },
+  {
+   "narration": "Because fixed interest payments continuously claim a major slice of earnings, hourly pay raises get absorbed before building long-term cash reserves.",
+   "visual": {
+    "type": "statement",
+    "text": "Interest payments absorb wage gains before savings build",
+    "highlight": [
+     "Interest"
+    ]
+   }
+  },
+  {
+   "narration": "This delicate tension between rising hourly pay and persistent debt service obligations explains why everyday family finances remain under constant pressure.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "AHETPI",
+     "TDSP"
+    ]
+   }
+  },
+  {
+   "narration": "Over the last decade, the safety cushion for American households steadily shrank. From January 2015 to September 2026, the personal saving rate dropped by 40%.",
+   "visual": {
+    "type": "line",
+    "series": "PSAVERT",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "Today, families hold onto far less of their income each month. By September 2026, the saving rate stood at just 3.8%.",
+   "visual": {
+    "type": "counter",
+    "series": "PSAVERT",
+    "stat": "last",
+    "start": "2015"
+   }
+  },
+  {
+   "narration": "That decline accelerated again recently. Between January 2025 and September 2026, the saving rate fell by 33%.",
+   "visual": {
+    "type": "compare",
+    "series": "PSAVERT",
+    "from": "2025-01",
+    "to": "last"
+   }
+  },
+  {
+   "narration": "High prices continuously drain cash, forcing households to rely on credit cards rather than true liquid reserves.",
+   "visual": {
+    "type": "statement",
+    "text": "SAVINGS REPLACED BY DEBT",
+    "highlight": [
+     "DEBT"
+    ]
+   }
+  },
+  {
+   "narration": "Credit card balances grew another 5% from January 2025 to October 2026, locking in high fixed expenses.",
+   "visual": {
+    "type": "bars",
+    "series": [
+     "CCLACBW027SBOG",
+     "AHETPI"
+    ],
+    "since": "2025"
+   }
+  },
+  {
+   "narration": "The key takeaway is clear: higher wages have not restored long-term financial security. Has your household buffer changed over recent years? Tell us in the comments.",
+   "visual": {
+    "type": "kpi",
+    "series": [
+     "PSAVERT",
+     "CCLACBW027SBOG"
+    ]
+   }
+  },
+  {
+   "narration": "Subscribe to Plotline Data for more data-driven stories on the economy.",
+   "visual": {
+    "type": "statement",
+    "text": "SUBSCRIBE TO PLOTLINE DATA",
+    "highlight": [
+     "SUBSCRIBE"
+    ]
+   }
+  }
+ ],
+ "engage": {
+  "kind": "correct",
+  "question": "Has your household buffer changed over recent years?",
+  "onscreen": "HAS YOUR HOUSEHOLD BUFFER CHANGED OVER RECENT YEARS",
+  "comment": "Has your household buffer changed over recent years?"
+ }
+}
