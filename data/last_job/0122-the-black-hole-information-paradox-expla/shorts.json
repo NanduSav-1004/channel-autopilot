@@ -1,0 +1,17 @@
+[
+ {
+  "section_index": 0,
+  "title": "Do Black Holes Really Erase Every Secret?",
+  "narration": "Do black holes really erase every secret? They swallow everything, even the details of what fell in. Hawking showed the emitted radiation depends only on mass, electric charge, and spin. Two completely different stars can collapse into black holes with identical mass, charge, and spin. Those black holes evaporate into indistinguishable clouds of photons. The final radiation carries no trace of the original state. This matches the no\u2011hair theorem, which says interior details are ignored. Quantum mechanics demands information cannot vanish, so the paradox appears. The universe seems to lose that secret"
+ },
+ {
+  "section_index": 1,
+  "title": "Can a Dying Star Glow Without Telling Its Story?",
+  "narration": "Can a dying star glow without telling its story? In the 1970s Stephen Hawking proved black holes emit faint Hawking radiation. The glow\u2019s temperature comes solely from the black hole\u2019s mass, so the spectrum depends only on mass, electric charge, and spin. Identical black holes therefore emit identical thermal radiation, a random soup of particles. The final burst reveals only those three numbers, not whether the star was a red giant or a neutron star. Hawking argued the pure quantum state becomes a mixed state of radiation, conflicting with quantum\u2011mechanical unitarity. The radiation thus hides the original story"
+ },
+ {
+  "section_index": 2,
+  "title": "Why Can Quantum Mechanics Never Lose Information?",
+  "narration": "Why can quantum mechanics never lose information? The Schr\u00f6dinger equation evolves the wavefunction with a unitary operator. Unitary means the map is bijective: knowing the state now lets you reconstruct the exact past and predict the exact future. Because the evolution is reversible, every microscopic detail is preserved. A pure state has zero von\u202fNeumann entropy, and unitary evolution keeps that entropy constant. Therefore a black hole that evaporates cannot turn a pure state into a mixed one without breaking this rule. Hawking\u2019s thermal radiation suggests otherwise, but unitarity forbids loss of information"
+ }
+]

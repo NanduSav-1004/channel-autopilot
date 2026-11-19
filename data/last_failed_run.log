@@ -1,0 +1,36 @@
+[daily] Short 1: old scheduled video deleted, will be made again
+[daily] Short 2: old scheduled video deleted, will be made again
+[daily] today's video is up; finishing its Shorts (0 queued, 2 already pending)
+[job 34] short_upload ...
+[job 34] short_upload: missing final.mp4, script.json; rewinding to the start
+[job 34] short_script ...
+[job 34] short_script done in 0s
+[job 34] short_voice ...
+[tts] voice for this video: kokoro:bm_george
+[0;93m2026-10-30 12:18:52.871888310 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+[job 34] short_voice done in 17s
+[job 34] short_render ...
+[llm] gemini:gemini-3.5-flash busy, trying next: gemini-3.5-flash HTTP 503
+[llm] gemini:gemini-3.6-flash busy, trying next: gemini-3.6-flash HTTP 503
+[job 34] media found again for this Short
+[datashot] number 'Jupiter volume multiple' at 4.6s (chosen by the model)
+[mix] audio: music ducked
+[job 34] short_render done in 261s
+[job 34] short_upload ...
+[job 34] short_upload done in 2s
+[job 35] short_upload ...
+[job 35] short_upload: missing final.mp4, script.json; rewinding to the start
+[job 35] short_script ...
+[job 35] short_script done in 0s
+[job 35] short_voice ...
+[job 35] short_voice done in 16s
+[job 35] short_render ...
+[datashot] bars 'Atmospheric composition' at 4.2s (chosen by the model)
+[mix] audio: music ducked
+[job 35] short_render done in 35s
+[job 35] short_upload ...
+[job 35] short_upload done in 2s
+ERROR: daily run finished no video (see job errors below)
+processed 2 job(s); dry_run=False
+{'id': 28, 'stage': 'new', 'status': 'failed', 'attempts': 3, 'error': 'qa: QA rejected script: unsupported claim: If it were only 189,000 kilometers away, its apparent size would double.; unsupported claim: If the Moon were at half its current distance, it would still be outside the Roche limit.; unsupported claim: The Moon could have solidified when orbiting at half its current distance, yet it remains intact today.'}
+malayalam edition: nothing due
