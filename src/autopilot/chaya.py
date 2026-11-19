@@ -21,11 +21,11 @@ def engine_for(key_env: str, model: str = MODEL):
     return cls(VOICE, [model])
 
 
-def speak(script: dict, out_wav: Path, log=print) -> list[dict]:
+def speak(script: dict, out_wav: Path, log=print, models: tuple | None = None) -> list[dict]:
     """The narration of `script` ({"sections": [{"heading", "narration"}]}) in the channel voice, with per-sentence timings. Tries every key on the
     fixed model first, then the fallback models."""
     last: Exception | None = None
-    for model in (MODEL, *FALLBACK_MODELS):
+    for model in (models or (MODEL, *FALLBACK_MODELS)):
         for key_env in KEY_ENVS:
             if not os.environ.get(key_env):
                 continue

@@ -1306,5 +1306,7 @@
     scene(0);
     return true;
   };
+  // the Science Chaya scene kit (chaya.js) builds on these
+  window.MOTION = { SCENES, E, prog, clamp, lerp, rid, get svg() { return svg; }, get W() { return W; }, get H() { return H; }, get C() { return C; } };
   window.seek = async (t) => { scene(t); if (pending.length) await Promise.all(pending.splice(0)); return true; };
 })();

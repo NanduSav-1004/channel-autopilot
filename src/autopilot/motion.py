@@ -24,7 +24,8 @@ def _chrome() -> str | None:
 
 def _topo() -> dict:
     v = STAGE / "vendor"
-    return {"states": json.loads((v / "states-albers-10m.json").read_text()), "world": json.loads((v / "countries-110m.json").read_text())}
+    return {"states": json.loads((v / "states-albers-10m.json").read_text()), "world": json.loads((v / "countries-110m.json").read_text()),
+            "kerala": json.loads((v / "kerala_region.json").read_text())}
 
 
 CHROME_MB = 900        # rough memory one rendering Chrome needs at 1080p
@@ -49,7 +50,7 @@ def _encode(out: Path, w: int, h: int, fps: int, grain: bool = True) -> subproce
 
 def _render_frames(page, spec: dict, first: int, last: int, out: Path, fps: int) -> None:
     w, h = spec.get("canvas") or (spec.get("width", 1920), spec.get("height", 1080))
-    page.evaluate("([s, t]) => window.load(s, t)", [spec, _topo() if spec["type"] in ("map", "world_map", "globe") else None])
+    page.evaluate("([s, t]) => window.load(s, t)", [spec, _topo() if spec["type"] in ("map", "world_map", "globe", "chaya") else None])
     ff = _encode(out, w, h, fps, spec.get("grain", True))
     try:
         for i in range(first, last):
