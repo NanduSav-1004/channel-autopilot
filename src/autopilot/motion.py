@@ -41,16 +41,16 @@ def workers() -> int:
     return max(1, min(cap, (os.cpu_count() or 2) - 1, (avail - 1024) // CHROME_MB))
 
 
-def _encode(out: Path, w: int, h: int, fps: int) -> subprocess.Popen:
+def _encode(out: Path, w: int, h: int, fps: int, grain: bool = True) -> subprocess.Popen:
     return subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", str(fps), "-c:v", "mjpeg", "-i", "-",
-                             "-vf", GRAIN, "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p", "-s", f"{w}x{h}",
+                             "-vf", GRAIN if grain else "null", "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p", "-s", f"{w}x{h}",
                              "-r", str(fps), str(out)], stdin=subprocess.PIPE)
 
 
 def _render_frames(page, spec: dict, first: int, last: int, out: Path, fps: int) -> None:
     w, h = spec.get("canvas") or (spec.get("width", 1920), spec.get("height", 1080))
     page.evaluate("([s, t]) => window.load(s, t)", [spec, _topo() if spec["type"] in ("map", "world_map", "globe") else None])
-    ff = _encode(out, w, h, fps)
+    ff = _encode(out, w, h, fps, spec.get("grain", True))
     try:
         for i in range(first, last):
             page.evaluate(f"window.seek({i / fps})")

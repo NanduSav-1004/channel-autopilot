@@ -1064,6 +1064,195 @@
     };
   };
 
+  // ---- Science Chaya: the monsoon explainer (a cut-away of Kerala, drawn in code; cards in Malayalam with an English line under them) ----
+  const CHAYA = { cream: "#f7ecd9", brown: "#7b4a2b", brownDark: "#4a2a17", leaf: "#2f7d4f", sea: "#1f8aa8", seaDeep: "#146a85", amber: "#e8a33d", sky1: "#bfe3f2", sky2: "#eaf6fb", ink: "#2a1a10" };
+  const MAL = '"Noto Sans Malayalam", "Space Grotesk", sans-serif';
+
+  SCENES.monsoon = (g, s) => {
+    const marks = s.marks, T = s.duration, id = "mz" + rid();
+    const defs_ = svg.select("defs");
+    const sh = defs_.append("filter").attr("id", id + "sh").attr("x", "-20%").attr("y", "-20%").attr("width", "140%").attr("height", "150%");
+    sh.append("feDropShadow").attr("dx", 0).attr("dy", 8).attr("stdDeviation", 9).attr("flood-color", "#2a1a10").attr("flood-opacity", 0.35);
+    const sky = defs_.append("linearGradient").attr("id", id + "sky").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 1);
+    sky.append("stop").attr("offset", "0%").attr("stop-color", CHAYA.sky1);
+    sky.append("stop").attr("offset", "100%").attr("stop-color", CHAYA.sky2);
+    const rock = defs_.append("linearGradient").attr("id", id + "rock").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 1);
+    rock.append("stop").attr("offset", "0%").attr("stop-color", "#8a6a45");
+    rock.append("stop").attr("offset", "100%").attr("stop-color", "#5a4029");
+    const hill = defs_.append("linearGradient").attr("id", id + "hill").attr("x1", 0).attr("y1", 0).attr("x2", 1).attr("y2", 0);
+    hill.append("stop").attr("offset", "0%").attr("stop-color", "#3f9a5f");
+    hill.append("stop").attr("offset", "62%").attr("stop-color", "#2f7d4f");
+    hill.append("stop").attr("offset", "100%").attr("stop-color", "#c9a35e");
+    const grayCloud = d3.interpolateRgb("#ffffff", "#9aa6b2");
+
+    g.append("rect").attr("width", W).attr("height", H).attr("fill", CHAYA.cream);
+    const skyRect = g.append("rect").attr("x", 0).attr("y", 330).attr("width", W).attr("height", 1100).attr("fill", `url(#${id}sky)`);
+    const storm = g.append("rect").attr("x", 0).attr("y", 330).attr("width", W).attr("height", 1100).attr("fill", "#5f7487").attr("opacity", 0);
+
+    // terrain: sea on the left, a low coast, the Western Ghats (windward slope), then the dry plateau behind them
+    const TER = [[330, 1420], [540, 1408], [690, 1120], [790, 860], [850, 700], [930, 830], [1080, 1090]];
+    const terY = (x) => { for (let i = 1; i < TER.length; i++) if (x <= TER[i][0]) { const [x0, y0] = TER[i - 1], [x1, y1] = TER[i]; return lerp(y0, y1, (x - x0) / (x1 - x0)); } return TER[TER.length - 1][1]; };
+    const BOT = 1760;
+
+    // sun, with slowly turning rays
+    const sun = g.append("g").attr("transform", "translate(880,520)");
+    const rays = sun.append("g");
+    for (let i = 0; i < 14; i++) rays.append("rect").attr("x", -9).attr("y", -150).attr("width", 18).attr("height", 52).attr("rx", 9).attr("fill", "#f6b945").attr("transform", `rotate(${i * 360 / 14})`);
+    const sunDisc = sun.append("circle").attr("r", 82).attr("fill", "#f9c74f");
+    sun.append("circle").attr("r", 58).attr("fill", "#fbd978");
+
+    // sea (waves), land and mountain
+    const seaG = g.append("g");
+    seaG.append("rect").attr("x", 0).attr("y", 1420).attr("width", 340).attr("height", BOT - 1420).attr("fill", CHAYA.seaDeep);
+    const waves = [0, 1, 2].map((k) => seaG.append("path").attr("fill", k === 0 ? CHAYA.sea : k === 1 ? "#3aa3c0" : "#6bbdd3").attr("opacity", k === 0 ? 1 : 0.7));
+    const landPts = [[330, BOT], ...TER, [1080, BOT]];
+    g.append("path").attr("d", d3.line()(landPts) + "Z").attr("fill", `url(#${id}rock)`);
+    g.append("path").attr("d", d3.line()([...TER, [1080, TER[TER.length - 1][1] + 70], ...TER.slice().reverse().map(([x, y]) => [x, y + 70])]) + "Z").attr("fill", `url(#${id}hill)`);
+    // soil layers
+    for (const [dy, c] of [[150, "#7a5a38"], [260, "#6b4d31"]]) g.append("path").attr("d", d3.line()(TER.map(([x, y]) => [x, y + dy]).concat([[1080, BOT], [330, BOT]])) + "Z").attr("fill", c).attr("opacity", 0.55);
+    // trees on the windward side, shrubs on the dry side
+    const rnd = (n) => { const v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
+    for (let i = 0; i < 22; i++) {
+      const x = 345 + i * 25 + rnd(i) * 8, y = terY(x), dry = x > 880, h = (dry ? 40 : 70) + rnd(i + 9) * 34;
+      const tr = g.append("g").attr("transform", `translate(${x},${y + 4})`);
+      tr.append("rect").attr("x", -3).attr("y", -h * 0.35).attr("width", 6).attr("height", h * 0.4).attr("fill", "#5b3a1f");
+      if (dry) tr.append("circle").attr("cy", -h * 0.5).attr("r", h * 0.32).attr("fill", "#a8934d");
+      else tr.append("circle").attr("cy", -h * 0.62).attr("r", h * 0.45).attr("fill", i % 2 ? "#2c8a52" : "#1f7344");
+    }
+
+    // heat shimmer over the land
+    const heat = [0, 1, 2].map((k) => g.append("path").attr("fill", "none").attr("stroke", "#e8793d").attr("stroke-width", 7).attr("stroke-linecap", "round").attr("opacity", 0));
+
+    // the wind: moist air from the sea, up the slope and over the ridge
+    const WIND = [[-40, 1330], [200, 1300], [440, 1240], [600, 1130], [730, 940], [810, 760], [900, 640], [1010, 660], [1120, 780]];
+
+    // drifting small clouds, a boat on the sea, and streaks that show the wind
+    const drift = [0, 1, 2].map((k) => { const c = g.append("g"); [[0, 0, 34], [34, -14, 42], [76, 0, 34]].forEach(([x, y, r]) => c.append("circle").attr("cx", x).attr("cy", y).attr("r", r).attr("fill", "#fff").attr("opacity", 0.85)); return c; });
+    const boat = g.append("g");
+    boat.append("path").attr("d", "M -50 0 L 50 0 L 34 24 L -34 24 Z").attr("fill", "#8a4b2a");
+    boat.append("path").attr("d", "M 0 -8 L 0 -92 L 44 -8 Z").attr("fill", "#fff7e6");
+    boat.append("rect").attr("x", -2).attr("y", -96).attr("width", 4).attr("height", 90).attr("fill", "#5b3a1f");
+    const streaks = [-46, -16, 14, 44].map((dy) => g.append("path").attr("fill", "none").attr("stroke", "#fff").attr("stroke-width", 7).attr("stroke-linecap", "round").attr("stroke-dasharray", "46 90")
+      .attr("d", d3.line().curve(d3.curveCatmullRom)(WIND.slice(0, 7).map(([x, y]) => [x, y + dy])).toString()));
+    const wp = g.append("path").attr("d", d3.line().curve(d3.curveCatmullRom)(WIND)).attr("fill", "none");
+    const WL = wp.node().getTotalLength();
+    const wpts = Array.from({ length: 400 }, (_, i) => { const p = wp.node().getPointAtLength((i / 399) * WL); return [p.x, p.y]; });
+    wp.remove();
+    const NP = 90, parts = Array.from({ length: NP }, (_, i) => ({ off: i / NP, jy: (rnd(i + 3) - 0.5) * 110, r: 8 + rnd(i + 5) * 9, sp: 0.8 + rnd(i + 1) * 0.5 }));
+    const dots = parts.map(() => g.append("circle").attr("opacity", 0));
+    const arrow = g.append("g").attr("opacity", 0);
+    arrow.append("path").attr("d", "M -90 0 L 90 0 M 50 -36 L 100 0 L 50 36").attr("fill", "none").attr("stroke", "#146a85").attr("stroke-width", 14).attr("stroke-linecap", "round").attr("stroke-linejoin", "round");
+
+    // cloud and rain
+    const CL = [[0, 0, 62], [58, -28, 74], [126, -6, 64], [188, 12, 52], [-58, 16, 50], [34, 38, 58], [100, 42, 56]];
+    const cloud = g.append("g").attr("transform", "translate(640,640)");
+    const blobs = CL.map(([x, y, r]) => cloud.append("circle").attr("cx", x).attr("cy", y).attr("r", r).attr("fill", "#fff"));
+    const NR = 150, drops = Array.from({ length: NR }, (_, i) => ({ x: 600 + rnd(i + 20) * 250, ph: rnd(i + 40), sp: 1.1 + rnd(i + 60) * 0.7, len: 26 + rnd(i + 80) * 22 }));
+    const rain = drops.map(() => g.append("line").attr("stroke", "#2d7fb8").attr("stroke-width", 5).attr("stroke-linecap", "round").attr("opacity", 0));
+    const puddle = g.append("ellipse").attr("cx", 640).attr("cy", 1000).attr("rx", 0).attr("ry", 0).attr("fill", "#2d7fb8").attr("opacity", 0.0);
+
+    // the calendar of the first beat
+    const cal = g.append("g").attr("opacity", 0);
+    cal.append("rect").attr("x", -150).attr("y", -170).attr("width", 300).attr("height", 340).attr("rx", 36).attr("fill", "#fffaf0").attr("filter", `url(#${id}sh)`);
+    cal.append("path").attr("d", "M -150 -90 L -150 -134 Q -150 -170 -114 -170 L 114 -170 Q 150 -170 150 -134 L 150 -90 Z").attr("fill", "#c8442f");
+    cal.append("text").attr("y", -108).attr("text-anchor", "middle").attr("font-size", 44).attr("font-weight", 700).attr("fill", "#fff").attr("font-family", MAL).text("ജൂൺ");
+    cal.append("text").attr("y", 78).attr("text-anchor", "middle").attr("font-size", 190).attr("font-weight", 800).attr("fill", CHAYA.ink).text("1");
+
+    // chai glass for the ending
+    const cup = g.append("g").attr("opacity", 0).attr("transform", "translate(250,1850)");
+    cup.append("path").attr("d", "M -44 -50 L 44 -50 L 34 52 Q 33 62 22 62 L -22 62 Q -33 62 -34 52 Z").attr("fill", "#d98a3d").attr("opacity", 0.95);
+    cup.append("path").attr("d", "M -44 -50 L 44 -50 L 41 -20 L -41 -20 Z").attr("fill", "#fff3dc").attr("opacity", 0.8);
+    const steam = [0, 1, 2].map((k) => cup.append("path").attr("fill", "none").attr("stroke", CHAYA.brown).attr("stroke-width", 6).attr("stroke-linecap", "round").attr("opacity", 0).datum(k));
+
+    // label cards: a big Malayalam line with a small English line under it, like the reference
+    const mk = (i) => (i < marks.length ? marks[i] : T + 1), end = (i) => (i + 1 < marks.length ? marks[i + 1] : T);
+    const CARDS = [
+      [0, 1, "top", "ജൂൺ 1", "THE DAY THE RAIN ARRIVES", CHAYA.brown], [1, 2, "top", "എല്ലാ വർഷവും", "EVERY YEAR", CHAYA.leaf], [2, 3, "top", "ഇതെങ്ങനെ?", "HOW?", CHAYA.brownDark],
+      [3, 4, "top", "ഉത്തരം: കടൽ", "THE ANSWER: THE SEA", CHAYA.sea], [4, 4.5, "top", "ചൂടാകുന്ന കര", "THE LAND HEATS UP", "#c45a2a"], [4.5, 5, "top", "ഈർപ്പമുള്ള കാറ്റ്", "MOIST WIND FROM THE ARABIAN SEA", CHAYA.sea],
+      [5, 6, "top", "പശ്ചിമഘട്ടം", "THE WESTERN GHATS", CHAYA.leaf], [6, 7, "top", "ഉയരുമ്പോൾ തണുക്കുന്നു", "IT COOLS AS IT RISES", "#3a6ea5"], [7, 8, "top", "മേഘം രൂപപ്പെടുന്നു", "A CLOUD FORMS", "#5b7189"],
+      [8, 9, "top", "മഴ!", "RAIN", "#2d6fa0"], [9, 10, "top", "മറുവശത്ത് മഴ കുറവ്", "THE OTHER SIDE STAYS DRY", "#a8782f"], [10, 11, "top", "മൺസൂൺ", "MONSOON", "#2d6fa0"],
+    ].map(([a, b, pos, ml, en, col]) => {
+      const t0 = Number.isInteger(a) ? mk(a) : lerp(mk(Math.floor(a)), end(Math.floor(a)), a - Math.floor(a)), t1 = Number.isInteger(b) ? mk(b) : lerp(mk(Math.floor(b)), end(Math.floor(b)), b - Math.floor(b));
+      const grp = g.append("g").attr("opacity", 0), w = 900, h = 190;
+      grp.append("rect").attr("x", -w / 2).attr("y", -h / 2).attr("width", w).attr("height", h).attr("rx", 40).attr("fill", col).attr("filter", `url(#${id}sh)`);
+      grp.append("rect").attr("x", -w / 2 + 8).attr("y", -h / 2 + 8).attr("width", w - 16).attr("height", h - 16).attr("rx", 34).attr("fill", "none").attr("stroke", "#fff").attr("stroke-opacity", 0.28).attr("stroke-width", 3);
+      const tml = grp.append("text").attr("y", 18).attr("text-anchor", "middle").attr("fill", "#fff").attr("font-weight", 800).attr("font-family", MAL).attr("font-size", 84).text(ml);
+      for (let fs = 84; tml.node().getComputedTextLength() > w - 70 && fs > 36;) tml.attr("font-size", --fs);
+      const ten = grp.append("text").attr("y", 66).attr("text-anchor", "middle").attr("fill", "#fff").attr("fill-opacity", 0.86).attr("font-weight", 600).attr("font-size", 30).attr("letter-spacing", 4).text(en);
+      for (let fs = 30; ten.node().getComputedTextLength() > w - 70 && fs > 18;) ten.attr("font-size", --fs);
+      return { grp, t0, t1, y: 215 };
+    });
+    // the brand, at the end
+    const brand = g.append("g").attr("opacity", 0).attr("transform", "translate(610,1840)");
+    const bt = brand.append("text").attr("text-anchor", "middle").attr("font-family", MAL).attr("font-weight", 800).attr("font-size", 76).attr("fill", CHAYA.brown).text("സയൻസ് ചായ");
+    brand.append("text").attr("y", 52).attr("text-anchor", "middle").attr("font-weight", 600).attr("font-size", 30).attr("letter-spacing", 8).attr("fill", CHAYA.brown).attr("fill-opacity", 0.8).text("SCIENCE CHAYA");
+    void bt;
+
+    const wavePath = (k, t) => {
+      const pts = [];
+      for (let x = 0; x <= 345; x += 15) pts.push([x, 1420 + 5 + k * 18 + Math.sin(x / 38 + t * (1.6 + k * 0.5) + k) * (11 - k * 2)]);
+      return d3.line().curve(d3.curveBasis)(pts) + `L345,${BOT}L0,${BOT}Z`;
+    };
+    const ph = (t, i) => prog(t, mk(i), end(i) - mk(i));       // progress within sentence i
+
+    return (t) => {
+      // sky tint and the sun
+      const dark = Math.max(0, prog(t, mk(7), 2.2) - 0.55 * prog(t, mk(9), 1.5));
+      storm.attr("opacity", 0.4 * dark);
+      sun.attr("opacity", 1 - 0.55 * dark);
+      rays.attr("transform", `rotate(${t * 14})`);
+      sunDisc.attr("r", 82 + 6 * Math.sin(t * 2) + 14 * ph(t, 4));
+      waves.forEach((w, k) => w.attr("d", wavePath(k, t)));
+      drift.forEach((c, k) => c.attr("transform", `translate(${((t * (14 + k * 6) + k * 420) % 1400) - 160},${470 + k * 150})`).attr("opacity", 1 - 0.6 * dark));
+      boat.attr("transform", `translate(150,${1420 - 10 + 6 * Math.sin(t * 1.5)}) rotate(${3 * Math.sin(t * 1.2)})`);
+      streaks.forEach((p, k) => p.attr("stroke-dashoffset", -t * 90 - k * 30).attr("opacity", 0.55 * prog(t, mk(4) + 1.0, 0.8) * (1 - prog(t, mk(6), 0.8))));
+      // the opening calendar
+      const c0 = E.back(prog(t, 0.1, 0.55)), cOut = prog(t, mk(1) - 0.3, 0.3);
+      cal.attr("opacity", (1 - cOut) * clamp(c0 * 2)).attr("transform", `translate(540,600) scale(${(0.6 + 0.4 * c0) * (1 - 0.1 * cOut)})`);
+      // heat over the land
+      const hOn = prog(t, mk(4), 0.8) * (1 - prog(t, mk(5) + 0.5, 0.8));
+      heat.forEach((p, k) => {
+        const pts = [];
+        for (let y = 0; y <= 150; y += 15) pts.push([400 + k * 85 + Math.sin(y / 14 + t * 4 + k) * 14, 1370 - y - ((t * 60 + k * 50) % 70)]);
+        p.attr("d", d3.line().curve(d3.curveBasis)(pts)).attr("opacity", 0.55 * hOn);
+      });
+      // the wind and its moisture
+      const wOn = prog(t, mk(4) + 1.0, 0.8);
+      arrow.attr("opacity", 0.85 * wOn * (1 - prog(t, mk(5), 0.6))).attr("transform", `translate(${150 + 40 * Math.sin(t * 3)},1230) scale(1.4)`);
+      parts.forEach((p, i) => {
+        const raw = (t - mk(4) - 1.0) * 0.075 * p.sp + p.off, u = ((raw % 1) + 1) % 1, k = Math.floor(u * 399), pt = wpts[k], on = wOn * (u > 0.02 ? 1 : 0);
+        const cool = prog(u, 0.5, 0.25);
+        dots[i].attr("cx", pt[0]).attr("cy", pt[1] + p.jy * (1 - 0.6 * u)).attr("r", p.r * (1 + 0.5 * prog(t, mk(6), 1.5) * cool)).attr("opacity", on * (0.9 - 0.5 * prog(t, mk(9), 2) * cool))
+          .attr("fill", d3.interpolateRgb("#4fb3e0", "#ffffff")(cool));
+      });
+      // cloud
+      const cg = E.out(prog(t, mk(6) + 0.2, 2.0));
+      cloud.attr("transform", `translate(${600 + 6 * Math.sin(t * 1.3)},${650 - 8 * Math.sin(t * 1.7)}) scale(${0.15 + 1.35 * cg})`).attr("opacity", clamp(cg * 3));
+      blobs.forEach((b) => b.attr("fill", grayCloud(0.85 * prog(t, mk(8), 1.4))));
+      // rain on the windward side, none behind the ridge
+      const rI = prog(t, mk(8), 1.2) * (1 - 0.25 * prog(t, mk(9), 2));
+      drops.forEach((d, i) => {
+        const top = 740, bot = terY(d.x) - 4, u = (t * d.sp * 0.9 + d.ph) % 1, y = lerp(top, bot, u);
+        rain[i].attr("x1", d.x - 6).attr("y1", y).attr("x2", d.x - 14).attr("y2", y + d.len).attr("opacity", i / NR < rI ? 0.85 * (u < 0.96 ? 1 : 0.2) : 0);
+      });
+      puddle.attr("rx", 150 * rI).attr("ry", 9 * rI).attr("cy", terY(700) + 4).attr("opacity", 0.0);
+      // cards: one at a time, popping in
+      CARDS.forEach((c) => {
+        const a = clamp(prog(t, c.t0, 0.3) * (1 - prog(t, c.t1 - 0.12, 0.12)) * 1.0), pop = E.back(prog(t, c.t0, 0.38));
+        c.grp.attr("opacity", a).attr("transform", `translate(540,${c.y + 16 * (1 - pop)}) scale(${0.92 + 0.08 * pop})`);
+      });
+      // the ending: the title card stays, the brand and the chai glass come in
+      const fin = E.out(prog(t, mk(10) + 0.1, 0.7));
+      brand.attr("opacity", fin);
+      cup.attr("opacity", fin).attr("transform", `translate(250,${1850 - 20 * (1 - fin)})`);
+      steam.forEach((p) => {
+        const k = p.datum(), pts = [];
+        for (let y = 0; y <= 70; y += 10) pts.push([(k - 1) * 22 + Math.sin(y / 9 + t * 3 + k) * 7, -60 - y - ((t * 22 + k * 20) % 20)]);
+        p.attr("d", d3.line().curve(d3.curveBasis)(pts)).attr("opacity", 0.5 * fin);
+      });
+    };
+  };
+
   // ---- public API -----------------------------------------------------------------------------------------------------
   window.load = async (spec, topo) => {
     if (topo) window.__topo = topo;
