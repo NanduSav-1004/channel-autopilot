@@ -17,6 +17,8 @@ from autopilot.env import load_env
 from autopilot.youtube_auth import load_credentials
 
 PROFILES = {
+    "chaya": {"dir": Path("assets/brand_chaya"), "country": "IN", "language": "ml", "creds": "ml",       # Science Chaya: the Malayalam channel, rebranded
+              "keywords": '"സയൻസ് ചായ" "science chaya" "malayalam science" "ശാസ്ത്രം" kerala animation explained monsoon physics chemistry technology "how things work"'},
     "ml": {"dir": Path("assets/brand_ml"), "country": "IN", "language": "ml",
            "keywords": '"ശാസ്ത്രം" "മലയാളം" "science malayalam" "malayalam science" physics chemistry technology explained "how things work"'},
 }
@@ -25,7 +27,7 @@ PROFILES = {
 def main(profile: str) -> None:
     cfg = PROFILES[profile]
     load_env()
-    yt = build("youtube", "v3", credentials=load_credentials(profile))
+    yt = build("youtube", "v3", credentials=load_credentials(cfg.get("creds", profile)))
     desc = (cfg["dir"] / "channel_description.txt").read_text().strip().replace("\r\n", "\n").replace("\n", "\r\n")
     assert len(desc) <= 1000 and len(cfg["keywords"]) <= 500, "description or keywords too long"
     ch = yt.channels().list(part="brandingSettings,snippet", mine=True).execute()["items"][0]
