@@ -39,6 +39,7 @@ def review() -> None:
     sync("pull")
     state = load()
     presses = notify.button_presses(state.get("offset"))
+    print(f"[chaya] {len(presses)} new Telegram updates (offset {state.get('offset')}), ledger: {[(k, v.get('status')) for k, v in state['items'].items() if v.get('status') in ('awaiting', 'held')]}", flush=True)
     if not presses:
         return
     chat = __import__("os").environ["TELEGRAM_CHAT_ID"]

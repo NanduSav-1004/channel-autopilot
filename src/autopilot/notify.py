@@ -85,7 +85,8 @@ def button_presses(offset: int | None = None) -> list[dict]:
     try:
         with net.urlopen(url, timeout=20) as r:
             res = json.load(r).get("result", [])
-    except (OSError, ValueError):
+    except (OSError, ValueError) as exc:
+        print(f"[telegram] could not read updates: {type(exc).__name__}: {str(exc)[:160]}", flush=True)
         return []
     out = []
     for u in res:
