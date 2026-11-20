@@ -1,0 +1,61 @@
+"""Science Chaya: lightning, the Arjunan Phalgunan chant, and how to stay safe (long)."""
+from chaya.content_monsoon import BL, BR, DK, GD, GR, LF, OR, RD, SE, B
+from chaya.dsl import BOLT, GROUND, PT, RINGS, C, I, T
+
+SP = "#ffe27a"
+LONG = {
+    "id": "lightning_long", "orient": "wide", "mood": "curious",
+    "title_ml": "അർജുനൻ ഫൽഗുനൻ മുതൽ മിന്നൽ രക്ഷ വരെ: ഇടിമിന്നലിന്റെ ശാസ്ത്രം",
+    "title_en": "From 'Arjunan Phalgunan' to staying safe: the science of lightning",
+    "thumb": {"ml": "മിന്നൽ ഉണ്ടാകുന്നത് എങ്ങനെ?", "en": "THE SCIENCE OF LIGHTNING", "hero": "compose"},
+    "comment": "ഇടിമിന്നലിനെക്കുറിച്ച് മുത്തശ്ശിമാർ പറഞ്ഞ ഏറ്റവും രസകരമായ വിശ്വാസം ഏതാണ്?",
+    "beats": [
+        B("ഇടിമിന്നൽ കാണുമ്പോൾ പണ്ട് മുത്തശ്ശിമാർ ചൊല്ലുന്നത് കേട്ടിട്ടുണ്ടോ, അർജുനൻ ഫൽഗുനൻ?", ("അർജുനൻ ഫൽഗുനൻ", "DO YOU REMEMBER THIS CHANT?", DK),
+          C([I("cloudDark", 0.5, 0.25, 6, anim="float"), BOLT(0.5, 0.35, [0.5, 0.82], 1.5, seed=2), GROUND("#2f4a36", 0.84), T("അർജുനൻ ഫൽഗുനൻ…", 0.5, 0.62, 100, "#ffffff")], bg="storm")),
+        B("അത് ഒരു വിശ്വാസമാണ്, പക്ഷേ മിന്നലിന്റെ ശാസ്ത്രം അതിലും അത്ഭുതമാണ്.", ("ശാസ്ത്രം അത്ഭുതം", "THE SCIENCE IS EVEN MORE AMAZING", BR)),
+        B("ആദ്യം നോക്കാം മിന്നൽ ഉണ്ടാകുന്നത് എങ്ങനെയെന്ന്.", ("മിന്നൽ എങ്ങനെ?", "HOW DOES LIGHTNING FORM?", SE), C([I("cloudDark", 0.5, 0.35, 9), PT("bubbles", 22, [0.3, 0.2, 0.7, 0.65], "#dfe9f2", 7)], bg="storm")),
+        B("ഇടിമേഘത്തിനുള്ളിൽ ചെറിയ ഐസ് കണങ്ങളും വെള്ളത്തുള്ളികളും ശക്തമായ കാറ്റിൽ കൂട്ടിമുട്ടുന്നു.", ("കൂട്ടിമുട്ടുന്ന കണങ്ങൾ", "ICE AND DROPS COLLIDE IN THE CLOUD", SE),
+          C([I("cloudDark", 0.5, 0.35, 9), PT("bubbles", 36, [0.3, 0.15, 0.7, 0.7], "#dfe9f2", 8, speed=0.8), PT("fireflies", 14, [0.3, 0.2, 0.7, 0.6], "#9fd0ff", 5)], bg="storm")),
+        B("ഈ ഉരസലിൽ വൈദ്യുതചാർജ് ഉണ്ടാകുന്നു.", ("വൈദ്യുതചാർജ്", "FRICTION CREATES ELECTRIC CHARGE", OR)),
+        B("ഭാരം കുറഞ്ഞ കണങ്ങൾ പോസിറ്റീവ് ചാർജുമായി മുകളിലേക്കും ഭാരമുള്ളവ നെഗറ്റീവ് ചാർജുമായി താഴേക്കും നീങ്ങുന്നു.", ("പോസിറ്റീവ് മുകളിൽ, നെഗറ്റീവ് താഴെ", "LIGHT BITS UP (+), HEAVY BITS DOWN (−)", GD),
+          C([I("cloudDark", 0.5, 0.4, 9), T("+  +  +  +  +", 0.5, 0.2, 90, "#ffd36b"), T("−  −  −  −  −", 0.5, 0.6, 90, "#9fd0ff", atb=0.5)], bg="storm")),
+        B("അങ്ങനെ മേഘത്തിന്റെ അടിഭാഗത്ത് നെഗറ്റീവ് ചാർജ് നിറയുന്നു.", ("അടിയിൽ നെഗറ്റീവ്", "THE BASE FILLS WITH NEGATIVE CHARGE", BL)),
+        B("അപ്പോൾ താഴെ ഭൂമിയിൽ എതിർ ചാർജായ പോസിറ്റീവ് ചാർജ് വന്ന് നിറയുന്നു, ഉയരമുള്ള മരങ്ങളിലും കെട്ടിടങ്ങളിലും കൂടുതലായി.", ("ഭൂമിയിൽ പോസിറ്റീവ്", "THE GROUND BUILDS UP POSITIVE CHARGE", RD),
+          C([I("cloudDark", 0.5, 0.18, 7), T("−  −  −  −", 0.5, 0.36, 80, "#9fd0ff"), GROUND("#2f4a36", 0.8), I("tree", 0.25, 0.7, 4), I("house", 0.72, 0.7, 4), T("+ +", 0.25, 0.54, 70, "#ffd36b", atb=0.3), T("+ +", 0.72, 0.54, 70, "#ffd36b", atb=0.3)], bg="storm")),
+        B("ചാർജ് ഒരു പരിധി കടന്നാൽ വായുവിന് അത് തടഞ്ഞുനിർത്താൻ പറ്റില്ല.", ("പരിധി കടക്കുന്നു", "AIR CAN NO LONGER HOLD IT BACK", OR)),
+        B("അപ്പോൾ ഒരു വലിയ ചാർജ് പ്രവാഹം ഭൂമിയിലേക്ക് പായും, അതാണ് മിന്നൽ.", ("ഇതാണ് മിന്നൽ!", "THAT RUSH IS LIGHTNING", GD),
+          C([I("cloudDark", 0.5, 0.18, 7), GROUND("#2f4a36", 0.8), I("tree", 0.25, 0.7, 4), I("house", 0.72, 0.7, 4), BOLT(0.5, 0.28, [0.25, 0.62], 0.55, seed=4), BOLT(0.5, 0.28, [0.25, 0.62], 0.9, seed=6), RINGS(0.25, 0.64, "#fff7c2", atb=0.55)], bg="storm")),
+        B("ആ വെളിച്ചം നമ്മൾ കാണുന്നത് ഒരു നിമിഷം മാത്രമാണ്.", ("ഒരു നിമിഷം മാത്രം", "ONLY A FLASH", SE)),
+        B("പക്ഷേ ആ മിന്നൽപ്പാതയിലെ വായു ഏകദേശം മുപ്പതിനായിരം ഡിഗ്രി സെൽഷ്യസ് വരെ ചൂടാകും, സൂര്യന്റെ ഉപരിതലത്തേക്കാൾ പല മടങ്ങ് കൂടുതൽ.", ("≈ 30,000 °C", "FAR HOTTER THAN THE SUN'S SURFACE", RD),
+          {"kind": "stat", "p": {"value": 30000, "suffix": " °C", "ml": "മിന്നൽപ്പാതയിലെ ചൂട്", "en": "ABOUT 5 TIMES THE SUN'S SURFACE", "icon": "bolt"}}),
+        B("ആ ചൂടിൽ വായു പെട്ടെന്ന് വികസിക്കും, അതാണ് ഇടിശബ്ദം.", ("ഇടി = വികസിക്കുന്ന വായു", "THUNDER IS AIR EXPANDING SUDDENLY", DK),
+          C([BOLT(0.5, 0.1, [0.5, 0.7], 0.1, seed=3), RINGS(0.5, 0.45, "#ffd36b", speed=0.9, r=0.5), I("bolt", 0.5, 0.45, 3)], bg="storm")),
+        B("വെളിച്ചം ഏതാണ്ട് ഉടനെ എത്തും, ശബ്ദം എത്താൻ സമയമെടുക്കും.", ("വെളിച്ചം ആദ്യം, ശബ്ദം പിന്നെ", "LIGHT FIRST, SOUND LATER", BL)),
+        B("മിന്നൽ കണ്ടതിന് ശേഷം ഇടി കേൾക്കുന്നത് വരെ സെക്കൻഡ് എണ്ണി മൂന്ന് കൊണ്ട് ഹരിച്ചാൽ മിന്നൽ എത്ര കിലോമീറ്റർ അകലെയെന്ന് അറിയാം.", ("സെക്കൻഡ് ÷ 3 = കി.മീ.", "SECONDS ÷ 3 = KILOMETRES AWAY", GD), {"kind": "text", "p": {"ml": "സെക്കൻഡ് ÷ 3 = കി.മീ.", "en": "COUNT THE SECONDS BETWEEN FLASH AND THUNDER", "icon": "bolt", "col": GD}}),
+        B("ഇനി കേരളത്തിലേക്ക് വരാം.", ("കേരളത്തിൽ", "NOW, KERALA", LF)),
+        B("കേരളത്തിൽ മിന്നൽ കൂടുതലായി കാണുന്നത് മാർച്ച് മുതൽ മെയ് വരെയും ഒക്ടോബർ മുതൽ ഡിസംബർ വരെയുമാണ്.", ("രണ്ട് മിന്നൽക്കാലം", "TWO LIGHTNING SEASONS", OR), C([T("മാർച്ച് – മെയ്", 0.5, 0.32, 110, "#e8731d"), T("ഒക്ടോബർ – ഡിസംബർ", 0.5, 0.62, 110, "#146a85", atb=0.5), I("bolt", 0.5, 0.9, 1.8)], bg="warm")),
+        B("ആ സമയങ്ങളിൽ പകൽ ചൂടും മുകളിൽ തണുത്ത വായുവും ഉള്ളതുകൊണ്ട് ഇടിമേഘങ്ങൾ വേഗം വളരും.", ("ഇടിമേഘങ്ങൾ വളരുന്നു", "HOT DAYS GROW THUNDERCLOUDS FAST", SE)),
+        B("ഒരു പഠനം പ്രകാരം കോട്ടയം ഭാഗം കേരളത്തിലെ പ്രധാന മിന്നൽ കേന്ദ്രങ്ങളിൽ ഒന്നാണ്.", ("മിന്നൽ കേന്ദ്രങ്ങൾ", "A STUDY LISTS KOTTAYAM AS A HOTSPOT", RD)),
+        B("ഇപ്പോൾ ആ പഴയ ചൊല്ലിലേക്ക് തിരിച്ചുവരാം.", ("ആ ചൊല്ല്", "BACK TO THE OLD CHANT", DK)),
+        B("മഹാഭാരതത്തിലെ അർജുനന്റെ പത്ത് പേരുകൾ ചൊല്ലിയാൽ ഇടിയുടെ ഭയം മാറും എന്ന വിശ്വാസമാണ് ഇതിന് പിന്നിൽ.", ("അർജുനന്റെ പത്ത് പേരുകൾ", "A BELIEF FROM THE MAHABHARATA", BR)),
+        B("പക്ഷേ ഇത് ഒരു വിശ്വാസം മാത്രമാണ്, ഇത് ചൊല്ലിയതുകൊണ്ട് മിന്നലിൽ നിന്ന് രക്ഷ കിട്ടില്ല.", ("വിശ്വാസം, രക്ഷയല്ല", "A BELIEF, NOT PROTECTION", RD)),
+        B("രക്ഷ കിട്ടാൻ ചെയ്യേണ്ടത് ഇതാണ്.", ("സുരക്ഷ ഇങ്ങനെ", "HERE IS WHAT PROTECTS YOU", LF)),
+        B("ഇടി മുഴങ്ങിയാൽ ഉടനെ ഉറപ്പുള്ള കെട്ടിടത്തിനുള്ളിൽ കയറുക.", ("കെട്ടിടത്തിനുള്ളിൽ", "GO INSIDE A SOLID BUILDING", LF), C([I("house", 0.5, 0.55, 8), I("person", 0.2, 0.62, 3, mvb=0, to=[0.5, 0.62]), BOLT(0.8, 0.0, [0.85, 0.7], 0.5, seed=8), GROUND("#2f4a36", 0.84)], bg="storm")),
+        B("തുറസ്സായ സ്ഥലത്തും വലിയ മരത്തിന്റെ ചുവട്ടിലും നിൽക്കരുത്.", ("മരച്ചുവട്ടിൽ പാടില്ല", "NOT IN THE OPEN OR UNDER A TALL TREE", RD)),
+        B("കുളത്തിലോ പുഴയിലോ കുളിക്കുകയോ മീൻ പിടിക്കുകയോ ചെയ്യരുത്.", ("വെള്ളത്തിൽ ഇറങ്ങരുത്", "STAY OUT OF WATER", SE)),
+        B("വീടിനുള്ളിൽ ആയാലും കുളിക്കുന്നതും ചുമരിലോ തറയിലോ തൊട്ടുനിൽക്കുന്നതും ഒഴിവാക്കണം.", ("വീടിനുള്ളിലും ശ്രദ്ധ", "EVEN INDOORS, AVOID BATHING AND LEANING ON WALLS", OR)),
+        B("തുറസ്സായ സ്ഥലത്ത് പെട്ടുപോയാൽ കാലുകൾ ചേർത്ത് കുനിഞ്ഞിരിക്കുക, നിലത്ത് കിടക്കരുത്.", ("കുനിഞ്ഞിരിക്കുക", "CROUCH WITH FEET TOGETHER, DO NOT LIE FLAT", GD)),
+        B("ഒരു കൂട്ടം ആളുകളാണെങ്കിൽ കുറഞ്ഞത് മുപ്പത് മീറ്റർ അകലത്തിൽ പിരിഞ്ഞ് നിൽക്കുക.", ("30 മീറ്റർ അകലം", "SPREAD OUT AT LEAST 30 METRES", GR)),
+        B("ശ്രദ്ധയാണ് ഏറ്റവും വലിയ രക്ഷ.", ("ശ്രദ്ധയാണ് രക്ഷ", "CARE IS THE BEST PROTECTION", LF)),
+        B("ഇടിമിന്നലിനെക്കുറിച്ച് മുത്തശ്ശിമാർ പറഞ്ഞ ഏറ്റവും രസകരമായ വിശ്വാസം ഏതാണ്?", None, {"kind": "outro", "p": {"ml": "മുത്തശ്ശിമാർ പറഞ്ഞ ഏറ്റവും രസകരമായ ഇടിമിന്നൽ വിശ്വാസം ഏതാണ്?", "en": "WHAT IS THE MOST INTERESTING THUNDER BELIEF YOU HEARD?"}}),
+        B("താഴെ കമന്റ് ചെയ്യൂ, ഇതുപോലുള്ള വീഡിയോകൾക്കായി സയൻസ് ചായ സബ്സ്ക്രൈബ് ചെയ്യൂ."),
+    ],
+}
+FACTS = [
+    "Lightning forms when ice and water particles collide in a thunderstorm and the cloud base gathers negative charge (standard cloud-electrification physics).",
+    "A lightning channel reaches about 30,000 degrees Celsius; thunder is the sudden expansion of the heated air; sound covers about 1 km in 3 seconds.",
+    "Kerala's lightning peaks are March-May and October-December; a CUSAT study names the Kottayam area as a hotspot (Onmanorama, 15 Oct 2026; The Wire).",
+    "Safety advice: go inside a solid building, avoid open ground, trees, water, bathing and touching walls; crouch with feet together if caught outdoors; spread at least 30 m apart in a group (KSDMA advisories; Onmanorama).",
+    "The Arjunan Phalgunan chant is a traditional belief from the story of Arjuna's ten names; it is not a protection against lightning.",
+]
+VIDEOS = [LONG]

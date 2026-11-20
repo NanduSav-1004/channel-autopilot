@@ -401,6 +401,96 @@
       steam.forEach((s2) => { const kk = s2.datum(), pts = []; for (let y = 0; y <= 70; y += 10) pts.push([(kk - 1) * 22 + Math.sin(y / 9 + lt * 3 + kk) * 7, -60 - y - ((lt * 22 + kk * 20) % 20)]); s2.attr("d", basis(pts)).attr("opacity", 0.55 * k2); }); };
   };
 
+  // ================= more icons for the nostalgia and village stories =================
+  Object.assign(ICON, {
+    bottle: (g) => { g.append("path").attr("d", "M -14 -52 L 14 -52 L 14 -34 Q 30 -22 30 -2 L 30 44 Q 30 52 22 52 L -22 52 Q -30 52 -30 44 L -30 -2 Q -30 -22 -14 -34 Z").attr("fill", "#7fc6b0").attr("fill-opacity", 0.75).attr("stroke", P.dark).attr("stroke-width", 4);
+      g.append("rect").attr("x", -26).attr("y", 8).attr("width", 52).attr("height", 40).attr("rx", 6).attr("fill", "#f6b945").attr("opacity", 0.55); },
+    marble: (g) => { g.append("circle").attr("r", 12).attr("fill", "#3a6fb0").attr("stroke", "#fff").attr("stroke-width", 2); g.append("circle").attr("cx", -4).attr("cy", -4).attr("r", 3).attr("fill", "#fff").attr("opacity", 0.8); },
+    firefly: (g) => { g.append("ellipse").attr("rx", 14).attr("ry", 8).attr("fill", P.dark); g.append("ellipse").attr("cx", 12).attr("rx", 9).attr("ry", 7).attr("fill", "#fff36b"); g.append("path").attr("d", "M -2 -6 Q -14 -26 -26 -16 Q -16 -6 -2 -4 Z").attr("fill", "#fff").attr("opacity", 0.7); g.append("circle").attr("cx", -16).attr("r", 5).attr("fill", P.dark); },
+    lamp: (g) => { g.append("path").attr("d", "M -30 52 L 30 52 L 26 14 Q 24 4 0 4 Q -24 4 -26 14 Z").attr("fill", P.steel2); g.append("path").attr("d", "M -20 -6 Q -22 -44 0 -48 Q 22 -44 20 -6 Z").attr("fill", "#fffbe0").attr("fill-opacity", 0.5).attr("stroke", P.dark).attr("stroke-width", 3);
+      g.append("path").attr("d", "M 0 -6 Q -12 -22 0 -40 Q 12 -22 0 -6 Z").attr("fill", P.gold); g.append("rect").attr("x", -3).attr("y", -8).attr("width", 6).attr("height", 14).attr("fill", P.dark); },
+    cassette: (g) => { g.append("rect").attr("x", -50).attr("y", -32).attr("width", 100).attr("height", 64).attr("rx", 8).attr("fill", P.dark); g.append("rect").attr("x", -40).attr("y", -24).attr("width", 80).attr("height", 30).attr("rx", 5).attr("fill", P.cream);
+      for (const x of [-18, 18]) { g.append("circle").attr("cx", x).attr("cy", -9).attr("r", 10).attr("fill", P.dark); g.append("circle").attr("cx", x).attr("cy", -9).attr("r", 4).attr("fill", P.cream); } g.append("path").attr("d", "M -30 32 L -22 14 L 22 14 L 30 32 Z").attr("fill", P.steel2); },
+    chenda: (g) => { g.append("rect").attr("x", -22).attr("y", -42).attr("width", 44).attr("height", 84).attr("rx", 6).attr("fill", P.rock2); g.append("ellipse").attr("cy", -42).attr("rx", 26).attr("ry", 9).attr("fill", P.cream).attr("stroke", P.dark).attr("stroke-width", 4);
+      g.append("ellipse").attr("cy", 42).attr("rx", 26).attr("ry", 9).attr("fill", P.cream).attr("stroke", P.dark).attr("stroke-width", 4); for (let i = -2; i <= 2; i++) g.append("path").attr("d", `M ${i * 10 - 4} -40 L ${i * 10 + 4} 40`).attr("stroke", P.amber).attr("stroke-width", 2); },
+    rocket: (g) => { g.append("path").attr("d", "M 0 -60 Q 22 -34 20 20 L -20 20 Q -22 -34 0 -60 Z").attr("fill", "#f2f2f2").attr("stroke", P.dark).attr("stroke-width", 3); g.append("circle").attr("cy", -22).attr("r", 9).attr("fill", P.sea);
+      g.append("path").attr("d", "M -20 4 L -38 34 L -20 22 Z").attr("fill", P.red); g.append("path").attr("d", "M 20 4 L 38 34 L 20 22 Z").attr("fill", P.red); g.append("path").attr("d", "M -10 22 Q 0 52 10 22 Z").attr("fill", P.gold); },
+    church: (g) => { g.append("rect").attr("x", -42).attr("y", -6).attr("width", 84).attr("height", 52).attr("fill", "#f3e2c4").attr("stroke", P.dark).attr("stroke-width", 3); g.append("path").attr("d", "M -42 -6 L 0 -40 L 42 -6 Z").attr("fill", P.red);
+      g.append("rect").attr("x", -9).attr("y", 20).attr("width", 18).attr("height", 26).attr("rx", 9).attr("fill", P.dark); g.append("path").attr("d", "M 0 -64 L 0 -42 M -8 -56 L 8 -56").attr("stroke", P.dark).attr("stroke-width", 4); },
+    bicycle: (g) => { for (const x of [-32, 32]) g.append("circle").attr("cx", x).attr("cy", 18).attr("r", 22).attr("fill", "none").attr("stroke", P.dark).attr("stroke-width", 5); g.append("path").attr("d", "M -32 18 L -6 -14 L 22 -14 L 32 18 M -6 -14 L 8 18 L -32 18 M 22 -14 L 18 -26").attr("fill", "none").attr("stroke", P.red).attr("stroke-width", 5).attr("stroke-linejoin", "round"); },
+    banana: (g) => { g.append("path").attr("d", "M -44 -10 Q -10 56 46 -34 Q 50 -42 42 -40 Q 6 34 -36 -22 Q -46 -24 -44 -10 Z").attr("fill", "#f4d03f").attr("stroke", P.dark).attr("stroke-width", 3); g.append("rect").attr("x", 38).attr("y", -48).attr("width", 10).attr("height", 12).attr("fill", P.leaf2); },
+    jackfruit: (g) => { g.append("ellipse").attr("rx", 42).attr("ry", 56).attr("fill", "#9bb64a").attr("stroke", P.dark).attr("stroke-width", 3); for (let i = 0; i < 18; i++) g.append("circle").attr("cx", Math.cos(i * 2.4) * 26).attr("cy", Math.sin(i * 2.4) * 36 * (i % 3 ? 0.9 : 0.5)).attr("r", 3.4).attr("fill", "#6c8a2a"); },
+    mango: (g) => { g.append("path").attr("d", "M 0 -40 Q 44 -34 46 12 Q 44 50 4 52 Q -40 50 -44 6 Q -42 -36 0 -40 Z").attr("fill", "#f7b32b").attr("stroke", P.dark).attr("stroke-width", 3); g.append("path").attr("d", "M 2 -40 Q 10 -54 24 -52 Q 18 -42 2 -40 Z").attr("fill", P.leaf); },
+    salt: (g) => { g.append("rect").attr("x", -22).attr("y", -22).attr("width", 44).attr("height", 60).attr("rx", 8).attr("fill", "#fff").attr("stroke", P.dark).attr("stroke-width", 3); g.append("rect").attr("x", -26).attr("y", -36).attr("width", 52).attr("height", 18).attr("rx", 6).attr("fill", P.steel); for (const [x, y] of [[-8, -28], [0, -28], [8, -28]]) g.append("circle").attr("cx", x).attr("cy", y).attr("r", 2).attr("fill", P.dark); },
+    person: (g) => { g.append("circle").attr("cy", -34).attr("r", 12).attr("fill", "#d9a272"); g.append("path").attr("d", "M -16 -18 L 16 -18 L 20 24 L -20 24 Z").attr("fill", P.sea); g.append("path").attr("d", "M -12 24 L -14 56 M 12 24 L 14 56").attr("stroke", P.dark).attr("stroke-width", 7).attr("stroke-linecap", "round"); },
+    tree: (g) => { g.append("rect").attr("x", -7).attr("y", 4).attr("width", 14).attr("height", 48).attr("fill", P.rock2); g.append("circle").attr("cy", -14).attr("r", 34).attr("fill", P.leaf); g.append("circle").attr("cx", -22).attr("cy", 2).attr("r", 24).attr("fill", P.leaf2); g.append("circle").attr("cx", 22).attr("cy", 2).attr("r", 24).attr("fill", P.leaf2); },
+    coconut: (g) => { g.append("rect").attr("x", -5).attr("y", -20).attr("width", 10).attr("height", 76).attr("fill", P.rock2).attr("transform", "rotate(6)"); for (let i = 0; i < 6; i++) g.append("path").attr("d", "M 0 -24 Q 30 -50 52 -26 Q 28 -34 0 -24").attr("fill", P.leaf).attr("transform", `rotate(${i * 60 - 20} 0 -24)`); },
+    moon: (g) => { g.append("path").attr("d", "M 14 -44 A 44 44 0 1 0 14 44 A 34 34 0 1 1 14 -44 Z").attr("fill", "#fff6c9"); },
+    cloudDark: (g) => { for (const [x, y, r] of [[-26, 6, 26], [4, -12, 34], [34, 6, 24]]) g.append("circle").attr("cx", x).attr("cy", y).attr("r", r).attr("fill", "#59606b"); g.append("rect").attr("x", -52).attr("y", 6).attr("width", 104).attr("height", 24).attr("fill", "#59606b"); },
+    thermo: (g) => { g.append("rect").attr("x", -8).attr("y", -48).attr("width", 16).attr("height", 70).attr("rx", 8).attr("fill", "#fff").attr("stroke", P.dark).attr("stroke-width", 3); g.append("circle").attr("cy", 32).attr("r", 16).attr("fill", P.red).attr("stroke", P.dark).attr("stroke-width", 3); g.append("rect").attr("x", -4).attr("y", -10).attr("width", 8).attr("height", 40).attr("fill", P.red); },
+    magnet: (g) => { g.append("path").attr("d", "M -36 -40 L -36 10 Q -36 44 0 44 Q 36 44 36 10 L 36 -40 L 18 -40 L 18 10 Q 18 26 0 26 Q -18 26 -18 10 L -18 -40 Z").attr("fill", P.red); g.append("rect").attr("x", -36).attr("y", -40).attr("width", 18).attr("height", 16).attr("fill", "#fff"); g.append("rect").attr("x", 18).attr("y", -40).attr("width", 18).attr("height", 16).attr("fill", "#fff"); },
+    boat: (g) => { g.append("path").attr("d", "M -64 6 Q 0 34 64 -8 Q 60 18 30 22 L -50 22 Q -62 18 -64 6 Z").attr("fill", P.red).attr("stroke", P.dark).attr("stroke-width", 3); for (let i = -3; i <= 3; i++) g.append("path").attr("d", `M ${i * 14} 2 L ${i * 14 - 8} -22`).attr("stroke", P.dark).attr("stroke-width", 5).attr("stroke-linecap", "round"); },
+  });
+
+  // ================= compose: a scene described as data (layers in drawing order, each with its own start/end as a fraction of the scene) =================
+  // layer types: icon rect circle ellipse path text flow particles bolt flash rings spiral. Coordinates are 0..1 of the stage; "s" is an icon size multiplier.
+  K.compose = (g, p, c) => {
+    const { X, Y } = c, S = c.S * (c.wide ? 1.2 : 1), W = c.stage.w, H = c.stage.h, id = c.id + rid();
+    const defs = M.svg.select("defs"), BG = { sky: [P.sky1, P.sky2], night: ["#0b1631", "#2a4472"], dusk: ["#f0a679", "#fde7c8"], dark: ["#17110c", "#3a2a1d"], storm: ["#3c4350", "#7a8493"], soil: ["#9a6f45", "#6a4a2c"] };
+    if (BG[p.bg]) { const gr = defs.append("linearGradient").attr("id", id + "g").attr("x1", 0).attr("x2", 0).attr("y1", 0).attr("y2", 1); gr.append("stop").attr("offset", 0).attr("stop-color", BG[p.bg][0]); gr.append("stop").attr("offset", 1).attr("stop-color", BG[p.bg][1]);
+      g.append("rect").attr("x", X(0)).attr("y", Y(0)).attr("width", W).attr("height", H).attr("fill", `url(#${id}g)`); }
+    const flashRect = g.append("rect").attr("x", X(0)).attr("y", Y(0)).attr("width", W).attr("height", H).attr("fill", "#fff").attr("opacity", 0);
+    const ups = [];
+    const pt = (o, k = "x") => [X(o[k] ?? 0.5), Y(o[k === "x" ? "y" : k + "y"] ?? 0.5)];
+    const vis = (o, f) => prog(f, o.at ?? 0, 0.04) * (o.end != null ? 1 - prog(f, o.end, 0.04) : 1);
+    const label = (grp, o) => { if (!o.label) return null; const l = o.label, lw = (l.w || 330) * S; return pill(grp, l.ml, l.en, (l.dx || 0) * S * 100, (l.dy ?? 1.3) * S * 100 + 0, l.col || P.brown, lw, 34 * S); };
+    for (const o of p.layers || []) {
+      const grp = g.append("g").attr("opacity", ["flow", "particles", "rings", "spiral"].includes(o.t) ? 1 : 0);
+      const sty = (n) => n.attr("fill", o.fill || "none").attr("stroke", o.stroke || "none").attr("stroke-width", (o.sw || 4) * S).attr("fill-opacity", o.op ?? 1);
+      if (o.t === "icon") {
+        const ig = icon(grp, o.icon, 0, 0, (o.s || 1.5) * 100 * S);
+        if (o.glow) ig.insert("circle", ":first-child").attr("r", 52).attr("fill", o.glow).attr("opacity", 0.22);
+        label(grp, o);
+        const from = pt(o), to = o.to ? [X(o.to[0]), Y(o.to[1])] : from, ph = rnd((o.x || 0) * 99 + (o.y || 0) * 31);
+        ups.push((lt, f) => { const mk = E.inOut(prog(f, o.mv ?? o.at ?? 0, o.dur ?? 0.2)), x = lerp(from[0], to[0], mk), y = lerp(from[1], to[1], mk);
+          let dy = 0, sc = 1, rot = o.rot || 0, op = vis(o, f);
+          if (o.anim === "float") dy = Math.sin(lt * 2 + ph * 6) * 10 * S; if (o.anim === "pulse") sc = 1 + 0.12 * Math.sin(lt * 4 + ph * 6); if (o.anim === "spin") rot += lt * (o.speed || 120);
+          if (o.anim === "shake") dy = Math.sin(lt * 40) * 4 * S; if (o.anim === "blink") op *= 0.25 + 0.75 * Math.max(0, Math.sin(lt * 3 + ph * 8));
+          if (o.rise) dy -= lt * o.rise * S * 100;
+          grp.attr("opacity", op).attr("transform", `translate(${x},${y + dy}) rotate(${rot}) scale(${sc})`); });
+      } else if (o.t === "rect") { sty(grp.append("rect").attr("x", X(o.x)).attr("y", Y(o.y)).attr("width", o.w * W).attr("height", o.h * H).attr("rx", (o.rx || 0) * S)); ups.push((lt, f) => grp.attr("opacity", vis(o, f)));
+      } else if (o.t === "circle") { sty(grp.append("circle").attr("cx", X(o.x)).attr("cy", Y(o.y)).attr("r", o.r * Math.min(W, H))); ups.push((lt, f) => grp.attr("opacity", vis(o, f) * (o.pulse ? 0.7 + 0.3 * Math.sin(lt * 4) : 1)));
+      } else if (o.t === "ellipse") { sty(grp.append("ellipse").attr("cx", X(o.x)).attr("cy", Y(o.y)).attr("rx", o.rx * W).attr("ry", o.ry * H)); ups.push((lt, f) => grp.attr("opacity", vis(o, f)));
+      } else if (o.t === "path") { const pts = o.pts.map(([x, y]) => [X(x), Y(y)]); sty(grp.append("path").attr("d", (o.smooth ? smooth : line)(pts) + (o.close ? "Z" : ""))); ups.push((lt, f) => grp.attr("opacity", vis(o, f)));
+      } else if (o.t === "text") { const t = grp.append("text").attr("x", X(o.x ?? 0.5)).attr("y", Y(o.y ?? 0.5)).attr("text-anchor", "middle").attr("fill", o.col || P.ink).attr("font-family", MAL).attr("font-weight", 800).text(o.ml); fit(t, (o.size || 90) * S, (o.w || 0.9) * W, 20); ups.push((lt, f) => grp.attr("opacity", vis(o, f)));
+      } else if (o.t === "flow") {        // particles streaming from one point to another
+        const n = o.n || 12, a = pt(o), b = [X(o.to[0]), Y(o.to[1])], dots = Array.from({ length: n }, () => grp.append("circle").attr("r", (o.r || 8) * S).attr("fill", o.col || P.sea));
+        ups.push((lt, f) => { const v = vis(o, f); dots.forEach((q, i) => { const u = (((lt * (o.speed || 0.4) + i / n) % 1) + 1) % 1; q.attr("cx", lerp(a[0], b[0], u) + Math.sin(u * 12 + i) * (o.wob || 10) * S).attr("cy", lerp(a[1], b[1], u) + Math.cos(u * 9 + i * 2) * (o.wob || 10) * S).attr("opacity", v * Math.sin(Math.PI * u)); }); });
+      } else if (o.t === "particles") {   // a field of drifting dots: fireflies blink, bubbles rise, rain falls
+        const n = o.n || 20, ar = o.area || [0, 0, 1, 1], dots = Array.from({ length: n }, (_, i) => ({ el: grp.append("circle").attr("r", (o.r || 7) * S).attr("fill", o.col || "#fff36b"), s: rnd(i + 3), t: rnd(i + 9), u: rnd(i + 17) }));
+        ups.push((lt, f) => { const v = vis(o, f); dots.forEach((q, i) => { let x, y, op = v; const T = lt * (o.speed || 0.3);
+          if (o.kind === "rain") { const u = (T * 2 + q.s) % 1; x = lerp(ar[0], ar[2], q.t) + u * 0.02; y = lerp(ar[1], ar[3], u); op *= 0.8; }
+          else if (o.kind === "bubbles") { const u = (T + q.s) % 1; x = lerp(ar[0], ar[2], q.t) + Math.sin(u * 14 + i) * 0.015; y = lerp(ar[3], ar[1], u); op *= Math.sin(Math.PI * u); }
+          else { x = lerp(ar[0], ar[2], q.t) + Math.sin(T * 2 + q.s * 9) * 0.05; y = lerp(ar[1], ar[3], q.s) + Math.cos(T * 1.7 + q.t * 9) * 0.04; op *= 0.1 + 0.9 * Math.max(0, Math.sin(lt * 2.4 + q.u * 12)); }
+          q.el.attr("cx", X(x)).attr("cy", Y(y)).attr("opacity", op); }); });
+      } else if (o.t === "bolt") {        // a jagged lightning stroke with a white flash
+        const a = pt(o), b = [X(o.to[0]), Y(o.to[1])], pts = [a], N = 16; for (let i = 1; i < N; i++) { const u = i / N; pts.push([lerp(a[0], b[0], u) + (rnd(i + (o.seed || 1) * 7) - 0.5) * 140 * S * (1 - u * 0.4), lerp(a[1], b[1], u)]); } pts.push(b);
+        const path = grp.append("path").attr("d", line(pts)).attr("fill", "none").attr("stroke", o.col || "#fff7c2").attr("stroke-width", (o.w || 12) * S).attr("stroke-linejoin", "round");
+        const glow = grp.insert("path", ":first-child").attr("d", line(pts)).attr("fill", "none").attr("stroke", "#9fc7ff").attr("stroke-width", (o.w || 12) * S * 3).attr("opacity", 0.5);
+        ups.push((lt, f, d) => { const k = (f - (o.at ?? 0)) * d, dd = o.dur || 0.09, on = k >= 0 && k < dd ? 1 : (k >= dd * 2 && k < dd * 3 ? 0.7 : 0); grp.attr("opacity", on); flashRect.attr("opacity", on * 0.55); void path; void glow; });
+      } else if (o.t === "flash") { ups.push((lt, f, d) => { const k = (f - (o.at ?? 0)) * d; if (k >= 0 && k < 0.45) flashRect.attr("opacity", 0.8 * (1 - k / 0.45)); }); grp.remove();
+      } else if (o.t === "rings") {       // sound or pressure waves
+        const cx = X(o.x), cy = Y(o.y), rs = [0, 1, 2, 3].map(() => grp.append("circle").attr("cx", cx).attr("cy", cy).attr("fill", "none").attr("stroke", o.col || P.red).attr("stroke-width", 6 * S));
+        ups.push((lt, f) => { const v = vis(o, f); rs.forEach((q, k) => { const u = (lt * (o.speed || 0.5) + k / 4) % 1; q.attr("r", (30 + u * (o.r || 0.45) * Math.min(W, H)) ).attr("opacity", v * (1 - u) * 0.8); }); });
+      } else if (o.t === "spiral") {      // a turning cyclone: arms of cloud around a low-pressure centre
+        const cx = X(o.x), cy = Y(o.y), R = (o.r || 0.3) * Math.min(W, H), arms = [0, 1, 2].map(() => grp.append("path").attr("fill", "none").attr("stroke", o.col || "#ffffff").attr("stroke-width", 22 * S).attr("stroke-linecap", "round").attr("opacity", 0.8));
+        const eye = grp.append("circle").attr("cx", cx).attr("cy", cy).attr("r", R * 0.09).attr("fill", o.eye || P.dark).attr("opacity", 0.7);
+        ups.push((lt, f) => { const v = vis(o, f); arms.forEach((q, k) => { const pts = []; for (let i = 0; i <= 40; i++) { const u = i / 40, th = u * 4.2 + k * 2.094 - lt * (o.speed || 0.8); pts.push([cx + Math.cos(th) * R * (0.1 + 0.9 * u), cy + Math.sin(th) * R * (0.1 + 0.9 * u) * 0.9]); } q.attr("d", basis(pts)).attr("opacity", v * 0.85); }); eye.attr("opacity", v * 0.7); });
+      }
+    }
+    return (lt, d) => { const f = lt / d; flashRect.attr("opacity", 0); ups.forEach((u) => u(lt, f, d)); };
+  };
+
   // ================= the runner: scenes crossfade, bilingual cards on top, a thin progress line, a small brand mark =================
   SCENES.chaya = (g, s) => {
     const W = M.W, H = M.H, wide = W > H, id = "cz" + rid();

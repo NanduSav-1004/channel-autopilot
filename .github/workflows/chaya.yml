@@ -71,3 +71,6 @@ jobs:
           restore-keys: chaya-voice-
       - name: Build the next video, upload it private, ask for the flag
         run: python scripts/chaya_run.py render
+      - name: Tell the owner if the render failed
+        if: failure()
+        run: python -c "from autopilot import notify; notify.send('Science Chaya render failed. Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}')"

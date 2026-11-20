@@ -31,8 +31,8 @@ def convert_atb(node, beat_t, first, n_beats, t0, t1):
         for k, v in node.items():
             if k == "atb" and isinstance(v, dict):
                 out["at"] = {kk: frac(vv) for kk, vv in v.items()}
-            elif k == "atb":
-                out["at"] = frac(v)
+            elif k in ("atb", "endb", "mvb"):
+                out[k[:-1]] = frac(v)
             else:
                 out[k] = convert_atb(v, beat_t, first, n_beats, t0, t1)
         return out
