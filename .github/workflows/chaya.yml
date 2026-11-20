@@ -18,7 +18,7 @@ on:
         default: render
 
 concurrency:
-  group: chaya-${{ github.event.inputs.job || github.event.schedule }}
+  group: chaya-${{ (github.event.inputs.job == 'review' || github.event.schedule == '7 * * * *') && 'review' || 'render' }}
   cancel-in-progress: false
 
 permissions:
