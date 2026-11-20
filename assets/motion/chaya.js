@@ -293,7 +293,7 @@
     const flux = Array.from({ length: 12 }, () => g.append("circle").attr("r", 8 * S).attr("fill", P.amber));
     const inA = g.append("path").attr("d", `M ${cx - w / 2 - 200 * S} ${cy} L ${cx - w / 2 - 40 * S} ${cy}`).attr("stroke", P.seaDeep).attr("stroke-width", 22 * S).attr("stroke-linecap", "round");
     const outA = g.append("path").attr("d", `M ${cx + w / 2 + 40 * S} ${cy} L ${cx + w / 2 + 200 * S} ${cy}`).attr("stroke", P.red).attr("stroke-width", 6 * S).attr("stroke-linecap", "round");
-    const bigI = mk(cx - w / 2 - 120 * S, cy + 60 * S, p.inI || "വലിയ കറന്റ്", P.seaDeep), smallI = mk(cx + w / 2 + 120 * S, cy + 60 * S, p.outI || "ചെറിയ കറന്റ്", P.red);
+    const bigI = mk(cx - w / 2 - 190 * S, cy + 70 * S, p.inI || "വലിയ കറന്റ്", P.seaDeep), smallI = mk(cx + w / 2 + 190 * S, cy + 70 * S, p.outI || "ചെറിയ കറന്റ്", P.red);
     void bigI; void smallI;
     return (lt, d) => { flux.forEach((q, i) => { const u = (lt * 0.35 + i / 12) % 1, ang = u * Math.PI * 2, rx = (w - 180 * S) / 2, ry = (h - 160 * S) / 2; q.attr("cx", cx + rx * Math.cos(ang)).attr("cy", cy + ry * Math.sin(ang)).attr("opacity", 0.9); });
       inA.attr("opacity", 0.6 + 0.4 * Math.sin(lt * 8)); outA.attr("opacity", 0.6 + 0.4 * Math.sin(lt * 8)); };
@@ -326,16 +326,16 @@
   K.meter = (g, p, c) => {
     const { X, Y, S } = c, wide = c.wide, items = p.items || [], n = items.length;
     const mx = X(wide ? 0.20 : 0.5), my = wide ? Y(0.5) : Y(0.16);
-    icon(g, "meter", mx, my, 230 * S);
-    const digits = g.append("text").attr("class", "num").attr("x", mx).attr("y", my - 56 * S).attr("text-anchor", "middle").attr("fill", "#7dffb0").attr("font-size", 34 * S).attr("font-weight", 700);
+    icon(g, "meter", mx, my, (wide ? 330 : 230) * S);
+    const digits = g.append("text").attr("class", "num").attr("x", mx).attr("y", my - (wide ? 80 : 56) * S + 1 * S).attr("text-anchor", "middle").attr("fill", "#7dffb0").attr("font-size", (wide ? 17 : 12) * S * 1.3).attr("font-weight", 700);
     const rows = items.map((it, i) => { const x = wide ? X(0.50) : X(0.08), y = wide ? Y(0.14 + i * 0.28) : Y(0.34 + i * 0.22), w = wide ? X(0.46) : X(0.84), r = g.append("g").attr("opacity", 0);
       r.append("rect").attr("x", x).attr("y", y - 70 * S).attr("width", w).attr("height", 140 * S).attr("rx", 36 * S).attr("fill", "#fffaf0").attr("stroke", P.brown).attr("stroke-width", 5 * S);
       icon(r, it.icon, x + 90 * S, y, 90 * S);
-      const t = r.append("text").attr("x", x + 180 * S).attr("y", y - 6 * S).attr("fill", P.brown).attr("font-family", MAL).attr("font-weight", 800).text(it.ml); fit(t, 44 * S, w - (wide ? 560 : 470) * S, 14);
+      const t = r.append("text").attr("x", x + 180 * S).attr("y", y - 6 * S).attr("fill", P.brown).attr("font-family", MAL).attr("font-weight", 800).text(it.ml); fit(t, 44 * S, w - (wide ? 600 : 640) * S, 14);
       const e = r.append("text").attr("x", x + 180 * S).attr("y", y + 34 * S).attr("fill", P.brown).attr("fill-opacity", 0.7).attr("font-weight", 600).text(it.watts + " W"); e.attr("font-size", 28 * S);
-      const hrs = r.append("text").attr("class", "num").attr("x", x + w - 30 * S).attr("y", y + 16 * S).attr("text-anchor", "end").attr("fill", it.col || P.red).attr("font-weight", 700).attr("font-size", (wide ? 60 : 44) * S);
+      const hrs = r.append("text").attr("class", "num").attr("x", x + w - 30 * S).attr("y", y + 16 * S).attr("text-anchor", "end").attr("fill", it.col || P.red).attr("font-weight", 700).attr("font-size", (wide ? 60 : 38) * S);
       return { r, hrs, it }; });
-    return (lt, d) => { const k = (lt * 3) % 100; digits.text(String(Math.floor(lt * 12 % 10000)).padStart(5, "0") + "." + Math.floor(k % 10));
+    return (lt, d) => { const k = (lt * 3) % 100; digits.text(String(Math.floor(lt * 12 % 10000)).padStart(4, "0"));
       rows.forEach((q, i) => { const o = prog(lt, 0.4 + i * 0.9, 0.4); q.r.attr("opacity", o); const val = 1000 / q.it.watts; q.hrs.text(((E.out(prog(lt, 0.6 + i * 0.9, 1.0)) * val)).toFixed(val < 10 ? 1 : 0) + " " + (p.unitMl || "മണിക്കൂർ")); }); };
   };
 
@@ -418,8 +418,8 @@
     const cards = (s.cards || []).map((cd) => { const grp = g.append("g").attr("opacity", 0), col = cd.col || P.brown;
       grp.append("rect").attr("x", -cardW / 2).attr("y", -cardH / 2).attr("width", cardW).attr("height", cardH).attr("rx", 40).attr("fill", col).attr("filter", `url(#${id}sh)`);
       grp.append("rect").attr("x", -cardW / 2 + 8).attr("y", -cardH / 2 + 8).attr("width", cardW - 16).attr("height", cardH - 16).attr("rx", 34).attr("fill", "none").attr("stroke", "#fff").attr("stroke-opacity", 0.28).attr("stroke-width", 3);
-      const tml = grp.append("text").attr("y", cardH * 0.1).attr("text-anchor", "middle").attr("fill", "#fff").attr("font-weight", 800).attr("font-family", MAL).text(cd.ml); fit(tml, wide ? 76 : 84, cardW - 70, 30);
-      if (cd.en) { const ten = grp.append("text").attr("y", cardH * 0.36).attr("text-anchor", "middle").attr("fill", "#fff").attr("fill-opacity", 0.86).attr("font-weight", 600).attr("letter-spacing", 4).text(cd.en); fit(ten, wide ? 26 : 30, cardW - 70, 12); }
+      const tml = grp.append("text").attr("y", -cardH * 0.02).attr("text-anchor", "middle").attr("fill", "#fff").attr("font-weight", 800).attr("font-family", MAL).text(cd.ml); fit(tml, wide ? 76 : 84, cardW - 70, 30);
+      if (cd.en) { const ten = grp.append("text").attr("y", cardH * (wide ? 0.38 : 0.37)).attr("text-anchor", "middle").attr("fill", "#fff").attr("fill-opacity", 0.86).attr("font-weight", 600).attr("letter-spacing", 4).text(cd.en); fit(ten, wide ? 26 : 30, cardW - 70, 12); }
       return { grp, t0: cd.t0, t1: cd.t1 }; });
     // brand mark and progress
     const bar = g.append("rect").attr("x", 0).attr("y", H - 8).attr("height", 8).attr("fill", P.amber);

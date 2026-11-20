@@ -44,3 +44,8 @@ def set_thumbnail(video_id: str, thumbnail: Path, profile: str = "en") -> None:
 
 def delete_video(video_id: str, profile: str = "en") -> None:
     _client(profile).videos().delete(id=video_id).execute()
+
+
+def schedule(video_id: str, publish_at: str, profile: str = "en") -> None:
+    """Give an uploaded private video a publish time (RFC 3339 UTC): it goes public by itself then."""
+    _client(profile).videos().update(part="status", body={"id": video_id, "status": {"privacyStatus": "private", "publishAt": publish_at, "selfDeclaredMadeForKids": False}}).execute()

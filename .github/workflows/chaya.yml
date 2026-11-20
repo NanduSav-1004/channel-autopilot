@@ -1,0 +1,73 @@
+name: Science Chaya
+
+# The weekly-batch flow of the Science Chaya channel. Scripts and storyboards are written with Claude in batches and listed in chaya/queue.json.
+#  render: builds the next queued video, uploads it PRIVATE, sends a small preview to Telegram with a green and a red button.
+#  review: reads the button presses: green gives the private video its publish time (next free 6 PM IST slot), red holds it. Nothing is ever public without a green flag.
+# Scheduled runs need the repo variable CHAYA_ENABLED = "true". The ledger lives on the `state-chaya` branch.
+on:
+  schedule:
+    # The free Gemini voice quotas reset at 08:00 UTC (winter), so the daily render starts just after.
+    - cron: "17 8 * * *"
+    - cron: "7 * * * *"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Which job to run"
+        type: choice
+        options: [render, review]
+        default: render
+
+concurrency:
+  group: chaya-${{ github.event.inputs.job || github.event.schedule }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # to update the `state-chaya` branch
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  GEMINI_API_KEY_ML: ${{ secrets.GEMINI_API_KEY_ML }}
+  GEMINI_API_KEY_DATA: ${{ secrets.GEMINI_API_KEY_DATA }}
+  YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+  YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+  YOUTUBE_REFRESH_TOKEN_ML: ${{ secrets.YOUTUBE_REFRESH_TOKEN_ML }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+jobs:
+  review:
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'review') || (github.event_name == 'schedule' && github.event.schedule == '7 * * * *' && vars.CHAYA_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e .
+      - name: Read the green and red flags
+        run: python scripts/chaya_run.py review
+
+  render:
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.job != 'review') || (github.event_name == 'schedule' && github.event.schedule == '17 8 * * *' && vars.CHAYA_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: System packages (fonts, ffmpeg, Chrome)
+        run: scripts/install_system_packages.sh
+      - run: pip install --retries 5 --timeout 60 -e .
+      - name: Voice pieces already spoken (the free daily voice quota may need several runs)
+        uses: actions/cache@v4
+        with:
+          path: output/chaya/*/voice_*
+          key: chaya-voice-${{ github.run_id }}
+          restore-keys: chaya-voice-
+      - name: Build the next video, upload it private, ask for the flag
+        run: python scripts/chaya_run.py render
