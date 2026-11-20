@@ -76,4 +76,4 @@ jobs:
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          python -c "import os; from autopilot import notify; notify.send('Science Chaya render failed. Run: ' + os.environ['RUN_URL'])"
+          PYTHONPATH=src python -c "import os; from autopilot import notify; notify.send('Science Chaya render failed. Run: ' + os.environ['RUN_URL'])"
