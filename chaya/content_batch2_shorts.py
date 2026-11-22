@@ -40,7 +40,7 @@ COOKER = short("cooker_s", "പ്രഷർ കുക്കർ വിസിൽ �
     outro("ഒരു വിസിൽ, ഒരു ശാസ്ത്രം!", "ONE WHISTLE, ONE BIT OF SCIENCE", "ഓരോ വിസിലിനും പിന്നിൽ ഒരു ശാസ്ത്രമുണ്ട്!"),
 ])
 ONION = short("onion_s", "ഉള്ളി മുറിക്കുമ്പോൾ കണ്ണ് നിറയുന്നത് എന്തുകൊണ്ട്? #Shorts", "Why do onions make you cry?", {"ml": "ഉള്ളി കരയിക്കുന്നത്", "en": "ONION TEARS", "hero": "compose"}, [
-    B("ഉള്ളി മുറിക്കുമ്പോൾ കണ്ണ് നിറയുന്നത് എന്തുകൊണ്ടാണ്?", ("ഉള്ളിയും കണ്ണീരും", "WHY DO ONIONS MAKE YOU CRY?", GD), C([I("onion", 0.5, 0.5, 7, anim="float"), T("ഉള്ളി", 0.5, 0.92, 90)], bg="dusk")),
+    B("ഉള്ളി മുറിക്കുമ്പോൾ കണ്ണ് നിറയുന്നത് എന്തുകൊണ്ടാണ്?", ("ഉള്ളിയും കണ്ണീരും", "WHY DO ONIONS MAKE YOU CRY?", GD), C([I("onion", 0.5, 0.5, 7, anim="float"), T("ഉള്ളി", 0.5, 0.86, 90)], bg="dusk")),
     B("ഉള്ളി മുറിക്കുമ്പോൾ അതിലെ കോശങ്ങൾ പൊട്ടും.", ("കോശങ്ങൾ പൊട്ടുന്നു", "CUTTING BREAKS THE CELLS", OR)),
     B("അപ്പോൾ അകത്തുള്ള എൻസൈമുകൾ പുറത്തുവരും.", ("എൻസൈമുകൾ പുറത്ത്", "ENZYMES ESCAPE", BL)),
     B("അവ ചേർന്ന് ഒരു ആവിയായ വസ്തു ഉണ്ടാക്കും.", ("ആവിയായ വസ്തു", "THEY MAKE A VAPOUR", RD), C([I("onion", 0.5, 0.65, 8), PT("bubbles", 26, [0.4, 0.15, 0.6, 0.55], "#e9b6d6", 7)], bg="dusk")),
@@ -67,7 +67,7 @@ BOAT = short("snakeboat_s", "ചുണ്ടൻ വള്ളം ഇത്ര വ
     outro("ഒരേ താളം, ഒരേ ലക്ഷ്യം!", "ONE RHYTHM, ONE GOAL", "ഒരേ താളത്തിന്റെ ശക്തി!"),
 ])
 COCO = short("tendercoconut_s", "ഇളനീരിൽ എന്താണ് ഉള്ളത്? #Shorts", "What is inside tender coconut water?", {"ml": "ഇളനീരിലെ രഹസ്യം", "en": "TENDER COCONUT", "hero": "compose"}, [
-    B("ഇളനീരിൽ എന്താണ് ഉള്ളത്?", ("ഇളനീർ", "WHAT IS IN IT?", LF), C([I("coconut", 0.5, 0.5, 9, anim="float"), T("ഇളനീർ", 0.5, 0.92, 90)], bg="dusk")),
+    B("ഇളനീരിൽ എന്താണ് ഉള്ളത്?", ("ഇളനീർ", "WHAT IS IN IT?", LF), C([I("coconut", 0.5, 0.5, 9, anim="float"), T("ഇളനീർ", 0.5, 0.86, 90)], bg="dusk")),
     B("ഇളനീരിൽ ഏകദേശം തൊണ്ണൂറ്റി നാല്, തൊണ്ണൂറ്റി അഞ്ച് ശതമാനം വെള്ളമാണ്.", ("≈ 95 % വെള്ളം", "ABOUT 94–95 % WATER", SE), {"kind": "stat", "p": {"value": 95, "suffix": " %", "ml": "ഇളനീരിലെ വെള്ളം", "en": "TENDER COCONUT WATER", "icon": "drop"}}),
     B("ബാക്കി ചെറിയ അളവ് പഞ്ചസാരയും ധാതുക്കളുമാണ്.", ("പഞ്ചസാരയും ധാതുക്കളും", "A LITTLE SUGAR AND MINERALS", GD)),
     B("അതിൽ ഏറ്റവും കൂടുതലുള്ള ധാതു പൊട്ടാസ്യമാണ്.", ("പൊട്ടാസ്യം", "POTASSIUM IS THE MAIN MINERAL", OR)),

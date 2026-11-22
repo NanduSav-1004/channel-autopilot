@@ -33,6 +33,7 @@ env:
   YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
   YOUTUBE_REFRESH_TOKEN_ML: ${{ secrets.YOUTUBE_REFRESH_TOKEN_ML }}
   TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_BOT_TOKEN_CHAYA: ${{ secrets.TELEGRAM_BOT_TOKEN_CHAYA }}
   TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
 jobs:
@@ -76,4 +77,4 @@ jobs:
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          PYTHONPATH=src python -c "import os; from autopilot import notify; notify.send('Science Chaya render failed. Run: ' + os.environ['RUN_URL'])"
+          PYTHONPATH=src python -c "import os; os.environ['TELEGRAM_BOT_TOKEN'] = os.environ.get('TELEGRAM_BOT_TOKEN_CHAYA') or os.environ['TELEGRAM_BOT_TOKEN']; from autopilot import notify; notify.send('Science Chaya render failed. Run: ' + os.environ['RUN_URL'])"

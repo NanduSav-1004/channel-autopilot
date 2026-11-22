@@ -13,7 +13,7 @@ from chaya import build
 
 name, vid, out = sys.argv[1], sys.argv[2], Path(sys.argv[3])
 mod = importlib.import_module(f"chaya.content_{name}")
-video = next(v for v in mod.VIDEOS if v["id"] == vid)
+video = build.styling.apply(next(v for v in mod.VIDEOS if v["id"] == vid))
 t, sents = 0.5, []
 for b in video["beats"]:
     d = max(2.2, len(b["t"]) * 0.075)

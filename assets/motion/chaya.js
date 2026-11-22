@@ -437,6 +437,40 @@
     elephant: (g) => { g.append("ellipse").attr("cx", 6).attr("cy", 6).attr("rx", 44).attr("ry", 32).attr("fill", "#7b8794"); g.append("circle").attr("cx", -36).attr("cy", -8).attr("r", 24).attr("fill", "#7b8794"); g.append("path").attr("d", "M -48 0 Q -62 26 -50 44 Q -42 48 -42 38 Q -46 22 -38 8 Z").attr("fill", "#6a7582"); g.append("ellipse").attr("cx", -22).attr("cy", -8).attr("rx", 16).attr("ry", 22).attr("fill", "#6a7582"); g.append("circle").attr("cx", -42).attr("cy", -14).attr("r", 3).attr("fill", P.dark); g.append("path").attr("d", "M -50 10 Q -64 14 -66 4").attr("stroke", "#f6efe0").attr("stroke-width", 5).attr("fill", "none").attr("stroke-linecap", "round"); for (const x of [-18, -2, 18, 34]) g.append("rect").attr("x", x - 6).attr("y", 22).attr("width", 12).attr("height", 30).attr("rx", 4).attr("fill", "#6a7582"); },
   });
 
+  // ---- characters: small flat people with faces, moods, a blink and a prop in the hand ----
+  const CAST = { man: { skin: "#c68b5e", hair: "#1d130c", top: "#f3efe6", extra: "mundu" }, woman: { skin: "#c68b5e", hair: "#1d130c", top: "#2f7d4f", extra: "bun" },
+    kid: { skin: "#d19a6c", hair: "#1d130c", top: "#f0b43a", extra: "kid" }, shopkeeper: { skin: "#b97b50", hair: "#1d130c", top: "#c8442f", extra: "mustache" }, student: { skin: "#c68b5e", hair: "#1d130c", top: "#1f8aa8", extra: "bag" } };
+  function drawChar(g, who, mood, holdIcon) {
+    const C = CAST[who] || CAST.man, kid = who === "kid", hs = kid ? 1.15 : 1;
+    const body = g.append("g");
+    body.append("path").attr("d", kid ? "M -34 30 Q -36 100 -28 112 L 28 112 Q 36 100 34 30 Q 0 14 -34 30 Z" : "M -42 28 Q -48 110 -38 128 L 38 128 Q 48 110 42 28 Q 0 8 -42 28 Z").attr("fill", C.top).attr("stroke", P.dark).attr("stroke-width", 3);
+    if (C.extra === "mundu") body.append("path").attr("d", "M -38 128 L 38 128 L 44 170 L -44 170 Z").attr("fill", "#fffaf0").attr("stroke", P.dark).attr("stroke-width", 3);
+    else if (!kid) body.append("path").attr("d", "M -38 128 L 38 128 L 34 172 L -34 172 Z").attr("fill", who === "woman" ? "#1f7344" : "#2b3a55").attr("stroke", P.dark).attr("stroke-width", 3);
+    else body.append("path").attr("d", "M -28 112 L 28 112 L 26 150 L -26 150 Z").attr("fill", "#2b3a55").attr("stroke", P.dark).attr("stroke-width", 3);
+    body.append("rect").attr("x", -9).attr("y", 14).attr("width", 18).attr("height", 18).attr("fill", C.skin);
+    // arms: a raised, pointing arm on the right and a hanging one on the left (or holding the prop)
+    const armL = g.append("path").attr("d", "M -40 36 Q -64 70 -56 108").attr("fill", "none").attr("stroke", C.top).attr("stroke-width", 16).attr("stroke-linecap", "round");
+    const hand = mood === "point" ? "M 40 36 Q 74 14 92 -22" : holdIcon ? "M 40 36 Q 72 62 70 84" : "M 40 36 Q 64 70 56 108";
+    const armR = g.append("path").attr("d", hand).attr("fill", "none").attr("stroke", C.top).attr("stroke-width", 16).attr("stroke-linecap", "round");
+    const endpt = mood === "point" ? [92, -22] : holdIcon ? [70, 84] : [56, 108];
+    g.append("circle").attr("cx", endpt[0]).attr("cy", endpt[1]).attr("r", 9).attr("fill", C.skin);
+    if (holdIcon && ICON[holdIcon]) { const hg = g.append("g").attr("transform", `translate(${endpt[0] + 12},${endpt[1] - 22}) scale(0.5)`); ICON[holdIcon](hg); }
+    void armL; void armR;
+    const head = g.append("g").attr("transform", `translate(0,${-22}) scale(${hs})`);
+    head.append("circle").attr("r", 36).attr("fill", C.skin).attr("stroke", P.dark).attr("stroke-width", 3);
+    head.append("path").attr("d", C.extra === "bun" ? "M -36 -6 Q -40 -46 0 -44 Q 40 -46 36 -6 Q 24 -28 0 -26 Q -24 -28 -36 -6 Z" : "M -36 -8 Q -38 -48 0 -46 Q 38 -48 36 -8 Q 20 -30 0 -28 Q -20 -30 -36 -8 Z").attr("fill", C.hair);
+    if (C.extra === "bun") head.append("circle").attr("cx", 0).attr("cy", -50).attr("r", 13).attr("fill", C.hair);
+    const eyes = [-13, 13].map((x) => head.append("ellipse").attr("cx", x).attr("cy", -4).attr("rx", 5).attr("ry", mood === "wow" ? 8 : 5.5).attr("fill", P.dark));
+    head.append("path").attr("d", mood === "wow" ? "M -20 -18 Q -13 -26 -6 -18 M 6 -18 Q 13 -26 20 -18" : mood === "think" ? "M -20 -14 L -6 -18 M 6 -20 L 20 -14" : "M -20 -16 Q -13 -20 -6 -16 M 6 -16 Q 13 -20 20 -16").attr("fill", "none").attr("stroke", C.hair === "#1d130c" ? "#1d130c" : P.dark).attr("stroke-width", 3.5).attr("stroke-linecap", "round");
+    if (mood === "wow") head.append("ellipse").attr("cy", 18).attr("rx", 8).attr("ry", 11).attr("fill", "#7a2418").attr("stroke", P.dark).attr("stroke-width", 2.5);
+    else if (mood === "smile" || mood === "point") head.append("path").attr("d", "M -14 14 Q 0 30 14 14").attr("fill", "#fff").attr("stroke", P.dark).attr("stroke-width", 3);
+    else if (mood === "think") head.append("path").attr("d", "M -10 20 L 10 16").attr("stroke", P.dark).attr("stroke-width", 3.5).attr("stroke-linecap", "round");
+    else head.append("path").attr("d", "M -10 18 Q 0 22 10 18").attr("fill", "none").attr("stroke", P.dark).attr("stroke-width", 3.5).attr("stroke-linecap", "round");
+    if (C.extra === "mustache") head.append("path").attr("d", "M -16 10 Q 0 4 16 10 Q 0 16 -16 10 Z").attr("fill", C.hair);
+    if (C.extra === "bag") g.append("rect").attr("x", -58).attr("y", 38).attr("width", 20).attr("height", 46).attr("rx", 6).attr("fill", "#8d4a2b").attr("opacity", 0.9);
+    return { eyes, head, armR };
+  }
+
   // ================= compose: a scene described as data (layers in drawing order, each with its own start/end as a fraction of the scene) =================
   // layer types: icon rect circle ellipse path text flow particles bolt flash rings spiral. Coordinates are 0..1 of the stage; "s" is an icon size multiplier.
   K.compose = (g, p, c) => {
@@ -457,12 +491,20 @@
         if (o.glow) ig.insert("circle", ":first-child").attr("r", 52).attr("fill", o.glow).attr("opacity", 0.22);
         label(grp, o);
         const from = pt(o), to = o.to ? [X(o.to[0]), Y(o.to[1])] : from, ph = rnd((o.x || 0) * 99 + (o.y || 0) * 31);
-        ups.push((lt, f) => { const mk = E.inOut(prog(f, o.mv ?? o.at ?? 0, o.dur ?? 0.2)), x = lerp(from[0], to[0], mk), y = lerp(from[1], to[1], mk);
-          let dy = 0, sc = 1, rot = o.rot || 0, op = vis(o, f);
-          if (o.anim === "float") dy = Math.sin(lt * 2 + ph * 6) * 10 * S; if (o.anim === "pulse") sc = 1 + 0.12 * Math.sin(lt * 4 + ph * 6); if (o.anim === "spin") rot += lt * (o.speed || 120);
+        ups.push((lt, f, d) => { const mk = E.inOut(prog(f, o.mv ?? o.at ?? 0, o.dur ?? 0.2)), x = lerp(from[0], to[0], mk), y = lerp(from[1], to[1], mk);
+          let dy = 0, sc = 0.45 + 0.55 * E.back(clamp((lt - (o.at ?? 0) * d) / 0.38)), rot = o.rot || 0, op = vis(o, f);
+          if (o.anim === "float") dy = Math.sin(lt * 2 + ph * 6) * 10 * S; if (o.anim === "pulse") sc *= 1 + 0.12 * Math.sin(lt * 4 + ph * 6); if (o.anim === "spin") rot += lt * (o.speed || 120);
           if (o.anim === "shake") dy = Math.sin(lt * 40) * 4 * S; if (o.anim === "blink") op *= 0.25 + 0.75 * Math.max(0, Math.sin(lt * 3 + ph * 8));
           if (o.rise) dy -= lt * o.rise * S * 100;
           grp.attr("opacity", op).attr("transform", `translate(${x},${y + dy}) rotate(${rot}) scale(${sc})`); });
+      } else if (o.t === "char") {        // a person: who = man | woman | kid | shopkeeper | student; mood = neutral | smile | wow | think | point; hold = an icon in the hand
+        const cg = grp.append("g"), parts = drawChar(cg, o.who || "man", o.mood || "neutral", o.hold), ph = rnd((o.x || 0) * 77 + 3), from = pt(o), to = o.to ? [X(o.to[0]), Y(o.to[1])] : from;
+        if (o.label) { const l = o.label; pill(grp, l.ml, l.en, (l.dx || 0) * S * 100, 205 * (o.s || 1.6) * S, l.col || P.brown, (l.w || 330) * S, 34 * S); }
+        ups.push((lt, f, d) => { const mk = E.inOut(prog(f, o.mv ?? o.at ?? 0, o.dur ?? 0.2)), x = lerp(from[0], to[0], mk), y = lerp(from[1], to[1], mk), k = E.back(clamp((lt - (o.at ?? 0) * d) / 0.4));
+          const blink = ((lt * 0.7 + ph * 5) % 3) < 0.12 ? 0.1 : 1, tilt = Math.sin(lt * 1.6 + ph * 6) * 2.5, bob = Math.sin(lt * 2.2 + ph * 6) * 4 * S, flip = o.flip ? -1 : 1;
+          parts.eyes.forEach((e) => e.attr("transform", `scale(1,${blink})`)); parts.head.attr("transform", `translate(0,-22) rotate(${tilt}) scale(${o.who === "kid" ? 1.15 : 1})`);
+          grp.attr("opacity", vis(o, f)).attr("transform", `translate(${x},${y + bob})`);
+          cg.attr("transform", `scale(${(o.s || 1.6) * S * (0.5 + 0.5 * k) * flip},${(o.s || 1.6) * S * (0.5 + 0.5 * k)})`); });
       } else if (o.t === "rect") { sty(grp.append("rect").attr("x", X(o.x)).attr("y", Y(o.y)).attr("width", o.w * W).attr("height", o.h * H).attr("rx", (o.rx || 0) * S)); ups.push((lt, f) => grp.attr("opacity", vis(o, f)));
       } else if (o.t === "circle") { sty(grp.append("circle").attr("cx", X(o.x)).attr("cy", Y(o.y)).attr("r", o.r * Math.min(W, H))); ups.push((lt, f) => grp.attr("opacity", vis(o, f) * (o.pulse ? 0.7 + 0.3 * Math.sin(lt * 4) : 1)));
       } else if (o.t === "ellipse") { sty(grp.append("ellipse").attr("cx", X(o.x)).attr("cy", Y(o.y)).attr("rx", o.rx * W).attr("ry", o.ry * H)); ups.push((lt, f) => grp.attr("opacity", vis(o, f)));
@@ -496,43 +538,86 @@
     return (lt, d) => { const f = lt / d; flashRect.attr("opacity", 0); ups.forEach((u) => u(lt, f, d)); };
   };
 
-  // ================= the runner: scenes crossfade, bilingual cards on top, a thin progress line, a small brand mark =================
+  // ================= the runner (v2): hard cuts and whips, a punch-in on every beat, a caption band at the bottom, light rays and sparkles behind =================
   SCENES.chaya = (g, s) => {
     const W = M.W, H = M.H, wide = W > H, id = "cz" + rid();
-    const stage = wide ? { x: 0, y: 215, w: W, h: H - 215 - 20 } : { x: 0, y: 330, w: W, h: 1420 };
+    const capH = wide ? 250 : 470, top = wide ? 56 : 150;
+    const stage = { x: 0, y: top, w: W, h: H - top - capH };
     const c = { W, H, wide, stage, X: (u) => stage.x + u * stage.w, Y: (v) => stage.y + v * stage.h, S: Math.min(stage.w, stage.h) / 1000, id };
-    const defs = M.svg.select("defs");
-    const sh = defs.append("filter").attr("id", id + "sh").attr("x", "-20%").attr("y", "-20%").attr("width", "140%").attr("height", "150%");
-    sh.append("feDropShadow").attr("dx", 0).attr("dy", 8).attr("stdDeviation", 9).attr("flood-color", P.ink).attr("flood-opacity", 0.35);
+    const defs = M.svg.select("defs"), cx = W / 2, cy = stage.y + stage.h / 2;
+    defs.append("clipPath").attr("id", id + "cl").append("rect").attr("x", 0).attr("y", stage.y).attr("width", W).attr("height", stage.h);
+    const bandG = defs.append("linearGradient").attr("id", id + "bd").attr("x1", 0).attr("x2", 0).attr("y1", 0).attr("y2", 1);
+    bandG.append("stop").attr("offset", 0).attr("stop-color", "#4a2a17"); bandG.append("stop").attr("offset", 1).attr("stop-color", "#2a170c");
+    // background: cream, a faint dot grid, slowly turning rays and drifting sparkles
     g.append("rect").attr("width", W).attr("height", H).attr("fill", P.cream);
     const dotsBg = g.append("g").attr("opacity", 0.07);
     for (let x = 30; x < W; x += 70) for (let y = 30; y < H; y += 70) dotsBg.append("circle").attr("cx", x).attr("cy", y).attr("r", 4).attr("fill", P.brown);
-    const scenes = s.scenes.map((sc) => { const grp = g.append("g").attr("opacity", 0).attr("display", "none"); const upd = K[sc.kind](grp, sc.p || {}, c); return { grp, upd, t0: sc.t0, t1: sc.t1, kind: sc.kind }; });
-    // cards
-    const cardW = wide ? Math.min(1200, W * 0.64) : 900, cardH = wide ? 150 : 190, cardY = wide ? 118 : 215;
-    const cards = (s.cards || []).map((cd) => { const grp = g.append("g").attr("opacity", 0), col = cd.col || P.brown;
-      grp.append("rect").attr("x", -cardW / 2).attr("y", -cardH / 2).attr("width", cardW).attr("height", cardH).attr("rx", 40).attr("fill", col).attr("filter", `url(#${id}sh)`);
-      grp.append("rect").attr("x", -cardW / 2 + 8).attr("y", -cardH / 2 + 8).attr("width", cardW - 16).attr("height", cardH - 16).attr("rx", 34).attr("fill", "none").attr("stroke", "#fff").attr("stroke-opacity", 0.28).attr("stroke-width", 3);
-      const tml = grp.append("text").attr("y", -cardH * 0.02).attr("text-anchor", "middle").attr("fill", "#fff").attr("font-weight", 800).attr("font-family", MAL).text(cd.ml); fit(tml, wide ? 76 : 84, cardW - 70, 30);
-      if (cd.en) { const ten = grp.append("text").attr("y", cardH * (wide ? 0.38 : 0.37)).attr("text-anchor", "middle").attr("fill", "#fff").attr("fill-opacity", 0.86).attr("font-weight", 600).attr("letter-spacing", 4).text(cd.en); fit(ten, wide ? 26 : 30, cardW - 70, 12); }
-      return { grp, t0: cd.t0, t1: cd.t1 }; });
-    // brand mark and progress
+    const rays = g.append("g").attr("opacity", 0.08);
+    for (let i = 0; i < 10; i++) rays.append("path").attr("d", `M ${cx} ${cy} L ${cx + Math.cos(i * 0.628) * W} ${cy + Math.sin(i * 0.628) * W} L ${cx + Math.cos(i * 0.628 + 0.2) * W} ${cy + Math.sin(i * 0.628 + 0.2) * W} Z`).attr("fill", P.amber);
+    const sparks = Array.from({ length: 26 }, (_, i) => ({ el: g.append("circle").attr("r", 3 + rnd(i) * 5).attr("fill", P.amber), x: rnd(i + 40) * W, y: rnd(i + 80) * H, sp: 18 + rnd(i + 5) * 30, ph: rnd(i + 9) * 6 }));
+    // the world: every scene lives in here, clipped to the stage, and is pushed, punched and slid as a whole
+    const world = g.append("g").attr("clip-path", `url(#${id}cl)`);
+    const scenes = s.scenes.map((sc) => { const grp = world.append("g").attr("display", "none"); const upd = K[sc.kind](grp, sc.p || {}, c); return { grp, upd, t0: sc.t0, t1: sc.t1, tr: sc.tr || "cut" }; });
+    // the caption band
+    const band = g.append("g");
+    band.append("rect").attr("x", 0).attr("y", H - capH).attr("width", W).attr("height", capH).attr("fill", `url(#${id}bd)`);
+    band.append("rect").attr("x", 0).attr("y", H - capH).attr("width", W).attr("height", 7).attr("fill", P.amber);
+    const capY = H - capH / 2 - (wide ? 6 : 14), maxW = W * (wide ? 0.82 : 0.9), size0 = wide ? 92 : 100, YEL = "#ffd447";
+    const probe = g.append("text").attr("font-family", MAL).attr("font-weight", 800).attr("opacity", 0);
+    const meas = (txt, sz) => { probe.attr("font-size", sz).text(txt); return probe.node().getComputedTextLength(); };
+    const cards = (s.cards || []).map((cd) => {
+      const grp = g.append("g").attr("opacity", 0), words = cd.ml.split(/\s+/).filter(Boolean);
+      let sz = size0, lines;
+      for (;;) {
+        const ws = words.map((w) => meas(w, sz)), sp = meas(" ", sz) || sz * 0.3, tot = ws.reduce((a, b) => a + b, 0) + sp * (words.length - 1);
+        if (tot <= maxW || words.length < 2) { lines = [words.map((w, i) => ({ w, wd: ws[i] }))]; if (tot <= maxW || sz <= 44) { lines.sp = sp; break; } }
+        else { let best = 1, bm = 1e9; for (let k = 1; k < words.length; k++) { const a = ws.slice(0, k).reduce((x, y) => x + y, 0) + sp * (k - 1), b = ws.slice(k).reduce((x, y) => x + y, 0) + sp * (words.length - k - 1), m = Math.max(a, b); if (m < bm) { bm = m; best = k; } }
+          if (bm <= maxW || sz <= 44) { lines = [words.slice(0, best).map((w, i) => ({ w, wd: ws[i] })), words.slice(best).map((w, i) => ({ w, wd: ws[best + i] }))]; lines.sp = sp; break; } }
+        sz -= 4;
+      }
+      const lh = sz * 1.18, hl = words.reduce((bi, w, i) => (w.length > words[bi].length ? i : bi), 0), wordEls = [];
+      const y0 = capY - (lines.length - 1) * lh / 2 - (cd.en ? sz * 0.18 : 0);
+      let wi = 0;
+      lines.forEach((ln, li) => { const tw = ln.reduce((a, o) => a + o.wd, 0) + lines.sp * (ln.length - 1); let x = cx - tw / 2;
+        ln.forEach((o) => { const wg = grp.append("g"), t = wg.append("text").attr("x", 0).attr("y", 0).attr("font-family", MAL).attr("font-weight", 800).attr("font-size", sz).attr("fill", wi === hl ? YEL : "#fff").attr("stroke", "#2a170c").attr("stroke-width", sz * 0.13).attr("stroke-linejoin", "round").attr("paint-order", "stroke").text(o.w);
+          wordEls.push({ wg, x: x + o.wd / 2, y: y0 + li * lh, w: o.wd, t }); x += o.wd + lines.sp; wi++; }); });
+      grp.append("rect").attr("x", cx - 60).attr("y", y0 - sz * 0.98).attr("width", 120).attr("height", 8).attr("rx", 4).attr("fill", cd.col || P.amber);
+      let en = null; if (cd.en) { en = grp.append("text").attr("x", cx).attr("y", y0 + (lines.length - 1) * lh + sz * 0.62).attr("text-anchor", "middle").attr("fill", "#f3e2c4").attr("font-weight", 700).attr("letter-spacing", 4).attr("stroke", "#2a170c").attr("stroke-width", 5).attr("paint-order", "stroke").text(cd.en); fit(en, sz * 0.36, maxW, 14); }
+      return { grp, t0: cd.t0, t1: cd.t1, wordEls, en };
+    });
+    const mark = g.append("text").attr("x", wide ? 36 : 40).attr("y", wide ? 40 : 84).attr("fill", P.brown).attr("fill-opacity", 0.75).attr("font-family", MAL).attr("font-weight", 800).attr("font-size", wide ? 30 : 38).text("സയൻസ് ചായ");
+    const flash = g.append("rect").attr("width", W).attr("height", H - capH).attr("fill", "#fffbe8").attr("opacity", 0);
     const bar = g.append("rect").attr("x", 0).attr("y", H - 8).attr("height", 8).attr("fill", P.amber);
-    const mark = g.append("text").attr("x", wide ? 36 : 40).attr("y", wide ? 52 : 84).attr("fill", P.brown).attr("fill-opacity", 0.7).attr("font-family", MAL).attr("font-weight", 800).attr("font-size", wide ? 34 : 38).text("സയൻസ് ചായ");
-    const T = s.duration;
+    const T = s.duration, beats = s.beats || [];
     return (t) => {
+      sparks.forEach((q) => { const yy = ((q.y - t * q.sp) % H + H) % H; q.el.attr("cx", q.x + Math.sin(t * 0.8 + q.ph) * 24).attr("cy", yy).attr("opacity", 0.12 + 0.12 * Math.sin(t * 2 + q.ph)); });
+      rays.attr("transform", `rotate(${t * 3} ${cx} ${cy})`);
+      // where are we among the beats: a punch-in at the start of each, and a slow push through it
+      let bi = -1; for (let i = 0; i < beats.length; i++) { if (beats[i] <= t) bi = i; else break; }
+      const bs = bi >= 0 ? beats[bi] : 0, b1 = bi + 1 < beats.length ? beats[bi + 1] : T, SEG = 2.4, seg = Math.floor((t - bs) / SEG), b0 = bs + seg * SEG;     // no framing lasts longer than 2.4 s
+      const punch = E.out(clamp((t - b0) / 0.42)), push = clamp((t - b0) / Math.max(0.8, Math.min(SEG, b1 - b0)));
+      // each beat is cut to a slightly different framing (a new "shot" from the same drawing), then pushed in
+      const FR = [[1, 0, 0], [1.14, -0.04, -0.03], [1.08, 0.04, 0.03], [1.2, 0, -0.04], [1.1, -0.03, 0.04]];
+      let si = 0; for (let i = 0; i < scenes.length; i++) if (scenes[i].t0 - 0.02 <= t) si = i;
+      const calm = s.scenes[si].kind === "outro", fr = calm || t - scenes[si].t0 < 0.5 ? FR[0] : FR[(Math.max(bi, 0) * 2 + seg + si) % FR.length], zoom = calm ? 1 : fr[0] * (1 + 0.07 * (1 - punch) + 0.035 * push), fx = fr[1] * W, fy = fr[2] * H;
+      let fl = 0.22 * (1 - clamp((t - b0) / 0.2));
       scenes.forEach((sc, i) => {
-        const last = i === scenes.length - 1, vis = t >= sc.t0 - 0.02 && (last || t <= sc.t1 + 0.35);
+        const last = i === scenes.length - 1, next = scenes[i + 1], slideOut = next && next.tr === "whip" ? 0.3 : 0, vis = t >= sc.t0 - 0.02 && (last || t < sc.t1 + slideOut);
         sc.grp.attr("display", vis ? null : "none");
         if (!vis) return;
-        const lt = t - sc.t0, d = sc.t1 - sc.t0, o = prog(t, sc.t0, 0.3) * (last ? 1 : 1 - prog(t, sc.t1, 0.3));
-        sc.grp.attr("opacity", o).attr("transform", `translate(0,${(1 - E.out(prog(t, sc.t0, 0.4))) * 26})`);
-        sc.upd(Math.max(0, lt), Math.max(0.5, d));
+        const tin = clamp((t - sc.t0) / 0.3), te = E.out(tin);
+        let dx = 0, sz = zoom, op = 1;
+        if (sc.tr === "whip") dx = (1 - te) * W * 0.55; else if (sc.tr === "zoom") { sz *= 1.28 - 0.28 * te; op = Math.min(1, tin * 3); } else if (sc.tr === "flash" && t - sc.t0 < 0.25) fl = Math.max(fl, 0.9 * (1 - (t - sc.t0) / 0.25));
+        if (slideOut && t >= sc.t1) dx = -Math.pow(clamp((t - sc.t1) / slideOut), 3) * W * 0.55;
+        sc.grp.attr("opacity", op).attr("transform", `translate(${dx + fx},${fy}) translate(${cx},${cy}) scale(${sz}) translate(${-cx},${-cy})`);
+        sc.upd(Math.max(0, t - sc.t0), Math.max(0.5, sc.t1 - sc.t0));
       });
-      cards.forEach((cd) => { const a = clamp(prog(t, cd.t0, 0.28) * (1 - prog(t, cd.t1 - 0.12, 0.12))), pop = E.back(prog(t, cd.t0, 0.36));
-        cd.grp.attr("opacity", a).attr("transform", `translate(${W / 2},${cardY + 16 * (1 - pop)}) scale(${0.92 + 0.08 * pop})`); });
+      flash.attr("opacity", fl);
+      cards.forEach((cd) => { const on = t >= cd.t0 && t < cd.t1, fade = clamp((cd.t1 - t) / 0.14); cd.grp.attr("opacity", on ? Math.min(1, fade) : 0); if (!on) return;
+        cd.wordEls.forEach((q, i) => { const k = E.back(clamp((t - cd.t0 - i * 0.07) / 0.32)), o = clamp((t - cd.t0 - i * 0.07) / 0.12);
+          q.wg.attr("opacity", o).attr("transform", `translate(${q.x},${q.y + (1 - k) * 46}) scale(${0.55 + 0.45 * k})`); q.t.attr("x", -q.w / 2); });
+        if (cd.en) cd.en.attr("opacity", E.out(clamp((t - cd.t0 - 0.25) / 0.3))); });
       bar.attr("width", W * clamp(t / T));
-      mark.attr("opacity", 1);
     };
   };
 })();

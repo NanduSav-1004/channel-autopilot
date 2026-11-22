@@ -11,9 +11,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
-from autopilot import audio, chaya, env, motion, qa_video, render, sfx
+from autopilot import audio, chaya, chaya_sound, env, motion, qa_video, render, sfx
+from chaya import styling
 
 CHUNK = 6       # beats per voice request: a whole long narration in one request is refused or cut
+TRANSITIONS = ["whip", "zoom", "cut", "flash", "whip", "cut"]   # how each scene after the first comes in
 TAIL = 3.6      # the brand and the chai glass stay after the last word
 
 
@@ -56,7 +58,8 @@ def plan(video: dict, sents: list[dict]) -> dict:
         t0 = starts[i] - (0.0 if i == 0 else 0.15)
         t1 = (starts[idx[k + 1]] - 0.15) if k + 1 < len(idx) else total
         sc = beats[i]["scene"]
-        scenes.append({"kind": sc["kind"], "t0": round(t0, 3), "t1": round(t1, 3), "p": convert_atb(sc.get("p", {}), beat_t, i, len(beats), t0, t1)})
+        scenes.append({"kind": sc["kind"], "t0": round(t0, 3), "t1": round(t1, 3), "tr": "cut" if k == 0 else TRANSITIONS[k % len(TRANSITIONS)],
+                       "p": convert_atb(sc.get("p", {}), beat_t, i, len(beats), t0, t1)})
     cards = []
     for i, b in enumerate(beats):
         if b["card"]:
@@ -64,16 +67,7 @@ def plan(video: dict, sents: list[dict]) -> dict:
             end = starts[i + 1] - 0.05 if i + 1 < len(beats) else sents[i]["end"] + 0.5
             cards.append({"t0": round(starts[i] + 0.05, 3), "t1": round(end, 3), "ml": ml, "en": en, "col": col})
     size = (1920, 1080) if video["orient"] == "wide" else (1080, 1920)
-    return {"type": "chaya", "duration": round(total, 3), "scenes": scenes, "cards": cards, "canvas": list(size), "width": size[0], "height": size[1], "grain": False}, starts, total
-
-
-def events(spec: dict, starts: list[float], total: float):
-    ev = [(0.0, "whoosh", 0.45)]
-    for sc in spec["scenes"][1:]:
-        ev.append((sc["t0"] + 0.05, "swish:1.2", 0.35))
-    ev += [(cd["t0"], "pop", 0.22) for cd in spec["cards"]]
-    ev.append((spec["scenes"][-1]["t0"] + 0.3, "accent", 0.7))
-    return ev
+    return {"type": "chaya", "duration": round(total, 3), "scenes": scenes, "cards": cards, "beats": [round(x, 3) for x in starts], "canvas": list(size), "width": size[0], "height": size[1], "grain": False}, starts, total
 
 
 def thumbnail(video: dict, final: Path, out_png: Path, work: Path) -> None:
@@ -149,6 +143,7 @@ def speak_chunks(video: dict, work: Path, out_wav: Path) -> list[dict]:
 
 
 def build(video: dict, out: Path, flags: set) -> Path:
+    video = styling.apply(video)
     work = out / video["id"]
     work.mkdir(parents=True, exist_ok=True)
     wav, tpath = work / "narration.wav", work / "timings.json"
@@ -158,7 +153,7 @@ def build(video: dict, out: Path, flags: set) -> Path:
         timings = speak_chunks(video, work, wav)
         tpath.write_text(json.dumps(timings, ensure_ascii=False, indent=1))
     sents = [x for sec in timings for x in sec["sentences"]]
-    spec, starts, total = plan(video, sents)
+    spec, _starts, total = plan(video, sents)
     (work / "spec.json").write_text(json.dumps(spec, ensure_ascii=False, indent=1))
     clip = work / "scene.mp4"
     fps = 24
@@ -167,8 +162,12 @@ def build(video: dict, out: Path, flags: set) -> Path:
     music = audio.generate_ambient(total + 2, work / "music.wav", seed=sum(map(ord, video["id"])) % 50, mood=video.get("mood", "curious"))
     mixed = work / "mix.wav"
     render.mix_audio(wav, music, mixed)
-    track = sfx.render_track(events(spec, starts, total), total, work / "sfx.wav")
+    track = chaya_sound.render(spec, work / "sfx.wav")
     withfx = sfx.add_to_mix(mixed, track, work / "mix_sfx.wav")
+    # a little more low end, like the reference videos (their bass share is about 13-16%, the first Science Chaya videos had 4-6%)
+    bass = work / "mix_bass.wav"
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(withfx), "-af", "bass=g=3:f=110:w=0.7", str(bass)], check=True)
+    bass.replace(withfx)
     render.master_loudness(withfx)
     final = work / f"{video['id']}.mp4"
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(clip), "-i", str(withfx), "-filter_complex", "[1:a]apad[a]", "-map", "0:v", "-map", "[a]",

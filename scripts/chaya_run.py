@@ -3,6 +3,7 @@
   render : build the next video of chaya/queue.json, upload it as private, send a small preview to Telegram with a green and a red button
 The ledger is data/chaya_state.json (kept on the `state-chaya` branch by scripts/chaya_state.sh); a failed step never publishes anything."""
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -13,6 +14,9 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 from autopilot import env, notify, upload
 from chaya import ops
+
+if os.environ.get("TELEGRAM_BOT_TOKEN_CHAYA"):      # a bot only Science Chaya uses: nothing else can read (and so swallow) the green and red presses
+    os.environ["TELEGRAM_BOT_TOKEN"] = os.environ["TELEGRAM_BOT_TOKEN_CHAYA"]
 
 STATE = ROOT / "data" / "chaya_state.json"
 OUT = ROOT / "output" / "chaya"
