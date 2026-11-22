@@ -12,10 +12,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 from autopilot import audio, chaya, chaya_sound, env, motion, qa_video, render, sfx
-from chaya import styling
 
 CHUNK = 6       # beats per voice request: a whole long narration in one request is refused or cut
-TRANSITIONS = ["whip", "zoom", "cut", "flash", "whip", "cut"]   # how each scene after the first comes in
+TRANSITIONS = ["whip", "fade", "zoom", "cut", "whip", "fade"]   # how each scene after the first comes in
 TAIL = 3.6      # the brand and the chai glass stay after the last word
 
 
@@ -143,7 +142,6 @@ def speak_chunks(video: dict, work: Path, out_wav: Path) -> list[dict]:
 
 
 def build(video: dict, out: Path, flags: set) -> Path:
-    video = styling.apply(video)
     work = out / video["id"]
     work.mkdir(parents=True, exist_ok=True)
     wav, tpath = work / "narration.wav", work / "timings.json"

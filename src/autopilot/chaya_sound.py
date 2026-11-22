@@ -214,6 +214,19 @@ def events_for(spec: dict) -> tuple[list[tuple[float, str, float]], list[tuple[f
         if sc["kind"] == "outro":
             ev += [(t0 + 0.3, "ding", 0.55), (t0 + 1.0, "shimmer", 0.4)]
         d = sc["t1"] - t0
+        if sc["kind"] == "crow":
+            a = sc.get("p", {}).get("at", {})
+            if "badges" in a:
+                ev += [(t0 + a["badges"] * d, "pop", 0.5), (t0 + a["badges"] * d + 0.12, "pop", 0.5)]
+            if "meter" in a:
+                ev.append((t0 + a["meter"] * d, "click", 0.5))
+            if "ok" in a:
+                ev.append((t0 + a["ok"] * d, "ding", 0.5))
+            if "danger" in a:
+                td = t0 + a["danger"] * d
+                ev += [(td - 0.8, "riser:0.8", 0.45), (td, "crack", 0.9), (td + 0.05, "buzz", 0.5), (td + 0.1, "impact", 0.6)]
+            for cm in sc.get("p", {}).get("cams", [])[1:]:
+                ev.append((t0 + cm.get("at", 0) * d, "whoosh", 0.3))
         for lay in sc.get("p", {}).get("layers", []):
             at = t0 + lay.get("at", 0) * d
             if lay.get("t") == "bolt":
