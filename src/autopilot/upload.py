@@ -49,3 +49,8 @@ def delete_video(video_id: str, profile: str = "en") -> None:
 def schedule(video_id: str, publish_at: str, profile: str = "en") -> None:
     """Give an uploaded private video a publish time (RFC 3339 UTC): it goes public by itself then."""
     _client(profile).videos().update(part="status", body={"id": video_id, "status": {"privacyStatus": "private", "publishAt": publish_at, "selfDeclaredMadeForKids": False}}).execute()
+
+
+def unschedule(video_id: str, profile: str = "en") -> None:
+    """Stop a scheduled private video from going public (it stays private; nothing is deleted)."""
+    _client(profile).videos().update(part="status", body={"id": video_id, "status": {"privacyStatus": "private", "selfDeclaredMadeForKids": False}}).execute()

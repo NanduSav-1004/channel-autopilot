@@ -27,6 +27,11 @@ HOOKS = {
     "fan_s": ("fan", "sky", ("man", "wow", None), ("woman", "smile", None)),
     "snakeboat_s": ("boat", "sky", ("man", "point", None), ("kid", "wow", None)),
     "elephants_long": ("elephant", "sky", ("kid", "wow", None), ("woman", "smile", None)),
+    "electricity_long": ("bulb", "dusk", ("woman", "smile", None), ("man", "wow", None)),
+    "electricity_s1": ("meter", "dusk", ("man", "wow", None), ("woman", "think", None)),
+    "electricity_s2": ("dam", "dusk", ("student", "point", None), ("kid", "wow", None)),
+    "electricity_s3": ("bird", "sky", ("kid", "wow", None), ("man", "think", None)),
+    "monsoon_s3": ("cup", "dusk", ("woman", "smile", "cup"), ("kid", "wow", None)),
     "tendercoconut_s": ("coconut", "dusk", ("man", "smile", None), ("kid", "wow", None)),
 }
 
