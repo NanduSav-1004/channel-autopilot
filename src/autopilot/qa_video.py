@@ -9,7 +9,7 @@ import re
 import subprocess
 from pathlib import Path
 
-LIMITS = {"long": (150.0, 1500.0), "short": (5.0, 61.0)}      # plausible length range in seconds
+LIMITS = {"long": (150.0, 1500.0), "chaya_long": (90.0, 1500.0), "short": (5.0, 61.0)}      # plausible length range in seconds
 BLACK_ERROR_SHARE, BLACK_ERROR_ONE = 0.40, 20.0              # dark footage is normal (space, a bulb that begins to glow): only a video that is mostly black, or one long black stretch, is a fault
 EDGE = 1.2                                                    # black or silence this close to the start or end is a fade, not a fault
 
@@ -72,7 +72,7 @@ def judge(info: dict, found: dict, loud: tuple[float, float] | None, kind: str, 
     inner_black = [(a, b) for a, b in found["black"] if a > EDGE and b < dur - EDGE + 0.01]
     black_total = sum(b - a for a, b in inner_black)
     where = ", ".join(f"{a:.0f}s for {b - a:.1f}s" for a, b in inner_black[:4])
-    limit_total, limit_one = (BLACK_ERROR_SHARE * dur, BLACK_ERROR_ONE) if kind == "long" else (BLACK_ERROR_SHARE * dur, BLACK_ERROR_ONE / 2)
+    limit_total, limit_one = (BLACK_ERROR_SHARE * dur, BLACK_ERROR_ONE) if kind != "short" else (BLACK_ERROR_SHARE * dur, BLACK_ERROR_ONE / 2)
     if inner_black and (black_total >= limit_total or max(b - a for a, b in inner_black) >= limit_one):
         errors.append(f"black picture for {black_total:.1f}s in total ({where})")
     elif inner_black:

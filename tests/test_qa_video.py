@@ -60,3 +60,9 @@ def test_a_missing_or_unreadable_file_never_raises_from_the_check_itself(tmp_pat
     logs = []
     out = q.gate(tmp_path / "nothing.mp4", "short", None, log=logs.append)
     assert out["errors"] == [] and "could not check" in logs[0]
+
+
+def test_science_chaya_long_videos_may_be_just_over_two_minutes():
+    short_long = {**OK_INFO, "dur": 140.0, "a_dur": 140.0, "v_dur": 140.0}
+    assert q.judge(short_long, NONE, None, "long", None)["errors"]
+    assert not any("length" in e for e in q.judge(short_long, NONE, None, "chaya_long", None)["errors"])

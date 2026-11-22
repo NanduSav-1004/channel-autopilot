@@ -173,10 +173,7 @@ def build(video: dict, out: Path, flags: set) -> Path:
     final = work / f"{video['id']}.mp4"
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(clip), "-i", str(withfx), "-filter_complex", "[1:a]apad[a]", "-map", "0:v", "-map", "[a]",
                     "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-t", f"{total:.2f}", str(final)], check=True)
-    try:
-        qa_video.gate(final, "long" if video["orient"] == "wide" else "short", tuple(spec["canvas"]))
-    except Exception as exc:  # noqa: BLE001 - report, keep going: the morning review decides
-        print("QA:", exc)
+    qa_video.gate(final, "chaya_long" if video["orient"] == "wide" else "short", tuple(spec["canvas"]))   # raises (and removes the file) on a real fault: nothing is uploaded
     thumbnail(video, final, out / f"{video['id']}_thumbnail.png", work)
     meta = {k: video.get(k) for k in ("id", "title_ml", "title_en", "comment")}
     meta["seconds"] = round(total, 1)
