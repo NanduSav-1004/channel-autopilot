@@ -82,6 +82,9 @@ def render() -> None:
     from chaya import build as chaya_build  # heavy imports only here
     from chaya import upload as chaya_upload
     env.load_env(ROOT / ".env")
+    if (ROOT / "chaya" / "PAUSED").exists():          # the owner paused new renders (remove the file to resume)
+        print("renders are paused: chaya/PAUSED exists")
+        return
     sync("pull")
     state = load()
     queue = json.loads((ROOT / "chaya" / "queue.json").read_text())
