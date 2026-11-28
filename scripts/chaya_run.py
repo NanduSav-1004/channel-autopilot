@@ -1,6 +1,6 @@
 """Science Chaya daily flow on GitHub Actions.
   review : read Telegram button presses; green -> give the (already uploaded, private) video its publish time, red -> hold it
-  render : build the next video of chaya/queue.json, upload it as private, send a small preview to Telegram with a green and a red button
+  render : build the next video of chaya/queue.json, upload it, schedule it for the next free 6 PM IST slot at once (no approval step) and tell Telegram
 The ledger is data/chaya_state.json (kept on the `state-chaya` branch by scripts/chaya_state.sh); a failed step never publishes anything."""
 import json
 import os
@@ -94,24 +94,23 @@ def render() -> None:
         return
     mod = importlib.import_module(f"chaya.content_{entry['content']}")
     video = next(v for v in mod.VIDEOS if v["id"] == entry["id"])
-    final = chaya_build.build(video, OUT, set())
+    chaya_build.build(video, OUT, set())
     vid_id = chaya_upload.upload_private(entry["content"], OUT, entry["id"], None)
-    work = OUT / entry["id"]
-    preview = work / "preview.mp4"
-    secs = max(10.0, chaya_build.plan(video, [s for sec in json.loads((work / "timings.json").read_text()) for s in sec["sentences"]])[2])
-    kbps = int(min(1500, 44 * 8 * 1000 / secs * 0.85))          # keep the preview under Telegram's 50 MB bot limit
-    scale = "scale=-2:720" if video["orient"] == "wide" else "scale=-2:960"
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(final), "-vf", scale, "-c:v", "libx264", "-b:v", f"{kbps}k", "-preset", "veryfast",
-                    "-c:a", "aac", "-b:a", "64k", str(preview)], check=True)
     sync("pull")                                                  # the ledger may have changed while this long job ran
     state = load()
-    state["items"][entry["id"]] = {"status": "awaiting", "youtube_id": vid_id, "title": video["title_ml"], "kind": "long" if video["orient"] == "wide" else "short"}
+    when = ops.next_slot(state, datetime.now(timezone.utc))      # no approval step: the video gets the next free 6 PM IST slot at once
+    item = {"status": "uploaded", "youtube_id": vid_id, "title": video["title_ml"], "kind": "long" if video["orient"] == "wide" else "short"}
+    state["items"][entry["id"]] = item
+    try:
+        upload.schedule(vid_id, when, profile="ml")
+        item.update(status="approved", publish_at=when)
+        line = f"Scheduled for {ist(when)}."
+    except Exception as exc:  # noqa: BLE001 - keep it private and say so; the next run will not repeat it
+        item["status"] = "awaiting"
+        line = f"Uploaded private but could not schedule it ({str(exc)[:120]})."
     save(state)
     sync("push")
-    text = f"{video['title_ml']}\n{video['title_en']}\n\nPrivate on YouTube: https://youtu.be/{vid_id}\nGreen = schedule it for the next 6 PM slot, red = hold it."
-    ok = notify.send_with_buttons(text, [("🟢 Green", f"chaya|ok|{entry['id']}"), ("🔴 Red", f"chaya|no|{entry['id']}")], video=preview)
-    if not ok:
-        notify.send_with_buttons(text, [("🟢 Green", f"chaya|ok|{entry['id']}"), ("🔴 Red", f"chaya|no|{entry['id']}")])
+    notify.send(f"{video['title_ml']}\n{video['title_en']}\n\n{line}\nhttps://youtu.be/{vid_id}")
 
 
 if __name__ == "__main__":

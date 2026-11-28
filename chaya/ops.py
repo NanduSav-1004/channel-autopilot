@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 IST = timezone(timedelta(hours=5, minutes=30))
 SLOT_HOUR = 18            # one video a day, 6 PM IST
-MAX_AWAITING = 3          # videos waiting for a green or red flag at once
+MAX_AWAITING = 1          # videos waiting for a green or red flag at once
 LEAD = timedelta(hours=3)  # a slot must be at least this far ahead (YouTube needs a future time)
 
 
