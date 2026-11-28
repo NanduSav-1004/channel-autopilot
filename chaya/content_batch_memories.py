@@ -1,6 +1,7 @@
 """Science Chaya: the science behind childhood memories (long)."""
 from chaya.content_monsoon import BL, BR, DK, GD, GR, LF, OR, RD, SE, B
 from chaya.dsl import GROUND, LB, PT, C, I, R, T
+from chaya.quick import lab
 
 LONG = {
     "id": "memories_long", "orient": "wide", "mood": "curious",
@@ -50,4 +51,12 @@ FACTS = [
     "The Codd-neck bottle was designed by Hiram Codd in 1872; gas pressure presses the marble against a washer to seal the fizz (Wikipedia: Codd-neck bottle, Banta).",
     "Cassette tape stores sound as a pattern of magnetised particles; salt draws water out of fruit by osmosis; a kerosene lamp wick lifts oil by capillary action and the vapour burns.",
 ]
+# richer scenes: a cut-away for each of the six memories
+lab(LONG, 2, 7, "petrichor", {"oil": 2, "geos": 3, "drop": 4, "spray": 4.3}, [(0.3, "പെട്രിക്കോർ", "PETRICHOR", 500, 320), (2, "ചെടികളുടെ എണ്ണ", "PLANT OIL", 280, 760), (3, "ജിയോസ്മിൻ", "GEOSMIN FROM BACTERIA", 720, 780), (4.3, "മണം വായുവിലേക്ക്", "FLICKED INTO THE AIR", 560, 380)])
+lab(LONG, 8, 12, "firefly", {"glow": 0, "chem": 1, "cold": 2, "bulb": 3}, [(1, "ലൂസിഫെറിൻ + ഓക്സിജൻ", "LUCIFERIN MEETS OXYGEN", 520, 480), (2, "തണുത്ത വെളിച്ചം", "COLD LIGHT", 1000, 470), (3, "ബൾബിൽ ചൂട് പാഴാകുന്നു", "A BULB WASTES HEAT", 1100, 300)])
+lab(LONG, 13, 17, "goli", {"bubbles": 1, "press": 2, "seal": 2.5, "push": 3}, [(1, "കഴുത്തിൽ ഗോലി", "A MARBLE IN THE NECK", 760, 330), (2, "വാതക മർദ്ദം മുകളിലേക്ക്", "GAS PRESSURE PUSHES UP", 200, 640), (3, "അകത്തേക്ക് തള്ളൂ, ശൂ!", "PUSH IN: PSSSH!", 780, 420)])
+lab(LONG, 18, 21, "cassette", {"tape": 1, "record": 2, "play": 3}, [(1, "ടേപ്പിൽ കാന്തകണങ്ങൾ", "MAGNETIC PARTICLES", 500, 690), (2, "ശബ്ദം അനുസരിച്ച് നിരക്കുന്നു", "THEY LINE UP WITH SOUND", 500, 590), (3, "വീണ്ടും ശബ്ദം", "BACK TO SOUND", 800, 520)])
+lab(LONG, 22, 24, "osmosis", {"salt": 0, "flow": 1, "mouth": 2}, [(0, "മാങ്ങയിൽ ഉപ്പ്", "SALT ON THE FRUIT", 500, 400), (1, "ഓസ്മോസിസ്", "OSMOSIS", 780, 500), (2, "നാവിൽ വെള്ളം", "MOUTH WATERING", 200, 330)])
+lab(LONG, 25, 28, "lamp", {"wick": 1, "vapor": 2, "flame": 2, "chimney": 3}, [(1, "കാപ്പില്ലറി പ്രവർത്തനം", "CAPILLARY ACTION", 740, 700), (2, "ആവിയാണ് കത്തുന്നത്", "THE VAPOUR BURNS", 740, 330), (3, "ചിമ്മിനി വായു വലിക്കുന്നു", "THE CHIMNEY DRAWS AIR", 280, 330)])
+
 VIDEOS = [LONG]
