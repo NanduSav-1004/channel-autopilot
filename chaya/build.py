@@ -70,7 +70,11 @@ def plan(video: dict, sents: list[dict]) -> dict:
 
 
 def thumbnail(video: dict, final: Path, out_png: Path, work: Path) -> None:
-    """A frame from the video at the hero scene, a warm wash, and the big Malayalam title with a small English line."""
+    """Long videos with a poster in chaya/thumb.py get that (a drawn poster: big hero picture, huge Malayalam, English line); others a frame from the video."""
+    from chaya import thumb as poster
+    if video["id"] in poster.ART:
+        poster.render(video["id"], out_png)
+        return
     spec = json.loads((work / "spec.json").read_text())
     hero = next((s for s in spec["scenes"] if s["kind"] == video["thumb"]["hero"]), spec["scenes"][0])
     t = hero["t0"] + (hero["t1"] - hero["t0"]) * 0.72
