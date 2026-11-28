@@ -1,6 +1,7 @@
 """Science Chaya: how India's space programme began at Thumba, Kerala (long)."""
 from chaya.content_monsoon import BL, BR, DK, GD, LF, OR, RD, SE, B
 from chaya.dsl import GROUND, PT, C, I, O, R, T
+from chaya.quick import rich
 
 LONG = {
     "id": "thumba_long", "orient": "wide", "mood": "curious",
@@ -44,4 +45,8 @@ FACTS = [
     "St Mary Magdalene Church and the bishop's house served as early offices and control room; parts were moved by bicycle and bullock cart; A.P.J. Abdul Kalam was among the young scientists present (The Better India; Daily Excelsior; The South First).",
     "The church building is now a space museum.",
 ]
+# richer scene: the village, the church, the bicycle and bullock cart, and the first launch
+rich(LONG, 9, 21, "thumba", {"bicycle": 0, "cart": 0.4, "church": 1, "bishop": 2, "villagers": 3, "rocket": 3.5, "date": 4, "count": 4, "launch": 5.2, "kalam": 8, "museum": 11},
+     [(0, -600, 580, 1.2), (1, 330, 480, 1.3), (2, -120, 560, 1.7), (3, 330, 650, 1.6), (3.8, 850, 480, 1.3), (5, 900, 300, 1.0), (6, 1150, -250, 0.85), (7.5, 600, 500, 1.0), (8, 560, 560, 1.7), (9.5, 400, 480, 1.0), (11, 330, 520, 1.5)])
+
 VIDEOS = [LONG]
