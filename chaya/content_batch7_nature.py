@@ -1,5 +1,5 @@
 """Science Chaya batch 7: nature (Western Ghats biodiversity long; neelakurinji, kingfisher, honeybee dance, bats, mangroves, peacock colour Shorts)."""
-from chaya.quick import ST, TX, S, lg, sh
+from chaya.quick import ST, TX, S, lab, lg, sh
 
 GHATS = lg(
     "ghats_long", "പശ്ചിമഘട്ടത്തിൽ ഇത്രയധികം ജീവികൾ എന്തുകൊണ്ട്? | ലോകത്തിലെ ജൈവവൈവിധ്യ കേന്ദ്രം", "Why does the Western Ghats hold so many species? A world biodiversity hotspot",
@@ -117,4 +117,13 @@ FACTS = [
     "Mangroves exclude or excrete salt, have aerial breathing roots (pneumatophores) and protect coasts and fish nurseries (FAO; IUCN).",
     "Peacock feather colours are structural: nanostructures reflect specific wavelengths (Zi et al., PNAS 2003).",
 ] + FACTS_GHATS
+# richer scenes (lab cut-aways) for the nature videos
+lab(GHATS, 6, 21, "ghats", {"wind": 1, "rain": 1.5, "bands": 3, "isolation": 7, "gap": 11}, [(1, "മൺസൂൺ കാറ്റ് മലയിൽ തട്ടുന്നു", "THE MONSOON HITS THE HILLS", 330, 300), (3, "ഓരോ ഉയരത്തിനും വേറെ ജീവികൾ", "EACH HEIGHT, ITS OWN LIFE", 900, 400), (7, "ഒറ്റപ്പെട്ട മലനിര", "AN ISOLATED RANGE", 900, 400), (11, "പാലക്കാട് ചുരം", "THE PALAKKAD GAP", 1100, 520)])
+lab(KURINJI, 0, 5, "neelakurinji", {"grow": 0, "bloom": 1, "seed": 2, "timeline": 5}, [(1, "ഒരുമിച്ച് പൂക്കും", "THEY ALL BLOOM TOGETHER", 450, 380), (2, "പൂവിട്ട് വിത്താകും", "FLOWER, SEED, DIE", 450, 380), (5, "12 വർഷം", "THE TWELVE-YEAR WAIT", 450, 380)])
+lab(KINGFISHER, 0, 5, "kingfisher", {"dive": 0, "beak": 1, "train": 3}, [(1, "നീണ്ട കൂർത്ത ചുണ്ട്", "THE LONG BEAK", 600, 330), (3, "ബുള്ളറ്റ് ട്രെയിൻ", "THE BULLET TRAIN", 700, 250)])
+lab(BEE, 0, 5, "beedance", {"dance": 1, "angle": 3, "distance": 4}, [(1, "വാഗിൾ ഡാൻസ്", "THE WAGGLE DANCE", 310, 240), (3, "ദിശ = സൂര്യനോടുള്ള കോൺ", "THE ANGLE IS THE DIRECTION", 600, 500), (4, "നീളം = ദൂരം", "LENGTH IS DISTANCE", 900, 650)])
+lab(BAT, 0, 5, "bat", {"call": 1, "echo": 2, "catch": 4}, [(1, "കേൾക്കാത്ത ശബ്ദം", "SOUNDS WE CANNOT HEAR", 400, 330), (2, "പ്രതിധ്വനി തിരികെ", "THE ECHO RETURNS", 650, 360)])
+lab(MANGROVE, 0, 5, "mangrove", {"salt": 1, "leaf": 2, "breath": 3, "wave": 4, "fish": 5}, [(1, "വേരിൽ ഉപ്പ് അരിപ്പ", "ROOTS FILTER THE SALT", 500, 700), (2, "ഇലയിലൂടെ ഉപ്പ് പുറത്ത്", "SALT OUT THROUGH LEAVES", 500, 220), (3, "ശ്വസന വേരുകൾ", "BREATHING ROOTS", 860, 560), (5, "മീൻകുഞ്ഞുങ്ങളുടെ നഴ്സറി", "A FISH NURSERY", 500, 700)])
+lab(PEACOCK, 0, 5, "peacock", {"layers": 2, "light": 2.5, "tilt": 4}, [(2, "ചെറിയ ഘടനകൾ", "TINY STRUCTURES", 500, 420), (4, "ചരിച്ചാൽ നിറം മാറും", "TILT IT, THE COLOUR SHIFTS", 500, 420)])
+
 VIDEOS = [GHATS, KURINJI, KINGFISHER, BEE, BAT, MANGROVE, PEACOCK]

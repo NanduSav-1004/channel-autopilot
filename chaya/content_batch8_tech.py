@@ -1,5 +1,5 @@
 """Science Chaya batch 8: everyday technology (how a phone call travels long; QR code, phone heating, induction cooker, GPS, touchscreen, microwave Shorts)."""
-from chaya.quick import ST, TX, S, lg, rich, sh
+from chaya.quick import ST, TX, S, lab, lg, rich, sh
 
 CALL = lg(
     "phonecall_long", "ഫോൺ വിളിക്കുമ്പോൾ ശബ്ദം എങ്ങനെ അപ്പുറത്തെത്തുന്നു? | മൊബൈൽ നെറ്റ്‌വർക്കിന്റെ ശാസ്ത്രം", "How does your voice reach the other phone? The science of a mobile network",
@@ -121,5 +121,13 @@ FACTS = [
 # richer scene: a call across the cells
 rich(CALL, 8, 21, "cells", {"wave": 0, "tower": 0, "cells": 1, "freq": 3, "reuse": 4, "fibre": 5, "call": 7, "bus": 13},
      [(0, -100, 375, 1.8), (1, 700, 450, 0.95), (3, 700, 520, 1.0), (4, 700, 300, 1.0), (5, 900, 375, 1.5), (7, 200, 375, 1.6), (8, 900, 375, 1.4), (9, 1700, 375, 1.6), (12, 400, 540, 1.3), (13, 1000, 540, 1.2)])
+
+# richer scenes (lab cut-aways) for the tech Shorts
+lab(QR, 0, 5, "qr", {"grid": 1, "markers": 2, "tear": 4, "scan": 4.5}, [(2, "മൂന്ന് മൂല ചതുരങ്ങൾ", "THREE CORNER MARKERS", 600, 330), (4, "30% കീറിയാലും", "UP TO 30% DAMAGE", 600, 330)])
+lab(HEAT, 0, 5, "phoneheat", {"chip": 2, "battery": 3, "heat": 4, "sun": 5}, [(2, "പ്രോസസർ", "THE PROCESSOR", 500, 380), (3, "ബാറ്ററി", "THE BATTERY", 500, 380), (5, "വെയിലത്ത് വയ്ക്കരുത്", "NOT IN THE SUN", 850, 300)])
+lab(INDUCTION, 0, 5, "induction", {"coil": 1, "field": 2, "eddy": 3, "heat": 4}, [(1, "കമ്പിച്ചുരുൾ", "THE COIL", 500, 560), (3, "ചുഴിവൈദ്യുതി", "EDDY CURRENTS", 500, 560), (4, "ചൂട് പാത്രത്തിൽ തന്നെ", "HEAT MADE IN THE PAN", 500, 560)])
+lab(GPS, 0, 5, "gps", {"sat": 1, "circles": 3, "fix": 4}, [(1, "ആറ്റോമിക് ക്ലോക്ക്", "ATOMIC CLOCKS", 500, 400), (4, "നാല് ഉപഗ്രഹങ്ങൾ", "FOUR SATELLITES FIX YOU", 500, 400)])
+lab(TOUCH, 0, 5, "touchscreen", {"field": 1, "finger": 3, "glove": 5}, [(1, "സ്ക്രീനിൽ വൈദ്യുത മണ്ഡലം", "AN ELECTRIC FIELD", 500, 640), (5, "കൈയുറ കടത്തില്ല", "A GLOVE DOES NOT CONDUCT", 500, 560)])
+lab(MICROWAVE, 0, 5, "microwave", {"wave": 1, "spin": 2, "heat": 3, "metal": 5}, [(2, "ജല തന്മാത്രകൾ തിരിയുന്നു", "WATER MOLECULES TWIST", 500, 560), (5, "ലോഹം വയ്ക്കരുത്", "NEVER PUT METAL INSIDE", 700, 560)])
 
 VIDEOS = [CALL, QR, HEAT, INDUCTION, GPS, TOUCH, MICROWAVE]

@@ -1,5 +1,5 @@
 """Science Chaya batch 10: the sea and the coast (waves and coastal erosion long; salty sea, why waves break, blue sea, black sand, fish gills, floating Shorts)."""
-from chaya.quick import ST, TX, S, lg, rich, sh
+from chaya.quick import ST, TX, S, lab, lg, rich, sh
 
 WAVES = lg(
     "waves_long", "തിരമാലകൾ ഉണ്ടാകുന്നത് എങ്ങനെ? കടൽ കരയെ എടുക്കുന്നത് എന്തുകൊണ്ട്?", "How are waves made, and why does the sea eat the coast?",
@@ -119,5 +119,13 @@ FACTS = [
 # richer scene: the sea in cross-section
 rich(WAVES, 3, 22, "wave", {"wind": 0, "swell": 2, "buoy": 4, "energy": 4, "orbits": 5, "shallow": 6, "break": 8, "wall": 13, "scour": 14, "far": 16},
      [(0, -640, 300, 1.5), (2, -300, 420, 1.2), (4, -350, 470, 1.8), (5, -650, 560, 2.2), (6, 500, 520, 1.3), (8, 800, 480, 1.6), (10, 300, 520, 1.0), (13, 900, 520, 1.8), (14, 880, 620, 2.0), (16, -900, 300, 1.3), (18, 0, 430, 1.0)])
+
+# richer scenes (lab cut-aways) for the sea Shorts
+lab(SALT, 0, 5, "saltysea", {"rain": 1, "rivers": 1.5, "evap": 3, "salt": 4}, [(1, "മഴ പാറകളെ അലിയിക്കുന്നു", "RAIN DISSOLVES ROCKS", 200, 540), (3, "വെള്ളം ആവിയാകും, ഉപ്പ് ബാക്കി", "WATER GOES, SALT STAYS", 1000, 520)])
+rich(BREAK, 0, 5, "wave", {"swell": 0, "shallow": 2, "break": 4}, [(0, 300, 500, 1.2), (3, 800, 480, 1.6)])
+lab(BLUE, 0, 5, "bluesea", {"ray": 1, "red": 2, "blue": 3}, [(2, "ചുവപ്പ് വലിച്ചെടുക്കും", "WATER ABSORBS RED", 500, 360), (3, "നീല തിരിച്ചുവരും", "BLUE COMES BACK", 760, 640)])
+lab(SAND, 0, 5, "blacksand", {"mountain": 2, "river": 2.5, "wave": 3, "heavy": 3.5}, [(2, "മലകളിൽ നിന്ന്", "FROM THE HILLS", 100, 300), (3, "തിരമാല ഭാരം കുറഞ്ഞവയെ കൊണ്ടുപോകും", "WAVES TAKE THE LIGHT GRAINS", 800, 700)])
+lab(GILL, 0, 5, "fishgill", {"mouth": 2, "gill": 3, "oxygen": 4}, [(2, "വായ് → ചെകിള", "MOUTH, THEN GILLS", 500, 360), (4, "ഓക്സിജൻ രക്തത്തിലേക്ക്", "OXYGEN INTO THE BLOOD", 500, 360)])
+lab(FLOAT, 0, 5, "floating", {"fresh": 1, "salt": 3, "force": 4}, [(1, "പുഴയിൽ മുങ്ങും", "SINKS IN FRESH WATER", 320, 420), (3, "കടലിൽ പൊങ്ങും", "FLOATS IN SEAWATER", 700, 420)])
 
 VIDEOS = [WAVES, SALT, BREAK, BLUE, SAND, GILL, FLOAT]

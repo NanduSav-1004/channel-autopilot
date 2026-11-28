@@ -1,5 +1,5 @@
 """Science Chaya batch 9: Kerala's heritage science (Madhava and the Kerala school of mathematics long; laterite, clay pot cooling, Aranmula mirror, coir, tiled roofs, copper vessels Shorts)."""
-from chaya.quick import ST, TX, S, lg, rich, sh
+from chaya.quick import ST, TX, S, lab, lg, rich, sh
 
 MADHAVA = lg(
     "madhava_long", "മാധവൻ: പൈയുടെ അനന്തശ്രേണി കണ്ടെത്തിയ കേരളത്തിലെ ഗണിതശാസ്ത്രജ്ഞൻ", "Madhava of Kerala: the mathematician who found infinite series for pi",
@@ -121,5 +121,13 @@ FACTS = [
 # richer scene: Madhava's series, drawn
 rich(MADHAVA, 10, 13, "series", {"terms": 1, "pi": 2}, [(0, 500, 300, 1.2), (1, 500, 620, 1.1)])
 rich(MADHAVA, 15, 17, "series", {"terms": 0, "pi": 0, "fix": 1}, [(0, 500, 620, 1.1), (1, 500, 660, 1.3)])
+
+# richer scenes (lab cut-aways) for the heritage Shorts
+lab(LATERITE, 0, 5, "laterite", {"cut": 3, "air": 4, "harden": 4.5}, [(3, "ഭൂമിക്കടിയിൽ മൃദുവായ", "SOFT UNDERGROUND", 500, 340), (4, "വായുവിൽ ഉറയ്ക്കുന്നു", "AIR HARDENS IT", 500, 340)])
+lab(POT, 0, 5, "matka", {"pores": 1, "seep": 2, "evap": 3, "cool": 4}, [(1, "ചെറിയ സുഷിരങ്ങൾ", "TINY PORES", 500, 380), (3, "ബാഷ്പീകരണം ചൂടെടുക്കുന്നു", "EVAPORATION TAKES HEAT", 500, 330)])
+lab(MIRROR, 0, 5, "aranmula", {"glass": 3, "double": 3.5, "metal": 4}, [(3, "ഗ്ലാസ് കണ്ണാടി: പിന്നിൽ പ്രതിഫലനം", "GLASS REFLECTS FROM BEHIND", 500, 320), (4, "ലോഹ കണ്ണാടി: ഉപരിതലത്തിൽ", "METAL REFLECTS AT THE SURFACE", 500, 320)])
+lab(COIR, 0, 5, "coir", {"soak": 1, "beat": 3, "twist": 4}, [(1, "കായലിൽ കുതിർക്കൽ", "SOAKED IN BACKWATER", 400, 560), (3, "അടിച്ച് നാര് വേർതിരിക്കൽ", "BEATEN INTO FIBRES", 700, 540), (4, "പിരിച്ച് കയറാക്കൽ", "TWISTED INTO ROPE", 800, 640)])
+lab(TILE, 0, 5, "tileroof", {"rain": 1, "heat": 3, "air": 4}, [(1, "മഴ ഒഴുകിപ്പോകും", "RAIN RUNS OFF", 500, 300), (4, "ചൂടുവായു പുറത്തേക്ക്", "HOT AIR ESCAPES", 500, 300)])
+lab(COPPER, 0, 5, "copper", {"water": 0, "ions": 2, "kill": 3, "boil": 5}, [(2, "ഒലിഗോഡൈനാമിക് പ്രഭാവം", "THE OLIGODYNAMIC EFFECT", 500, 400), (5, "ഇപ്പോഴും തിളപ്പിക്കണം", "STILL BOIL IT", 880, 560)])
 
 VIDEOS = [MADHAVA, LATERITE, POT, MIRROR, COIR, TILE, COPPER]
