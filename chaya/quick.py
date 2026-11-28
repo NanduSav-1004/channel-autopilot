@@ -53,3 +53,15 @@ def lg(vid, title_ml, title_en, thumb_ml, thumb_en, comment, comment_en, rows):
     """A long video: rows, then the question and the subscribe line."""
     beats = rows_to_beats(rows) + [B(comment, None, {"kind": "outro", "p": {"ml": comment, "en": comment_en}}), B(SUBSCRIBE)]
     return {"id": vid, "orient": "wide", "mood": "curious", "title_ml": title_ml, "title_en": title_en, "thumb": {"ml": thumb_ml, "en": thumb_en, "hero": "compose"}, "comment": comment, "beats": beats}
+
+
+def rich(video, first, last, kind, at=None, cams=None, **extra):
+    """Make beats first..last (inclusive) one hand-made scene: kind slope|wave|moonland|cells|series|rainbow. `at` = {name: beat offset from `first`}, cams = [(beat offset, x, y, zoom[, cut])].
+    The beats' own scenes inside the range are dropped, their cards stay."""
+    beats = video["beats"]
+    p = {"atb": dict(at or {}), **extra}
+    if cams:
+        p["cams"] = [{"atb": c[0], "x": c[1], "y": c[2], "z": c[3], **({"cut": True} if len(c) > 4 and c[4] else {})} for c in cams]
+    beats[first]["scene"] = {"kind": kind, "p": p}
+    for i in range(first + 1, last + 1):
+        beats[i]["scene"] = None

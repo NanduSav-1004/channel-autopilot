@@ -626,6 +626,7 @@
         cam.attr("transform", `translate(${st.x + st.w / 2},${st.y + st.h / 2}) scale(${U * v.z}) translate(${-v.x},${-v.y})`); }; };
     return { defs, lg, rg, blur, cam, set, pill2, camMover, sh: `url(#${id}dsh)`, glow: `url(#${id}glw)` };
   }
+  M.setKit = setKit;
 
   // ================= home: a Kerala living room with a ceiling fan, an LED bulb, an AC and the electricity meter; each appliance shows how long it runs on 1 unit =================
   // p.items = [{icon: led|fan|ac, ml, en, at}], p.at = {meter}, p.cams (set units)

@@ -1,5 +1,5 @@
 """Science Chaya batch 3: weather and land (landslides long; rainbow, sea breeze, humidity, hail, cloud weight, raindrop Shorts)."""
-from chaya.quick import ST, TX, S, lg, sh
+from chaya.quick import ST, TX, S, lg, rich, sh
 
 LAND = lg(
     "landslide_long", "ഉരുൾപൊട്ടൽ എങ്ങനെ ഉണ്ടാകുന്നു? | മലയിടിച്ചിലിന്റെ ശാസ്ത്രം", "How do landslides happen? The science behind the slopes that slip",
@@ -116,4 +116,11 @@ FACTS = [
     "A typical small cumulus cloud holds about 500 tonnes of water (USGS Water Science School: How much does a cloud weigh).",
     "Large raindrops fall at about 9 m/s (roughly 32 km/h); drag limits the speed to a terminal velocity (NOAA; Wikipedia: Drop (liquid)).",
 ] + FACTS_LAND
+# richer scenes: the hillside in cross-section, and a raindrop with real refraction
+rich(LAND, 3, 18, "slope", {"roots": 1, "rain": 3, "wet": 4, "weight": 5, "slide": 8, "flow": 9},
+     [(0, 500, 520, 1.0), (1, 100, 260, 1.9), (3, 300, 300, 1.0), (4, 250, 500, 1.7), (5, 320, 540, 1.7), (8, 450, 520, 1.05), (9, 800, 560, 1.25), (11, 500, 520, 1.0)])
+rich(LAND, 19, 22, "slope", {"rain": 0, "wet": 0, "gauge": 0, "alert": 1, "crack": 3}, [(0, 1100, 560, 1.25), (1, 1150, 430, 1.5), (3, 250, 400, 1.6)])
+rich(RAINBOW, 0, 6, "rainbow", {"ray": 0, "split": 1, "reflect": 2, "exit": 2.5, "angle": 3, "circle": 4, "ground": 5, "full": 6},
+     [(0, 420, 500, 1.1), (2.5, 150, 780, 1.0), (4, 2700, 450, 0.9, True)])
+
 VIDEOS = [LAND, RAINBOW, BREEZE, HUMID, HAIL, CLOUDW, DROPS]

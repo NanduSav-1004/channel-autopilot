@@ -1,5 +1,5 @@
 """Science Chaya batch 4: sky and space (Chandrayaan-3 long; blue sky, twinkling, moon illusion, the 2019 ring eclipse over Kerala, the space station, the moon's one face)."""
-from chaya.quick import ST, TX, S, lg, sh
+from chaya.quick import ST, TX, S, lg, rich, sh
 
 MOON = lg(
     "chandrayaan_long", "ചന്ദ്രയാൻ മൂന്ന് ചന്ദ്രനിൽ ഇറങ്ങിയത് എങ്ങനെ? | ഒരു സോഫ്റ്റ് ലാൻഡിങ്ങിന്റെ ശാസ്ത്രം", "How did Chandrayaan-3 land on the Moon? The science of a soft landing",
@@ -120,4 +120,8 @@ FACTS = [
     "The International Space Station orbits at about 400 km altitude at about 28,000 km/h and circles Earth in about 90 minutes (NASA).",
     "The Moon is tidally locked to Earth: its rotation period equals its orbital period of about 27.3 days (NASA Science).",
 ] + FACTS_MOON
+# richer scenes: the trip to the Moon and the landing
+rich(MOON, 3, 7, "moonland", {"launch": 0, "orbits": 2, "transfer": 3, "capture": 4}, [(0, -150, 420, 1.1), (1.5, -100, 520, 0.95), (3, 500, 420, 0.8), (4, 1050, 380, 1.3)])
+rich(MOON, 14, 24, "moonland", {"descend": 0, "land": 3, "rover": 6}, [(0, 3300, 340, 1.0, True), (3, 3350, 560, 1.5), (6, 3600, 640, 1.4), (8, 3450, 520, 1.1)])
+
 VIDEOS = [MOON, BLUE, TWINKLE, ILLUSION, ECLIPSE, ISS, MOONFACE]

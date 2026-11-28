@@ -1,5 +1,5 @@
 """Science Chaya batch 8: everyday technology (how a phone call travels long; QR code, phone heating, induction cooker, GPS, touchscreen, microwave Shorts)."""
-from chaya.quick import ST, TX, S, lg, sh
+from chaya.quick import ST, TX, S, lg, rich, sh
 
 CALL = lg(
     "phonecall_long", "ഫോൺ വിളിക്കുമ്പോൾ ശബ്ദം എങ്ങനെ അപ്പുറത്തെത്തുന്നു? | മൊബൈൽ നെറ്റ്‌വർക്കിന്റെ ശാസ്ത്രം", "How does your voice reach the other phone? The science of a mobile network",
@@ -118,4 +118,8 @@ FACTS = [
     "Capacitive touchscreens sense the change in an electric field caused by a conductive fingertip (Wikipedia: Touchscreen).",
     "A microwave oven uses microwaves of about 2.45 GHz that rotate polar water molecules and heat the food (Britannica: Microwave oven).",
 ] + FACTS_CALL
+# richer scene: a call across the cells
+rich(CALL, 8, 21, "cells", {"wave": 0, "tower": 0, "cells": 1, "freq": 3, "reuse": 4, "fibre": 5, "call": 7, "bus": 13},
+     [(0, -100, 375, 1.8), (1, 700, 450, 0.95), (3, 700, 520, 1.0), (4, 700, 300, 1.0), (5, 900, 375, 1.5), (7, 200, 375, 1.6), (8, 900, 375, 1.4), (9, 1700, 375, 1.6), (12, 400, 540, 1.3), (13, 1000, 540, 1.2)])
+
 VIDEOS = [CALL, QR, HEAT, INDUCTION, GPS, TOUCH, MICROWAVE]

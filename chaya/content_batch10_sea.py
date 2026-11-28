@@ -1,5 +1,5 @@
 """Science Chaya batch 10: the sea and the coast (waves and coastal erosion long; salty sea, why waves break, blue sea, black sand, fish gills, floating Shorts)."""
-from chaya.quick import ST, TX, S, lg, sh
+from chaya.quick import ST, TX, S, lg, rich, sh
 
 WAVES = lg(
     "waves_long", "തിരമാലകൾ ഉണ്ടാകുന്നത് എങ്ങനെ? കടൽ കരയെ എടുക്കുന്നത് എന്തുകൊണ്ട്?", "How are waves made, and why does the sea eat the coast?",
@@ -116,4 +116,8 @@ FACTS = [
     "Fish extract dissolved oxygen through gill filaments rich in blood vessels (Britannica: Gill).",
     "Seawater is denser than fresh water, so it gives a larger buoyant force; the Dead Sea is far saltier (Britannica: Buoyancy; Dead Sea).",
 ] + FACTS_WAVES
+# richer scene: the sea in cross-section
+rich(WAVES, 3, 22, "wave", {"wind": 0, "swell": 2, "buoy": 4, "energy": 4, "orbits": 5, "shallow": 6, "break": 8, "wall": 13, "scour": 14, "far": 16},
+     [(0, -640, 300, 1.5), (2, -300, 420, 1.2), (4, -350, 470, 1.8), (5, -650, 560, 2.2), (6, 500, 520, 1.3), (8, 800, 480, 1.6), (10, 300, 520, 1.0), (13, 900, 520, 1.8), (14, 880, 620, 2.0), (16, -900, 300, 1.3), (18, 0, 430, 1.0)])
+
 VIDEOS = [WAVES, SALT, BREAK, BLUE, SAND, GILL, FLOAT]

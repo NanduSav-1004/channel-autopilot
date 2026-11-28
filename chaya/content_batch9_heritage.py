@@ -1,5 +1,5 @@
 """Science Chaya batch 9: Kerala's heritage science (Madhava and the Kerala school of mathematics long; laterite, clay pot cooling, Aranmula mirror, coir, tiled roofs, copper vessels Shorts)."""
-from chaya.quick import ST, TX, S, lg, sh
+from chaya.quick import ST, TX, S, lg, rich, sh
 
 MADHAVA = lg(
     "madhava_long", "മാധവൻ: പൈയുടെ അനന്തശ്രേണി കണ്ടെത്തിയ കേരളത്തിലെ ഗണിതശാസ്ത്രജ്ഞൻ", "Madhava of Kerala: the mathematician who found infinite series for pi",
@@ -118,4 +118,8 @@ FACTS = [
     "Sloped tiled roofs shed monsoon rain and let hot air escape (traditional Kerala architecture; Laurie Baker's writings).",
     "Copper surfaces can kill some bacteria through the oligodynamic effect, but this is slow and does not replace boiling or filtering (Grass et al., Applied and Environmental Microbiology 2011; WHO).",
 ] + FACTS_MADHAVA
+# richer scene: Madhava's series, drawn
+rich(MADHAVA, 10, 13, "series", {"terms": 1, "pi": 2}, [(0, 500, 300, 1.2), (1, 500, 620, 1.1)])
+rich(MADHAVA, 15, 17, "series", {"terms": 0, "pi": 0, "fix": 1}, [(0, 500, 620, 1.1), (1, 500, 660, 1.3)])
+
 VIDEOS = [MADHAVA, LATERITE, POT, MIRROR, COIR, TILE, COPPER]
