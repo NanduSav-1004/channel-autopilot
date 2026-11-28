@@ -2,6 +2,7 @@
 from chaya.content_batch_shorts import outro, short
 from chaya.content_monsoon import BL, BR, DK, GD, GR, LF, OR, RD, SE, B
 from chaya.dsl import LB, PT, C, I, R, T
+from chaya.quick import lab
 
 IDLI = short("idli_s", "ഇഡ്ഡലി മാവ് പൊങ്ങുന്നത് എങ്ങനെ? #Shorts", "Why does idli batter rise overnight?", {"ml": "മാവ് പൊങ്ങുന്നത് എങ്ങനെ?", "en": "IDLI BATTER", "hero": "compose"}, [
     B("രാത്രി വെച്ച ഇഡ്ഡലി മാവ് രാവിലെ പൊങ്ങിയിരിക്കുന്നത് എങ്ങനെയാണ്?", ("മാവ് പൊങ്ങുന്നു", "HOW DOES BATTER RISE OVERNIGHT?", OR), C([I("bowl", 0.5, 0.5, 6.5, label=LB("ഇഡ്ഡലി മാവ്", "IDLI BATTER", OR, 400)), PT("bubbles", 24, [0.4, 0.25, 0.6, 0.58], "#fffaf0", 7)], bg="dusk")),
@@ -83,4 +84,14 @@ FACTS = [
     "Chundan vallams are about 100-138 feet long; the Nehru Trophy Boat Race has run on Punnamada Lake since 1952 (Wikipedia: Chundan vallam, Nehru Trophy Boat Race).",
     "Tender coconut water is about 94-95% water, with potassium as the main mineral, rising as the nut matures (Tetra Pak Coconut Handbook; Wikipedia: Coconut water).",
 ]
+# richer scenes: a close look inside each kitchen and village thing
+lab(IDLI, 0, 5, "ferment", {"bact": 1, "eat": 3, "rise": 4}, [(1, "കണ്ണിന് കാണാത്ത ബാക്ടീരിയ", "TINY BACTERIA", 500, 380), (3, "പുളിപ്പും വാതകവും", "ACID AND GAS", 500, 350), (4, "കുമിളകൾ മാവിനെ പൊക്കുന്നു", "BUBBLES LIFT THE BATTER", 500, 360)], kind="idli")
+lab(CURD, 0, 5, "ferment", {"bact": 1, "eat": 2, "set": 3}, [(1, "ലക്ഷക്കണക്കിന് ബാക്ടീരിയ", "MILLIONS OF BACTERIA", 500, 380), (2, "പഞ്ചസാര → ആസിഡ്", "SUGAR TO ACID", 500, 350), (3, "മാംസ്യം കട്ടപിടിക്കുന്നു", "THE PROTEIN CLUMPS", 500, 360)], kind="curd")
+lab(COIL, 0, 5, "oilsolid", {"cool": 2, "warm": 5}, [(2, "24–25 °C ന് താഴെ കട്ടിയാകും", "SOLID BELOW ABOUT 24 °C", 500, 300), (5, "ചൂടാക്കിയാൽ വീണ്ടും ഒഴുകും", "WARM IT AND IT FLOWS", 500, 300)])
+lab(COOKER, 0, 5, "cooker", {"heat": 1, "steam": 1.5, "pressure": 2, "whistle": 5}, [(1, "100 °C ൽ തിളയ്ക്കും", "WATER BOILS AT 100 °C", 500, 330), (2, "മർദ്ദം കൂടുന്നു", "THE PRESSURE RISES", 500, 330), (5, "വിസിൽ = അധിക ആവി", "THE WHISTLE LETS STEAM OUT", 500, 330)])
+lab(ONION, 0, 5, "onion", {"cut": 1, "enzyme": 2, "vapor": 3, "tears": 5}, [(1, "കോശങ്ങൾ പൊട്ടുന്നു", "CELLS BREAK OPEN", 420, 400), (2, "എൻസൈമുകൾ പുറത്ത്", "ENZYMES ESCAPE", 420, 400), (3, "ആവിയായ വസ്തു", "A VAPOUR FORMS", 640, 380), (5, "കണ്ണീര്", "TEARS", 880, 620)])
+lab(FAN, 0, 5, "sweat", {"sweat": 1, "evap": 2, "fan": 3, "room": 4}, [(1, "തൊലിയിൽ വിയർപ്പ്", "SWEAT ON THE SKIN", 500, 600), (2, "ആവിയാകുമ്പോൾ ചൂട് പോകും", "EVAPORATION CARRIES HEAT", 500, 500), (3, "കാറ്റ് ആവിയാകൽ കൂട്ടും", "MOVING AIR SPEEDS IT UP", 250, 330), (4, "മുറിയുടെ ചൂട് അതുതന്നെ", "THE ROOM STAYS THE SAME", 880, 360)])
+lab(BOAT, 0, 5, "snakeboat", {"long": 1, "rhythm": 3, "push": 4}, [(1, "100–138 അടി നീളം", "UP TO 138 FEET", 40, 840), (3, "ഒരേ താളം", "THE SAME RHYTHM", 40, 330), (4, "ഒന്നിച്ച് തള്ളുന്നു", "ALL PUSH TOGETHER", 40, 330)])
+lab(COCO, 0, 5, "coconutwater", {"water": 1, "minerals": 2, "potassium": 3}, [(1, "94–95 % വെള്ളം", "ABOUT 94–95% WATER", 760, 850), (2, "പഞ്ചസാരയും ധാതുക്കളും", "SUGAR AND MINERALS", 760, 850), (3, "ഏറ്റവും കൂടുതൽ പൊട്ടാസ്യം", "MOST OF ALL POTASSIUM", 980, 250)])
+
 VIDEOS = [IDLI, CURD, COIL, COOKER, ONION, FAN, BOAT, COCO]

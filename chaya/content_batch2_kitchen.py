@@ -1,6 +1,7 @@
 """Science Chaya: five science secrets in a Kerala kitchen (long)."""
 from chaya.content_monsoon import BL, BR, DK, GD, GR, LF, OR, RD, SE, B
 from chaya.dsl import LB, PT, C, I, T
+from chaya.quick import lab
 
 LONG = {
     "id": "kitchen_long", "orient": "wide", "mood": "curious",
@@ -45,4 +46,11 @@ FACTS = [
     "A pressure cooker at about 15 psi above atmospheric pressure raises water's boiling point to about 121 degrees Celsius (Wikipedia: Pressure cooking; HyperPhysics).",
     "Cut onions release syn-propanethial-S-oxide, made by the enzyme lachrymatory factor synthase, which irritates the eyes (ACS Chemical Biology 2017; Wikipedia).",
 ]
+# richer scenes: the kitchen secrets, each as a close look
+lab(LONG, 1, 5, "ferment", {"bact": 2, "eat": 3, "rise": 4}, [(2, "ലാക്റ്റിക് ആസിഡ് ബാക്ടീരിയ", "LACTIC ACID BACTERIA", 500, 380), (3, "പുളിപ്പും വാതകവും", "ACID AND GAS", 500, 350), (4, "കുമിളകൾ = മൃദുവായ ഇഡ്ഡലി", "BUBBLES MAKE IT SOFT", 500, 360)], kind="idli")
+lab(LONG, 6, 10, "ferment", {"bact": 1, "eat": 2, "set": 3}, [(1, "ഒരു സ്പൂൺ മതി", "ONE SPOON IS ENOUGH", 500, 380), (2, "പഞ്ചസാര → ആസിഡ്", "SUGAR TO ACID", 500, 350), (3, "മാംസ്യം കട്ടപിടിക്കുന്നു", "THE PROTEIN CLUMPS", 500, 360)], kind="curd")
+lab(LONG, 11, 14, "oilsolid", {"cool": 1, "warm": 3.5}, [(1, "24–25 °C ന് താഴെ കട്ടിയാകും", "SOLID BELOW ABOUT 24 °C", 500, 300), (3.5, "കേടല്ല, സാധാരണം", "NOT SPOILED, JUST COLD", 500, 300)])
+lab(LONG, 15, 19, "cooker", {"heat": 1, "steam": 1.5, "pressure": 2}, [(1, "100 °C ൽ തിളയ്ക്കും", "WATER BOILS AT 100 °C", 500, 330), (2, "മർദ്ദം കൂടും", "THE PRESSURE RISES", 500, 330), (3, "≈ 121 °C", "ABOUT 121 °C", 500, 330)])
+lab(LONG, 20, 23, "onion", {"cut": 1, "enzyme": 1.5, "vapor": 2, "tears": 3}, [(1, "കോശങ്ങൾ പൊട്ടുന്നു", "CELLS BREAK OPEN", 420, 400), (2, "ആവിയായ വസ്തു", "A VAPOUR FORMS", 640, 380), (3, "കണ്ണ് നിറയുന്നു", "YOUR EYES WATER", 880, 620)])
+
 VIDEOS = [LONG]

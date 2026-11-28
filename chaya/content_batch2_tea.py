@@ -1,6 +1,7 @@
 """Science Chaya: the science of a cup of tea, from Munnar to the glass (long)."""
 from chaya.content_monsoon import BL, BR, DK, GD, LF, OR, RD, SE, B
 from chaya.dsl import GROUND, LB, PT, C, I, T
+from chaya.quick import lab
 
 LONG = {
     "id": "tea_long", "orient": "wide", "mood": "curious",
@@ -41,4 +42,9 @@ FACTS = [
     "Munnar lies at about 1,532 m; Finlay bought the estates in the mid-1890s; the Kannan Devan name is said to come from two local guides (Wikipedia: Munnar; Kerala Museum; Kerala Tourism).",
     "Caffeine blocks adenosine receptors in the brain, delaying sleepiness (standard pharmacology).",
 ]
+# richer scenes: the leaf becoming tea, caffeine in the brain, the cup
+lab(LONG, 9, 16, "tealeaf", {"wither": 0, "roll": 1, "oxid": 2, "dry": 4}, [(0, "1. വാട്ടൽ", "WITHERING", 500, 330), (1, "2. ഉരുട്ടൽ", "ROLLING", 500, 330), (2, "3. ഓക്സീകരണം", "OXIDATION", 500, 330), (4, "4. ഉണക്കൽ", "DRYING", 500, 330)])
+lab(LONG, 17, 18, "adenosine", {"adenosine": 0, "caffeine": 1}, [(0, "അഡിനോസിൻ ഉറക്കം തരുന്നു", "ADENOSINE MAKES YOU SLEEPY", 500, 560), (1, "കഫീൻ തടയുന്നു", "CAFFEINE BLOCKS IT", 500, 560)])
+lab(LONG, 19, 21, "steep", {"leaves": 0, "spread": 0, "hot": 0.5, "milk": 1}, [(0.5, "ചൂട് കൂടിയാൽ വേഗം ഇറങ്ങും", "HOTTER, FASTER", 500, 350), (1, "പാൽ ചവർപ്പ് കുറയ്ക്കുന്നു", "MILK SOFTENS IT", 500, 350)])
+
 VIDEOS = [LONG]

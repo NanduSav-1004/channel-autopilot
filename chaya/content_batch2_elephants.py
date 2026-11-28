@@ -1,6 +1,7 @@
 """Science Chaya: the science of elephants, in Kerala's festivals and forests (long)."""
 from chaya.content_monsoon import BL, BR, DK, GD, GR, LF, OR, RD, SE, B
 from chaya.dsl import GROUND, RINGS, C, I
+from chaya.quick import lab
 
 LONG = {
     "id": "elephants_long", "orient": "wide", "mood": "curious",
@@ -34,4 +35,7 @@ FACTS = [
     "Researchers propose that elephants make infrasound and sense ground vibrations through their feet, which hold pressure-sensitive nerve endings; models suggest ground signals could travel about 2 km; the picture is incomplete (Stanford; Physics World; ElephantVoices).",
     "Kerala's festival season runs from August to May with over 500 festivals reported; the number of captive elephants fell from 509 in 2018 to 388 in 2024 according to figures given to the Kerala High Court; other counts differ (Deccan Herald; South First).",
 ]
+# richer scene: a call through the air and the ground
+lab(LONG, 2, 7, "seismic", {"call": 0, "ground": 1, "feet": 2, "far": 4}, [(0, "ഇൻഫ്രാസൗണ്ട്", "INFRASOUND", 300, 330), (1, "ഭൂമിയിലൂടെ വിറയൽ", "A TREMOR THROUGH THE GROUND", 520, 800), (2, "കാലിലെ നാഡികൾ", "SENSORS IN THE FEET", 860, 780), (4, "≈ 2 km വരെ?", "UP TO ABOUT 2 KM?", 510, 330)])
+
 VIDEOS = [LONG]

@@ -1,6 +1,7 @@
 """Science Chaya: six nostalgia and village Shorts (petrichor, goli soda, chenda, banana ripening, zero shadow day, fireflies)."""
 from chaya.content_monsoon import BL, BR, DK, GD, GR, LF, OR, RD, SE, B
 from chaya.dsl import GROUND, LB, PT, RINGS, C, I, R, T
+from chaya.scenes import lab
 
 SUB = "കൂടുതൽ കാണാൻ സബ്സ്ക്രൈബ് ചെയ്യൂ"
 
@@ -69,6 +70,9 @@ FIREFLY = short("firefly_s", "മിന്നാമിനുങ്ങിന്�
     B("ഒരു ബൾബിൽ ഊർജ്ജത്തിന്റെ വലിയൊരു ഭാഗം ചൂടായി പോകും.", ("ബൾബ്: ചൂട് നഷ്ടം", "A BULB WASTES MOST AS HEAT", RD), C([I("bulb", 0.5, 0.45, 8, glow="#ff9a3c"), PT("bubbles", 20, [0.35, 0.15, 0.65, 0.5], "#ff9a3c", 8)], bg="warm")),
     outro("പ്രകൃതിയുടെ തണുത്ത ബൾബ്!", "NATURE'S COLD BULB", "പ്രകൃതിയുടെ സ്വന്തം തണുത്ത ബൾബ്!"),
 ])
+# richer scene: the Sun overhead and a stick without a shadow
+lab(ZERO, 0, 5, "sunshadow", {"sun": 0, "noon": 3}, [(3, "നിഴൽ ചുവട്ടിൽ ഒതുങ്ങുന്നു", "THE SHADOW SHRINKS TO ITS FOOT", 500, 300)])
+
 VIDEOS = [PETRICHOR, GOLI, CHENDA, BANANA, ZERO, FIREFLY]
 FACTS = [
     "Petrichor: plant oils and the soil-bacteria compound geosmin make the smell; raindrops throw it into the air as tiny aerosols (Met Office; Smithsonian).",

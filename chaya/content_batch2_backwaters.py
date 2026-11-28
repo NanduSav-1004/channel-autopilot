@@ -1,6 +1,7 @@
 """Science Chaya: tides, the backwaters and chakara (long)."""
 from chaya.content_monsoon import BL, BR, DK, GD, GR, LF, OR, RD, SE, B
 from chaya.dsl import PT, C, I, R
+from chaya.quick import lab
 
 LONG = {
     "id": "backwaters_long", "orient": "wide", "mood": "curious",
@@ -39,4 +40,8 @@ FACTS = [
     "Tides come mainly from the Moon's gravity, with a smaller pull from the Sun; the Vembanad lake is Kerala's largest lake and a Ramsar wetland; the Thanneermukkom bund keeps salt water out of Kuttanad's rice fields.",
     "Mud banks (chakara) are calm, muddy patches of inshore water along Kerala's coast in the south-west monsoon; their origin is still not fully explained; the Alappuzha mud bank can spread over 10 to 50 sq km and fishers report chakara is declining (research papers on Kerala mud banks; Deccan Chronicle; The South First).",
 ]
+# richer scenes: the Moon's pull on the sea and a mud bank
+lab(LONG, 2, 10, "tide", {"pull": 0, "rise": 2, "bund": 8}, [(0, "ചന്ദ്രന്റെ ഗുരുത്വാകർഷണം", "THE MOON'S PULL", 500, 330), (2, "കായലിലും ഉയരും", "THE BACKWATER RISES TOO", 1250, 330), (8, "ഉപ്പുവെള്ളം തടയാൻ ബണ്ട്", "A BUND KEEPS OUT SALT", 1600, 330)])
+lab(LONG, 12, 20, "mudbank", {"waves": 0, "mud": 1, "boats": 2}, [(0, "ചാകര", "CHAKARA", 500, 360), (1, "ചെളി തിരമാലയെ ശമിപ്പിക്കുന്നു", "MUD CALMS THE WAVES", 550, 360), (2, "സുരക്ഷിതമായി വള്ളമിറക്കാം", "BOATS CAN LAUNCH SAFELY", 550, 360)])
+
 VIDEOS = [LONG]
