@@ -26,6 +26,14 @@ ART = {
     "backwaters_long": ("കായലും", "ചാകരയും", "TIDES AND CHAKARA", "?", [("boat", 280, 350, 360, 0), ("coconut", 110, 160, 130, -10), ("drop", 450, 160, 130, 10)]),
     "thumba_long": ("പള്ളിമുറ്റത്ത് നിന്ന്", "ബഹിരാകാശത്തേക്ക്", "THE STORY OF THUMBA", "!", [("rocket", 300, 300, 400, 20), ("church", 140, 480, 220, 0)]),
     "memories_long": ("ആ ഓർമ്മകളുടെ", "ശാസ്ത്രം", "THE SCIENCE OF CHILDHOOD", "?", [("marble", 150, 200, 190, 0), ("cassette", 330, 310, 270, -8), ("bicycle", 300, 500, 250, 0)]),
+    "landslide_long": ("ഉരുൾപൊട്ടൽ", "എങ്ങനെ?", "HOW LANDSLIDES HAPPEN", "?", [("mountain", 270, 400, 380, 0), ("cloudDark", 250, 150, 300, 0), ("drop", 130, 320, 120, -8), ("drop", 440, 300, 130, 8)]),
+    "chandrayaan_long": ("ചന്ദ്രനിൽ", "ഇറങ്ങിയത് എങ്ങനെ?", "CHANDRAYAAN-3 LANDING", "!", [("rocket", 290, 340, 430, 20), ("satellite", 120, 150, 170, -15)]),
+    "fever_long": ("പനി വരുന്നത്", "എന്തിന്?", "WHY WE GET FEVER", "?", [("thermo", 280, 340, 420, 0), ("drop", 130, 200, 130, -10), ("drop", 440, 480, 120, 10)]),
+    "pepper_long": ("കറുത്ത", "പൊന്ന്!", "THE SCIENCE OF PEPPER", "!", [("leaf", 220, 330, 340, -15), ("boat", 330, 520, 280, 0), ("sun", 450, 130, 140, 0)]),
+    "ghats_long": ("പശ്ചിമഘട്ടത്തിന്റെ", "രഹസ്യം", "WESTERN GHATS SECRET", "?", [("mountain", 270, 400, 380, 0), ("tree", 110, 480, 190, 0), ("elephant", 430, 520, 220, 0), ("leaf", 300, 130, 130, 15)]),
+    "phonecall_long": ("ഫോൺ കോൾ", "എങ്ങനെ?", "HOW A PHONE CALL TRAVELS", "?", [("phone", 300, 380, 420, 8), ("satellite", 150, 130, 200, -10), ("pylon", 450, 190, 200, 0)]),
+    "madhava_long": ("യൂറോപ്പിന് മുൻപ്", "250 വർഷം!", "MADHAVA OF KERALA", "π", [("pi", 280, 340, 420, 0), ("person", 120, 520, 190, 0), ("leaf", 450, 520, 150, 15)]),
+    "waves_long": ("തിരമാലയുടെ", "ശക്തി!", "THE POWER OF WAVES", "!", [("boat", 270, 420, 400, -6), ("cloudDark", 250, 150, 280, 0), ("drop", 450, 300, 140, 10)]),
 }
 
 PAGE = """<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="{m}/theme.css">
