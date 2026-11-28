@@ -279,12 +279,265 @@
       feet.attr("opacity", fe * (0.5 + 0.5 * Math.sin(lt * 6))).attr("r", 40 + 20 * Math.sin(lt * 6)); dist.attr("opacity", fa); };
   };
 
+  // ---- sea breeze: land heats faster than sea, warm air rises over land and cool sea air flows in; the pattern reverses at night ----   at: heat, rise, flow, night
+  MODES.seabreeze = (s, k, a) => {
+    s.append("rect").attr("x", -400).attr("y", 600).attr("width", 1400).attr("height", 400).attr("fill", k.lg("sea", [[0, "#2a8fc0"], [1, "#146a95"]])); s.append("rect").attr("x", 500).attr("y", 600).attr("width", 1000).attr("height", 400).attr("fill", k.lg("land", [[0, "#8fb24a"], [1, "#5d7a2a"]]));
+    s.append("path").attr("d", "M 480 600 L 500 600 L 500 640 Z").attr("fill", "#e6cf98"); const sun = M.chayaIcon(s, "sun", 900, 200, 200), moon = s.append("circle").attr("cx", 900).attr("cy", 200).attr("r", 70).attr("fill", "#e4e1d8").attr("opacity", 0), tr = M.chayaIcon(s, "tree", 800, 560, 130), bt = M.chayaIcon(s, "boat", 200, 560, 150);
+    const warm = Array.from({ length: 6 }, (_, i) => s.append("path").attr("fill", "none").attr("stroke", "#ff7a3c").attr("stroke-width", 9).attr("stroke-linecap", "round").attr("opacity", 0).datum(i)), arrows = Array.from({ length: 7 }, (_, i) => s.append("path").attr("fill", "none").attr("stroke", "#4aa8e8").attr("stroke-width", 10).attr("stroke-linecap", "round").attr("opacity", 0).datum(i));
+    return (lt, f, d, S) => { const he = S("heat", 0.05), ri = S("rise", 0.06), fl = S("flow", 0.06), ni = S("night", 0.08);
+      sun.attr("opacity", 1 - ni).attr("transform", "translate(900,200) scale(2)"); moon.attr("opacity", ni);
+      warm.forEach((q, i) => { const u = (lt * 0.5 + i / 6) % 1, x = 620 + i * 60; q.attr("d", `M ${x} ${580 - u * 330} q 14 -20 0 -40 t 0 -40`).attr("opacity", ri * (1 - ni) * (1 - u) + ni * ri * 0.0); });
+      arrows.forEach((q, i) => { const u = (lt * 0.4 + i / 7) % 1, dir = ni > 0.5 ? 1 : -1, x0 = ni > 0.5 ? 760 : 240; q.attr("d", `M ${x0 + dir * u * 300 * (ni > 0.5 ? -1 : 1) * -1} ${560 - (i % 3) * 36} l ${(ni > 0.5 ? 1 : -1) * 60} 0`).attr("opacity", fl * (1 - Math.abs(u - 0.5) * 2)); }); };
+  };
+
+  // ---- humid air: the air is already full of water vapour, so sweat has nowhere to go ----   at: humid, sweat, stuck
+  MODES.humid = (s, k, a) => {
+    s.append("path").attr("d", "M 200 720 Q 500 680 800 720 L 800 900 L 200 900 Z").attr("fill", "#d9a77a").attr("stroke", "#a8774a").attr("stroke-width", 8);
+    const vap = dots(s, 70, "#9fd8f5", 9, 2), dr = Array.from({ length: 8 }, (_, i) => s.append("circle").attr("r", 15).attr("fill", "#4fb8e8").attr("opacity", 0).datum(i)), x = s.append("text").attr("x", 500).attr("y", 600).attr("text-anchor", "middle").attr("font-size", 120).attr("font-weight", 800).attr("fill", "#c8442f").attr("opacity", 0).text("✕");
+    return (lt, f, d, S) => { const hu = S("humid", 0.1), sw = S("sweat", 0.05), st = S("stuck", 0.05);
+      vap.forEach((q, i) => q.attr("cx", 120 + rnd(i) * 760 + Math.sin(lt * 1.2 + i) * 24).attr("cy", 260 + rnd(i + 3) * 400 + Math.cos(lt + i) * 20).attr("opacity", hu * 0.9));
+      dr.forEach((q) => { const i = q.datum(); q.attr("cx", 260 + i * 68).attr("cy", 706 + Math.sin(i * 2) * 6).attr("opacity", sw); }); x.attr("opacity", st * (0.6 + 0.4 * Math.sin(lt * 4))); };
+  };
+
+  // ---- hail: updrafts carry drops up into freezing air; layers of ice build until it is too heavy ----   at: updraft, rise, layers, fall
+  MODES.hail = (s, k, a) => {
+    M.chayaIcon(s, "cloudDark", 500, 230, 700); const ups = [260, 420, 580, 740].map((x) => s.append("path").attr("fill", "none").attr("stroke", "#ff9a3c").attr("stroke-width", 12).attr("stroke-linecap", "round").attr("opacity", 0).datum(x));
+    const stone = s.append("g"), layers = [60, 48, 36, 24, 12].map((r, i) => stone.append("circle").attr("r", r).attr("fill", i % 2 ? "#e8f6ff" : "#bfe3f6").attr("stroke", "#7fb8e8").attr("stroke-width", 3));
+    const frost = s.append("text").attr("x", 860).attr("y", 330).attr("font-size", 80).attr("fill", "#7fd0f8").attr("opacity", 0).text("❄");
+    return (lt, f, d, S) => { const up = S("updraft", 0.05), ri = S("rise", 0.15), la = S("layers", 0.2), fa = S("fall", 0.1);
+      ups.forEach((q) => { const x = q.datum(), u = (lt * 0.6) % 1; q.attr("d", `M ${x} ${860 - u * 30} L ${x} ${520 - u * 30}`).attr("opacity", up * 0.8); });
+      const y = lerp(820, 420, E.out(ri)) + fa * 520 * fa; stone.attr("transform", `translate(${440 + 60 * Math.sin(lt * 1.2) * (1 - fa)},${y}) scale(${0.5 + 0.9 * la})`); layers.forEach((q, i) => q.attr("opacity", i === 0 ? 1 : clamp(la * 6 - (4 - i) * 0.9 + 0.3))); frost.attr("opacity", ri * (1 - fa)); };
+  };
+
+  // ---- cloud weight: a cloud holds hundreds of tonnes of water as tiny drops, about eighty elephants ----   at: cloud, weight, elephants, float
+  MODES.cloudweight = (s, k, a) => {
+    const c = M.chayaIcon(s, "cloud", 500, 280, 520), drops = dots(s, 60, "#4fb8e8", 6, 3), els = Array.from({ length: 8 }, (_, i) => M.chayaIcon(s, "elephant", 150 + i * 100, 780, 110).attr("opacity", 0)), n = s.append("text").attr("x", 500).attr("y", 960).attr("text-anchor", "middle").attr("font-size", 70).attr("font-weight", 800).attr("fill", "#2a1a10").attr("opacity", 0).text("× 80 ആനകൾ");
+    return (lt, f, d, S) => { const cl = S("cloud", 0.05), we = S("weight", 0.1), el = S("elephants", 0.2), fl = S("float", 0.08);
+      c.attr("opacity", 1).attr("transform", `translate(500,${280 + 8 * Math.sin(lt * 1.2)}) scale(5.2)`); drops.forEach((q, i) => q.attr("cx", 250 + rnd(i) * 500 + Math.sin(lt + i) * 10).attr("cy", 200 + rnd(i + 3) * 160 + Math.cos(lt * 0.8 + i) * 8).attr("opacity", cl * (1 - fl * 0.2) * 0.9));
+      els.forEach((e, i) => e.attr("opacity", clamp(el * 10 - i) * we).attr("transform", `translate(${150 + i * 100},780) scale(1.1)`)); n.attr("opacity", el); };
+  };
+
+  // ---- a falling raindrop: gravity pulls down, air drag grows until the two balance ----   at: fall, drag, balance
+  MODES.raindropspeed = (s, k, a) => {
+    s.append("rect").attr("x", -1400).attr("y", -400).attr("width", 3800).attr("height", 1400).attr("fill", k.lg("sky", [[0, "#7e8d9a"], [1, "#d9e3e8"]]));
+    const dr = s.append("path").attr("d", "M 0 -52 Q 34 8 28 24 Q 22 52 0 52 Q -22 52 -28 24 Q -34 8 0 -52 Z").attr("fill", "#2a8fd0").attr("stroke", "#fff").attr("stroke-width", 4), g2 = arrowK(s, "#c8442f"), dg = arrowK(s, "#2f7d4f"), sp = s.append("text").attr("x", 760).attr("y", 330).attr("font-size", 80).attr("font-weight", 800).attr("fill", "#2a1a10").attr("opacity", 0), eq = s.append("text").attr("x", 500).attr("y", 840).attr("text-anchor", "middle").attr("font-size", 60).attr("font-weight", 800).attr("fill", "#2a1a10").attr("opacity", 0).text("ഗുരുത്വം = വായു തടസ്സം");
+    return (lt, f, d, S) => { const fa = S("fall", 0.12), da = S("drag", 0.15), ba = S("balance", 0.1), v = 32 * E.out(da);
+      const y = 150 + 520 * ((lt * 0.45) % 1); dr.attr("transform", `translate(500,${y})`).attr("opacity", fa); const gd = 90, dd = 90 * da * (0.2 + 0.8 * da);
+      g2(500, y + 54, 500, y + 54 + gd, fa); dg(500, y - 54, 500, y - 54 - dd, da); sp.attr("opacity", da).text(Math.round(v) + " km/h"); eq.attr("opacity", ba); };
+    function arrowK(g, col) { const p2 = g.append("path").attr("fill", "none").attr("stroke", col).attr("stroke-width", 12).attr("stroke-linecap", "round"), h = g.append("path").attr("fill", col); return (x0, y0, x1, y1, op) => { const L = Math.hypot(x1 - x0, y1 - y0) || 1, ux = (x1 - x0) / L, uy = (y1 - y0) / L; p2.attr("d", `M ${x0} ${y0} L ${x1} ${y1}`).attr("opacity", op); h.attr("d", `M ${x1 + ux * 22} ${y1 + uy * 22} L ${x1 - uy * 16} ${y1 + ux * 16} L ${x1 + uy * 16} ${y1 - ux * 16} Z`).attr("opacity", op); }; }
+  };
+
+  // ---- the blue sky: sunlight meets air molecules; blue scatters everywhere, red goes on; at sunset the path is longer ----   at: ray, scatter, sunset
+  MODES.bluesky = (s, k, a) => {
+    s.append("rect").attr("x", -1400).attr("y", -400).attr("width", 3800).attr("height", 1000).attr("fill", k.lg("sky", [[0, "#2a6fb8"], [1, "#9fd0f0"]])); s.append("rect").attr("x", -1400).attr("y", 760).attr("width", 3800).attr("height", 500).attr("fill", "#5d7a2a");
+    const sun = M.chayaIcon(s, "sun", 140, 180, 220), ray = s.append("line").attr("stroke", "#fff6c8").attr("stroke-width", 14).attr("stroke-linecap", "round").attr("opacity", 0), mol = dots(s, 40, "#fff", 8, 2), blues = dots(s, 40, "#3a6fe8", 9, 5), reds = Array.from({ length: 6 }, (_, i) => s.append("circle").attr("r", 10).attr("fill", "#e23b2e").attr("opacity", 0).datum(i));
+    const eye = M.chayaIcon(s, "person", 820, 700, 150);
+    return (lt, f, d, S) => { const ra = S("ray", 0.05), sc = S("scatter", 0.1), ss = S("sunset", 0.12);
+      sun.attr("transform", `translate(${lerp(140, 230, ss)},${lerp(180, 640, ss)}) scale(2.2)`); ray.attr("x1", lerp(200, 280, ss)).attr("y1", lerp(220, 640, ss)).attr("x2", 780).attr("y2", 680).attr("opacity", ra);
+      mol.forEach((q, i) => q.attr("cx", 280 + rnd(i) * 500).attr("cy", lerp(220 + rnd(i + 3) * 400, 600 + rnd(i + 3) * 120, ss) + Math.sin(lt + i) * 6).attr("opacity", ra * 0.6));
+      blues.forEach((q, i) => { const u = (lt * 0.7 + rnd(i)) % 1, an = rnd(i + 8) * Math.PI * 2, cx = 280 + rnd(i) * 500, cy = lerp(220 + rnd(i + 3) * 400, 600 + rnd(i + 3) * 120, ss); q.attr("cx", cx + Math.cos(an) * u * 150).attr("cy", cy + Math.sin(an) * u * 150).attr("opacity", sc * (1 - ss * 0.8) * (1 - u)); });
+      reds.forEach((q) => { const i = q.datum(), u = (lt * 0.5 + i / 6) % 1; q.attr("cx", lerp(280, 780, u)).attr("cy", lerp(lerp(220, 640, ss), 680, u)).attr("opacity", sc * (0.5 + ss * 0.5) * 0.9); }); eye.attr("transform", "translate(820,700) scale(1.5)"); };
+  };
+
+  // ---- twinkling: starlight bends as it crosses shifting layers of air; a planet is a small disc so it averages out ----   at: ray, bend, planet
+  MODES.twinkle = (s, k, a) => {
+    for (let i = 0; i < 20; i++) s.append("circle").attr("cx", -300 + rnd(i) * 1600).attr("cy", rnd(i + 5) * 500).attr("r", 2).attr("fill", "#fff").attr("opacity", 0.6);
+    const air = [380, 520, 660].map((y, i) => s.append("path").attr("fill", "#8fb8e8").attr("opacity", 0.18 + i * 0.08).datum(y)), star = s.append("text").attr("x", 500).attr("y", 130).attr("text-anchor", "middle").attr("font-size", 120).attr("fill", "#ffe9a8").text("★"), planet = s.append("circle").attr("cx", 820).attr("cy", 110).attr("r", 34).attr("fill", "#e8a33d").attr("opacity", 0), ray = s.append("path").attr("fill", "none").attr("stroke", "#ffe9a8").attr("stroke-width", 7).attr("opacity", 0), ray2 = s.append("path").attr("fill", "none").attr("stroke", "#e8a33d").attr("stroke-width", 22).attr("opacity", 0);
+    const eye = s.append("g").attr("transform", "translate(500,880)"); eye.append("ellipse").attr("rx", 70).attr("ry", 44).attr("fill", "#fff"); eye.append("circle").attr("r", 20).attr("fill", "#4a2a17");
+    return (lt, f, d, S) => { const ra = S("ray", 0.04), be = S("bend", 0.12), pl = S("planet", 0.06);
+      air.forEach((q) => { const y = q.datum(); q.attr("d", `M -400 ${y} Q 200 ${y + 40 * Math.sin(lt * 2 + y)} 500 ${y} T 1400 ${y} L 1400 ${y + 110} L -400 ${y + 110} Z`); });
+      const wob = (x0) => `M ${x0} 170 L ${x0 + 12 * be * Math.sin(lt * 7)} 380 L ${500 + 24 * be * Math.sin(lt * 9 + 1)} 520 L ${500 + 14 * be * Math.sin(lt * 11)} 660 L 500 840`; ray.attr("d", wob(500)).attr("opacity", ra); star.attr("opacity", 1).attr("font-size", 120 + 20 * be * Math.sin(lt * 8));
+      planet.attr("opacity", pl); ray2.attr("d", `M 820 150 L 640 380 L 540 520 L 510 660 L 500 840`).attr("opacity", pl * 0.6); };
+  };
+
+  // ---- the Moon illusion: a horizon Moon beside trees looks big; the same Moon overhead looks small; through a tube they match ----   at: horizon, overhead, tube
+  MODES.moonillusion = (s, k, a) => {
+    s.append("rect").attr("x", -1400).attr("y", -400).attr("width", 3800).attr("height", 1300).attr("fill", k.lg("sky", [[0, "#17214a"], [1, "#f0a679"]])); s.append("rect").attr("x", -1400).attr("y", 740).attr("width", 3800).attr("height", 500).attr("fill", "#17241a");
+    [60, 200, 780, 900].forEach((x, i) => M.chayaIcon(s, "tree", x, 720, 200 + i * 20)); const moonH = s.append("circle").attr("cx", 500).attr("cy", 620).attr("r", 90).attr("fill", "#f3e6b0"), moonO = s.append("circle").attr("cx", 500).attr("cy", 180).attr("r", 90).attr("fill", "#f3e6b0").attr("opacity", 0);
+    const ruler = s.append("g").attr("opacity", 0); ruler.append("line").attr("x1", 410).attr("x2", 590).attr("y1", 780).attr("y2", 780).attr("stroke", "#fff").attr("stroke-width", 6); ruler.append("text").attr("x", 500).attr("y", 830).attr("text-anchor", "middle").attr("fill", "#fff").attr("font-size", 44).attr("font-weight", 800).text("ഒരേ വലുപ്പം");
+    const tube = s.append("rect").attr("x", 330).attr("y", 80).attr("width", 340).attr("height", 200).attr("rx", 100).attr("fill", "none").attr("stroke", "#fff").attr("stroke-width", 10).attr("opacity", 0);
+    return (lt, f, d, S) => { const ho = S("horizon", 0.05), ov = S("overhead", 0.1), tu = S("tube", 0.08);
+      moonH.attr("opacity", 1).attr("cy", lerp(620, 620 - 440 * ov * 0, 0)); moonO.attr("opacity", ov); ruler.attr("opacity", ov); tube.attr("opacity", tu); };
+  };
+
+  // ---- ring of fire: when the Moon is farther away it looks smaller and cannot cover the whole Sun ----   at: align, near, far, ring
+  MODES.ringeclipse = (s, k, a) => {
+    s.append("rect").attr("x", -1400).attr("y", -400).attr("width", 3800).attr("height", 1500).attr("fill", "#0a1030");
+    s.append("circle").attr("cx", 120).attr("cy", 500).attr("r", 150).attr("fill", "#ffd23f"); s.append("circle").attr("cx", 120).attr("cy", 500).attr("r", 300).attr("fill", k.rg("sg", [[0, "#ffd23f", 0.4], [1, "#ffd23f", 0]]));
+    s.append("circle").attr("cx", 880).attr("cy", 500).attr("r", 50).attr("fill", "#3aa0e8"); const moon = s.append("circle").attr("r", 28).attr("fill", "#cfccc2").attr("stroke", "#fff").attr("stroke-width", 3), ln = s.append("path").attr("fill", "rgba(255,226,120,0.18)").attr("stroke", "none"), view = s.append("g").attr("transform", "translate(500,200)").attr("opacity", 0); view.append("circle").attr("r", 110).attr("fill", "#ffd23f"); const disc = view.append("circle").attr("r", 80).attr("fill", "#0a1030").attr("stroke", "#0a1030");
+    const lab = s.append("text").attr("x", 500).attr("y", 760).attr("text-anchor", "middle").attr("font-size", 52).attr("font-weight", 800).attr("fill", "#fff6e2").attr("opacity", 0);
+    return (lt, f, d, S) => { const al = S("align", 0.08), ne = S("near", 0.05), fa = S("far", 0.1), ri = S("ring", 0.05), x = lerp(500, 760 - 130 * ne * (1 - fa), fa * 0 + 1) * 0 + (ne > 0 && fa === 0 ? 760 : fa > 0 ? 500 : 640);
+      moon.attr("cx", al * 0 + (fa > 0 ? 440 : 640)).attr("cy", 500).attr("r", fa > 0 ? 36 : 56).attr("opacity", al); ln.attr("d", `M 120 350 L ${fa > 0 ? 440 : 640} 460 L 880 470 L 880 530 L ${fa > 0 ? 440 : 640} 540 L 120 650 Z`).attr("opacity", al);
+      view.attr("opacity", Math.max(ne, fa)); disc.attr("r", fa > 0 ? 82 : 118).attr("fill", "#0a1030"); view.select("circle").attr("r", 110); lab.attr("opacity", Math.max(ne, fa)).text(fa > 0 ? "വലയം (ring)" : "പൂർണ്ണ ഗ്രഹണം"); };
+  };
+
+  // ---- the space station: a fast orbit that is really constant falling around the Earth; we see it by reflected sunlight ----   at: orbit, speed, reflect
+  MODES.iss = (s, k, a) => {
+    s.append("rect").attr("x", -1400).attr("y", -400).attr("width", 3800).attr("height", 1500).attr("fill", "#050b1f"); for (let i = 0; i < 80; i++) s.append("circle").attr("cx", -800 + rnd(i) * 2400).attr("cy", -300 + rnd(i + 4) * 1100).attr("r", 1.6 + rnd(i + 2) * 2).attr("fill", "#fff").attr("opacity", 0.6);
+    s.append("circle").attr("cx", 500).attr("cy", 1300).attr("r", 760).attr("fill", k.lg("e", [[0, "#3aa0e8"], [1, "#1a5fa8"]])); s.append("circle").attr("cx", 500).attr("cy", 1300).attr("r", 740).attr("fill", "#4f9a4a").attr("opacity", 0.35);
+    const orb = s.append("ellipse").attr("cx", 500).attr("cy", 1300).attr("rx", 880).attr("ry", 880).attr("fill", "none").attr("stroke", "#ffd23f").attr("stroke-width", 4).attr("stroke-dasharray", "12 12").attr("opacity", 0), sat = M.chayaIcon(s, "satellite", 500, 420, 100).attr("opacity", 0), person = M.chayaIcon(s, "person", 140, 560, 120), beam = s.append("path").attr("fill", "rgba(255,246,200,0.25)").attr("opacity", 0), sp = s.append("text").attr("x", 500).attr("y", 120).attr("text-anchor", "middle").attr("font-size", 64).attr("font-weight", 800).attr("fill", "#ffd23f").attr("opacity", 0), sunI = M.chayaIcon(s, "sun", 1250, 120, 160);
+    return (lt, f, d, S) => { const or = S("orbit", 0.05), sp2 = S("speed", 0.1), re = S("reflect", 0.1), th = -Math.PI / 2 + (lt * 0.5);
+      orb.attr("opacity", or); const x = 500 + 880 * Math.cos(th), y = 1300 + 880 * Math.sin(th); sat.attr("opacity", or).attr("transform", `translate(${x},${y}) scale(1.1)`); sp.attr("opacity", sp2).text("≈ 28,000 km/h");
+      beam.attr("d", `M 1200 130 L ${x} ${y} L ${x + 20} ${y + 40} Z`).attr("opacity", re); person.attr("transform", "translate(140,560) scale(1.3)"); sunI.attr("transform", "translate(1250,120) scale(1.6)"); };
+  };
+
+  // ---- one face of the Moon: it spins once per orbit, so the same side always faces Earth ----   at: orbit, spin, lock
+  MODES.moonface = (s, k, a) => {
+    s.append("rect").attr("x", -1400).attr("y", -400).attr("width", 3800).attr("height", 1500).attr("fill", "#050b1f"); for (let i = 0; i < 60; i++) s.append("circle").attr("cx", -600 + rnd(i) * 2200).attr("cy", -300 + rnd(i + 4) * 1100).attr("r", 1.6 + rnd(i + 2) * 2).attr("fill", "#fff").attr("opacity", 0.6);
+    s.append("circle").attr("cx", 500).attr("cy", 560).attr("r", 120).attr("fill", k.lg("e", [[0, "#3aa0e8"], [1, "#1a5fa8"]])); s.append("ellipse").attr("cx", 480).attr("cy", 540).attr("rx", 50).attr("ry", 34).attr("fill", "#4f9a4a"); s.append("ellipse").attr("cx", 500).attr("cy", 560).attr("rx", 360).attr("ry", 360).attr("fill", "none").attr("stroke", "#ffd23f").attr("stroke-width", 4).attr("stroke-dasharray", "12 12");
+    const moon = s.append("g"); moon.append("circle").attr("r", 60).attr("fill", "#d9d6cc"); moon.append("circle").attr("cx", 14).attr("cy", -10).attr("r", 18).attr("fill", "#9b988e"); moon.append("circle").attr("cx", 26).attr("cy", 20).attr("r", 10).attr("fill", "#9b988e"); const face = moon.append("path").attr("d", "M 0 0 L 90 0").attr("stroke", "#c8442f").attr("stroke-width", 8).attr("stroke-linecap", "round"), lab = s.append("text").attr("x", 500).attr("y", 1010).attr("text-anchor", "middle").attr("font-size", 56).attr("font-weight", 800).attr("fill", "#fff6e2").attr("opacity", 0);
+    return (lt, f, d, S) => { const or = S("orbit", 0.05), sp = S("spin", 0.1), lo = S("lock", 0.1), th = lt * 0.6, x = 500 + 360 * Math.cos(th), y = 560 + 360 * Math.sin(th);
+      moon.attr("opacity", 1).attr("transform", `translate(${x},${y}) rotate(${(th * 180) / Math.PI + 180 + (lo > 0 ? 0 : (1 - sp) * lt * 80)})`); lab.attr("opacity", lo).text("ഒരു ചുറ്റ് = ഒരു കറക്കം"); };
+  };
+
+  // ---- fever: germs, immune signals, the brain's thermostat set higher, shivering, then lowered and sweating ----   at: germ, signal, raise, shiver, hot, lower
+  MODES.thermostat = (s, k, a) => {
+    const gg = s.append("g").attr("transform", "translate(320,520)"); gg.append("path").attr("d", "M -200 0 A 200 200 0 0 1 200 0").attr("fill", "none").attr("stroke", "#c9a77a").attr("stroke-width", 36).attr("stroke-linecap", "round"); gg.append("path").attr("d", "M 60 -190 A 200 200 0 0 1 200 0").attr("fill", "none").attr("stroke", "#e23b2e").attr("stroke-width", 36).attr("stroke-linecap", "round").attr("opacity", 0.5);
+    const needle = gg.append("g"); needle.append("path").attr("d", "M -10 0 L 0 -170 L 10 0 Z").attr("fill", "#2a1a10"); gg.append("circle").attr("r", 20).attr("fill", "#2a1a10"); gg.append("text").attr("y", 80).attr("text-anchor", "middle").attr("font-size", 40).attr("font-weight", 800).attr("fill", "#4a2a17").text("തെർമോസ്റ്റാറ്റ്");
+    const body = s.append("g").attr("transform", "translate(760,520)"), person = M.chayaIcon(body, "person", 0, 0, 260), th = M.chayaIcon(s, "thermo", 960, 480, 220), val = s.append("text").attr("x", 760).attr("y", 780).attr("text-anchor", "middle").attr("font-size", 70).attr("font-weight", 800).attr("fill", "#2a1a10");
+    const germs = dots(s, 12, "#7a3fb0", 12, 2), sig = dots(s, 8, "#2d6fa0", 9, 5), drops = dots(s, 8, "#4fb8e8", 9, 7);
+    return (lt, f, d, S) => { const ge = S("germ", 0.05), si = S("signal", 0.08), ra = S("raise", 0.12), sh = S("shiver", 0.05), ho = S("hot", 0.05), lo = S("lower", 0.12), set = 37 + 2 * ra - 2 * lo, temp = lerp(37, 39, clamp(ra * 1.1 - lo * 1.1));
+      needle.attr("transform", `rotate(${lerp(-90, 40, (set - 36) / 4) - 0})`); val.text(temp.toFixed(1) + " °C");
+      germs.forEach((q, i) => q.attr("cx", 620 + rnd(i) * 280 + Math.sin(lt * 2 + i) * 20).attr("cy", 300 + rnd(i + 3) * 340 + Math.cos(lt * 1.6 + i) * 20).attr("opacity", ge * (1 - lo * 0.8)));
+      sig.forEach((q, i) => { const u = (lt * 0.5 + i / 8) % 1; q.attr("cx", lerp(760, 320, u)).attr("cy", lerp(380, 400, u) - Math.sin(u * Math.PI) * 60).attr("opacity", si * (1 - lo) * 0.9); });
+      body.attr("transform", `translate(${760 + sh * (1 - ho) * (1 - lo) * 8 * Math.sin(lt * 40)},520)`); th.attr("transform", "translate(960,480) scale(2.2)");
+      drops.forEach((q, i) => { const u = (lt * 0.5 + rnd(i)) % 1; q.attr("cx", 700 + (i % 4) * 40).attr("cy", 320 + u * 120).attr("opacity", (ho * (1 - lo) * 0 + lo) * (1 - u)); }); };
+  };
+
+  // ---- hiccups: the diaphragm jerks down and the vocal cords snap shut ----   at: breath, spasm, close
+  MODES.hiccup = (s, k, a) => {
+    s.append("path").attr("d", "M 300 260 Q 500 200 700 260 L 760 880 L 240 880 Z").attr("fill", "#f3dcc0").attr("stroke", "#c9a77a").attr("stroke-width", 8); const lungs = [380, 620].map((x) => s.append("ellipse").attr("cx", x).attr("cy", 480).attr("rx", 90).attr("ry", 150).attr("fill", "#e89a9a").attr("stroke", "#a85a5a").attr("stroke-width", 6));
+    const dia = s.append("path").attr("fill", "#c8442f").attr("stroke", "#7b2a1c").attr("stroke-width", 8), cords = [-1, 1].map((sg) => s.append("path").attr("fill", "#c8442f").datum(sg)), hic = s.append("text").attr("x", 500).attr("y", 190).attr("text-anchor", "middle").attr("font-size", 110).attr("font-weight", 800).attr("fill", "#c8442f").attr("opacity", 0).text("ഹിക്!");
+    return (lt, f, d, S) => { const br = S("breath", 0.05), sp = S("spasm", 0.1), cl = S("close", 0.08), pulse = sp * Math.max(0, Math.sin(lt * 5)) ** 6, y = 640 + 40 * Math.sin(lt * 1.4) * (1 - sp) + 90 * pulse;
+      dia.attr("d", `M 270 ${y} Q 500 ${y - 90 + 60 * pulse} 730 ${y} L 730 ${y + 30} Q 500 ${y - 50} 270 ${y + 30} Z`); lungs.forEach((q) => q.attr("ry", 150 + 14 * Math.sin(lt * 1.4) * (1 - sp) + 30 * pulse).attr("opacity", br));
+      cords.forEach((q) => { const sg = q.datum(), gap = 26 * (1 - cl * pulse); q.attr("d", `M ${500 + sg * 80} 270 L ${500 + sg * gap} 290 L ${500 + sg * 80} 310 Z`); }); hic.attr("opacity", cl * pulse); };
+  };
+
+  // ---- wrinkled fingers: blood vessels narrow, the skin pulls in and forms grooves like tyre treads ----   at: water, narrow, wrinkle, grip
+  MODES.pruning = (s, k, a) => {
+    const top = s.append("path").attr("fill", "#e6b890").attr("stroke", "#a8774a").attr("stroke-width", 6), sub = s.append("rect").attr("x", 160).attr("y", 600).attr("width", 680).attr("height", 260).attr("fill", "#d98a8a").attr("opacity", 0.9), vessels = [680, 760, 840].map((y) => s.append("path").attr("fill", "none").attr("stroke", "#c8221f").attr("stroke-linecap", "round").datum(y)), drops = dots(s, 14, "#4fb8e8", 12, 3), ball = s.append("circle").attr("cx", 500).attr("cy", 380).attr("r", 70).attr("fill", "#4fb8e8").attr("opacity", 0), rain = s.append("circle").attr("cx", 500).attr("cy", 380).attr("r", 70).attr("fill", "none").attr("stroke", "#2f7d4f").attr("stroke-width", 8).attr("opacity", 0);
+    return (lt, f, d, S) => { const wa = S("water", 0.05), na = S("narrow", 0.12), wr = S("wrinkle", 0.15), gr = S("grip", 0.08), amp = 40 * wr, pts = Array.from({ length: 35 }, (_, i) => [160 + i * 20, 600 - 20 - amp * (0.5 + 0.5 * Math.sin(i * 0.9)) * 0 - amp * Math.abs(Math.sin(i * 0.9))]);
+      top.attr("d", "M 160 700 L " + pts.map((q) => q.join(" ")).join(" L ") + " L 840 700 Z"); vessels.forEach((q) => q.attr("d", `M 200 ${q.datum()} L 800 ${q.datum()}`).attr("stroke-width", 32 - 22 * na));
+      drops.forEach((q, i) => { const u = (lt * 0.5 + rnd(i)) % 1; q.attr("cx", 180 + rnd(i + 2) * 640).attr("cy", 300 + u * 280).attr("opacity", wa * (1 - u)); }); ball.attr("opacity", gr); rain.attr("opacity", gr * (0.6 + 0.4 * Math.sin(lt * 5))); };
+  };
+
+  // ---- goosebumps: a tiny muscle pulls each hair upright when the nerves fire ----   at: cold, nerve, stand
+  MODES.goosebumps = (s, k, a) => {
+    s.append("rect").attr("x", 160).attr("y", 600).attr("width", 680).attr("height", 300).attr("fill", "#f0c4a0"); s.append("rect").attr("x", 160).attr("y", 760).attr("width", 680).attr("height", 160).attr("fill", "#e8a0a0");
+    const hairs = [300, 500, 700].map((x) => { const g2 = s.append("g").datum(x), hair = g2.append("path").attr("fill", "none").attr("stroke", "#2a1a10").attr("stroke-width", 8).attr("stroke-linecap", "round"), mus = g2.append("path").attr("fill", "none").attr("stroke", "#c8442f").attr("stroke-width", 12).attr("stroke-linecap", "round"); return { x, hair, mus }; });
+    const snow = s.append("text").attr("x", 500).attr("y", 260).attr("text-anchor", "middle").attr("font-size", 150).attr("fill", "#7fd0f8").attr("opacity", 0).text("❄"), pulse = dots(s, 6, "#ffd23f", 10, 4);
+    return (lt, f, d, S) => { const co = S("cold", 0.05), ne = S("nerve", 0.08), st = S("stand", 0.1);
+      snow.attr("opacity", co).attr("transform", `rotate(${lt * 40} 500 210)`);
+      hairs.forEach(({ x, hair, mus }) => { const ang = lerp(-62, 0, st) * (x > 500 ? -1 : 1) * 1, tipx = x + Math.sin((ang * Math.PI) / 180) * 150, tipy = 600 - Math.cos((ang * Math.PI) / 180) * 150; hair.attr("d", `M ${x} 740 L ${x} 600 Q ${(x + tipx) / 2} ${600 - 60} ${tipx} ${tipy}`); mus.attr("d", `M ${x} 740 L ${x + lerp(-120, -60, st)} ${lerp(660, 690, st)}`); });
+      pulse.forEach((q, i) => { const u = (lt * 0.6 + i / 6) % 1; q.attr("cx", 120 + u * 640).attr("cy", 860).attr("opacity", ne * (1 - st * 0.6) * (1 - Math.abs(u - 0.5) * 1.4)); }); };
+  };
+
+  // ---- yawning: tired or bored, the mouth opens wide, and a nearby friend yawns too ----   at: yawn, tired, copy
+  MODES.yawn = (s, k, a) => {
+    const mk = (x) => { const g2 = s.append("g").attr("transform", `translate(${x},560)`); g2.append("circle").attr("r", 150).attr("fill", "#e6b890").attr("stroke", "#a8774a").attr("stroke-width", 8); g2.append("circle").attr("cx", -50).attr("cy", -40).attr("r", 14).attr("fill", "#2a1a10"); g2.append("circle").attr("cx", 50).attr("cy", -40).attr("r", 14).attr("fill", "#2a1a10"); const mouth = g2.append("ellipse").attr("cy", 60).attr("fill", "#7b2a1c").attr("rx", 40).attr("ry", 12); return mouth; };
+    const m1 = mk(300), m2 = mk(700), z = s.append("text").attr("x", 300).attr("y", 330).attr("text-anchor", "middle").attr("font-size", 100).attr("font-weight", 800).attr("fill", "#4a90d8").attr("opacity", 0).text("Zzz");
+    return (lt, f, d, S) => { const ya = S("yawn", 0.05), ti = S("tired", 0.1), co = S("copy", 0.1), w = (ph) => Math.max(0, Math.sin(lt * 1.6 + ph)) ** 2;
+      m1.attr("rx", 40 - 10 * ya * w(0)).attr("ry", 12 + 70 * ya * w(0)); m2.attr("rx", 40 - 10 * co * w(0.8)).attr("ry", 12 + 70 * co * w(0.8)); z.attr("opacity", ti * 0.8); };
+  };
+
+  // ---- soap vs a virus: the soap molecules pull apart the fatty coat and wash the pieces away ----   at: virus, soap, break, wash
+  MODES.soap = (s, k, a) => {
+    const v = s.append("g").attr("transform", "translate(500,560)"); v.append("circle").attr("r", 150).attr("fill", "#b45ab0").attr("stroke", "#f6c8f0").attr("stroke-width", 22); for (let i = 0; i < 14; i++) v.append("rect").attr("x", -6).attr("y", -190).attr("width", 12).attr("height", 40).attr("rx", 6).attr("fill", "#e23b2e").attr("transform", `rotate(${i * 25.7})`);
+    const mols = Array.from({ length: 26 }, (_, i) => { const g2 = s.append("g").datum(i); g2.append("circle").attr("r", 12).attr("fill", "#4fb8e8"); g2.append("path").attr("d", "M 0 12 L 0 38").attr("stroke", "#ffd23f").attr("stroke-width", 6).attr("stroke-linecap", "round"); return g2; }), bits = dots(s, 18, "#b45ab0", 12, 8), wat = Array.from({ length: 6 }, (_, i) => s.append("path").attr("fill", "none").attr("stroke", "#7fb8e8").attr("stroke-width", 9).attr("stroke-linecap", "round").attr("opacity", 0).datum(i));
+    return (lt, f, d, S) => { const vi = S("virus", 0.05), so = S("soap", 0.1), br = S("break", 0.12), wa = S("wash", 0.1);
+      v.attr("opacity", vi * (1 - br)).attr("transform", `translate(500,560) scale(${1 - 0.3 * br})`); mols.forEach((g2) => { const i = g2.datum(), an = (i / 26) * Math.PI * 2, r = lerp(520 + 100 * Math.sin(lt + i), 190, so) + br * 160; g2.attr("transform", `translate(${500 + Math.cos(an) * r},${560 + Math.sin(an) * r}) rotate(${(an * 180) / Math.PI - 90})`).attr("opacity", so); });
+      bits.forEach((q, i) => { const an = rnd(i) * Math.PI * 2, r = 60 + br * (120 + rnd(i + 3) * 160) + wa * 300; q.attr("cx", 500 + Math.cos(an) * r + wa * 200).attr("cy", 560 + Math.sin(an) * r + wa * 120).attr("opacity", br * (1 - wa)); });
+      wat.forEach((q, i) => { const u = (lt * 0.8 + i / 6) % 1; q.attr("d", `M ${120 + u * 760} ${300 + i * 90} l 70 20`).attr("opacity", wa * (1 - Math.abs(u - 0.5) * 1.6)); }); };
+  };
+
+  // ---- the heart: it beats about 72 times a minute, so around 100,000 times a day ----   at: beat, count, day
+  MODES.heart = (s, k, a) => {
+    const hrt = s.append("path").attr("d", "M 0 120 C -260 -60 -140 -220 0 -90 C 140 -220 260 -60 0 120 Z").attr("fill", "#d8323a").attr("stroke", "#7b1a1f").attr("stroke-width", 10), cnt = s.append("text").attr("x", 500).attr("y", 880).attr("text-anchor", "middle").attr("font-size", 90).attr("font-weight", 800).attr("fill", "#2a1a10").attr("opacity", 0), lab = s.append("text").attr("x", 500).attr("y", 960).attr("text-anchor", "middle").attr("font-size", 44).attr("font-weight", 700).attr("fill", "#7b4a2b").attr("opacity", 0), pulse = s.append("path").attr("fill", "none").attr("stroke", "#d8323a").attr("stroke-width", 8).attr("stroke-linecap", "round").attr("opacity", 0);
+    return (lt, f, d, S) => { const be = S("beat", 0.05), co = S("count", 0.1), da = S("day", 0.15), ph = (lt * 1.2) % 1, sc = 1 + 0.14 * Math.exp(-ph * 6) * Math.sin(ph * 12 + 1.6) * 0 + 0.12 * Math.max(0, Math.sin(ph * Math.PI * 2)) ** 3;
+      hrt.attr("transform", `translate(500,520) scale(${sc})`).attr("opacity", 1);
+      const n = Math.floor(co * 72 + da * (100000 - 72)); cnt.attr("opacity", co).text(n.toLocaleString("en-US")); lab.attr("opacity", co).text(da > 0.1 ? "ഒരു ദിവസത്തെ മിടിപ്പുകൾ" : "ഒരു മിനിറ്റിലെ മിടിപ്പുകൾ");
+      const pts = Array.from({ length: 41 }, (_, i) => { const x = 120 + i * 19, u = ((x - 120) / 760 - lt * 0.2 + 1) % 1; return [x, 190 - (u > 0.45 && u < 0.5 ? 130 * Math.sin((u - 0.45) * 63) : u > 0.5 && u < 0.55 ? -40 : 0)]; }); pulse.attr("d", "M " + pts.map((q) => q.join(" ")).join(" L ")).attr("opacity", be); };
+  };
+
+  // ---- a pepper berry: green, ripe red, dried black, or peeled white ----   at: green, red, black, white
+  MODES.pepperberry = (s, k, a) => {
+    s.append("path").attr("d", "M 500 120 Q 520 300 500 420").attr("stroke", "#4a7a2a").attr("stroke-width", 14).attr("fill", "none"); const bunch = Array.from({ length: 14 }, (_, i) => { const ang = (i / 14) * Math.PI * 2, r = 50 + (i % 3) * 30, x = 500 + Math.cos(ang) * r * 0.6, y = 520 + i * 18 + (i % 2) * 20; return { c: s.append("circle").attr("cx", x).attr("cy", y).attr("r", 34).attr("stroke", "#3a2a1d").attr("stroke-width", 4), x, y }; });
+    s.append("ellipse").attr("cx", 500).attr("cy", 380).attr("rx", 140).attr("ry", 46).attr("fill", "#3a8a3a").attr("transform", "rotate(-12 500 380)"); const lab = s.append("text").attr("x", 500).attr("y", 940).attr("text-anchor", "middle").attr("font-size", 70).attr("font-weight", 800).attr("fill", "#2a1a10");
+    return (lt, f, d, S) => { const gr = S("green", 0.05), re = S("red", 0.1), bl = S("black", 0.12), wh = S("white", 0.12);
+      const col = d3.interpolateRgb(d3.interpolateRgb(d3.interpolateRgb("#4aa83a", "#d8323a")(re), "#2a1a10")(bl), "#f3ead0")(wh * (re > 0.5 ? 1 : 1));
+      bunch.forEach(({ c }) => c.attr("fill", col).attr("opacity", gr).attr("r", 34 - 8 * bl * (1 - wh) + 0 * wh)); lab.text(wh > 0.5 ? "വെള്ള കുരുമുളക്" : bl > 0.5 ? "കറുത്ത കുരുമുളക്" : re > 0.5 ? "പഴുത്തത്" : "പച്ച മണികൾ"); };
+  };
+
+  // ---- ships and the monsoon wind: Roman ships sail to Muziris on the monsoon and come back loaded with pepper ----   at: wind, sail, trade
+  MODES.muziris = (s, k, a) => {
+    s.append("rect").attr("x", -1400).attr("y", 560).attr("width", 3800).attr("height", 600).attr("fill", k.lg("sea", [[0, "#2a8fc0"], [1, "#146a95"]])); s.append("rect").attr("x", -400).attr("y", 520).attr("width", 300).attr("height", 120).attr("rx", 20).attr("fill", "#e6cf98"); s.append("rect").attr("x", 1100).attr("y", 520).attr("width", 300).attr("height", 120).attr("rx", 20).attr("fill", "#5d9a3a");
+    s.append("text").attr("x", -250).attr("y", 500).attr("text-anchor", "middle").attr("font-size", 52).attr("font-weight", 800).attr("fill", "#4a2a17").text("റോം"); s.append("text").attr("x", 1250).attr("y", 500).attr("text-anchor", "middle").attr("font-size", 52).attr("font-weight", 800).attr("fill", "#4a2a17").text("മുസിരിസ്");
+    const ship = M.chayaIcon(s, "boat", 0, 540, 200), winds = Array.from({ length: 8 }, (_, i) => s.append("path").attr("fill", "none").attr("stroke", "#fff").attr("stroke-width", 8).attr("stroke-linecap", "round").attr("opacity", 0).datum(i)), coins = dots(s, 6, "#ffd23f", 16, 4), sacks = Array.from({ length: 4 }, () => s.append("ellipse").attr("rx", 24).attr("ry", 20).attr("fill", "#8a5a36").attr("opacity", 0));
+    return (lt, f, d, S) => { const wi = S("wind", 0.05), sa = S("sail", 0.25), tr = S("trade", 0.1), x = lerp(-200, 1120, E.inOut(sa));
+      winds.forEach((q) => { const i = q.datum(), u = (lt * 0.5 + i / 8) % 1; q.attr("d", `M ${-200 + u * 1500} ${300 + (i % 4) * 50} l 100 0`).attr("opacity", wi * (1 - Math.abs(u - 0.5) * 2)); }); ship.attr("transform", `translate(${x},${540 + 8 * Math.sin(lt * 3)}) scale(2)`);
+      coins.forEach((q, i) => q.attr("cx", 1100 + (i % 3) * 36).attr("cy", 640 - Math.floor(i / 3) * 30).attr("opacity", tr * (x > 1000 ? 1 : 0))); sacks.forEach((q, i) => q.attr("cx", 1000 - tr * 1100 + i * 40 - 0).attr("cy", 600).attr("opacity", tr * 0.9)); };
+  };
+
+  // ---- the heat receptor: capsaicin or piperine opens the tongue's heat channel and the brain feels burning; water cannot wash it, milk's casein can ----   at: bind, signal, water, milk
+  MODES.receptor = (s, k, a) => {
+    s.append("rect").attr("x", 160).attr("y", 600).attr("width", 680).attr("height", 40).attr("fill", "#d98a8a"); s.append("rect").attr("x", 160).attr("y", 640).attr("width", 680).attr("height", 260).attr("fill", "#e8a0a0").attr("opacity", 0.8);
+    const gate = s.append("g").attr("transform", "translate(500,620)"); gate.append("rect").attr("x", -90).attr("y", -40).attr("width", 50).attr("height", 80).attr("fill", "#8a5ab8"); gate.append("rect").attr("x", 40).attr("y", -40).attr("width", 50).attr("height", 80).attr("fill", "#8a5ab8"); const lid = gate.append("rect").attr("x", -40).attr("y", -20).attr("width", 80).attr("height", 40).attr("fill", "#4a2a6a");
+    const mol = dots(s, 8, "#e8613a", 18, 1), ow = dots(s, 14, "#4fb8e8", 10, 3), casein = dots(s, 6, "#fff6e2", 26, 5), sig = s.append("path").attr("fill", "none").attr("stroke", "#ffd23f").attr("stroke-width", 12).attr("stroke-linecap", "round").attr("opacity", 0), hot = s.append("text").attr("x", 500).attr("y", 180).attr("text-anchor", "middle").attr("font-size", 110).attr("font-weight", 800).attr("fill", "#c8442f").attr("opacity", 0).text("ഹോ! 🔥");
+    return (lt, f, d, S) => { const bi = S("bind", 0.06), si = S("signal", 0.06), wa = S("water", 0.08), mi = S("milk", 0.1);
+      mol.forEach((q, i) => { const dock = bi * (1 - mi), tx = 440 + (i % 4) * 40, ty = 560; q.attr("cx", lerp(150 + rnd(i) * 700, tx, dock) + Math.sin(lt * 2 + i) * 12 * (1 - dock) + mi * (rnd(i) - 0.5) * 120).attr("cy", lerp(300 + rnd(i + 3) * 200, ty, dock) - mi * 220 * rnd(i + 2)).attr("opacity", bi); });
+      lid.attr("y", lerp(-20, -90, si * (1 - mi))); sig.attr("d", `M 500 590 L 500 ${590 - 380 * si}`).attr("opacity", si * (1 - mi)); hot.attr("opacity", si * (1 - mi) * (0.6 + 0.4 * Math.sin(lt * 8)));
+      ow.forEach((q, i) => { const u = (lt * 0.6 + rnd(i)) % 1; q.attr("cx", 120 + u * 760).attr("cy", 520 + (rnd(i + 2) - 0.5) * 140).attr("opacity", wa * (1 - mi) * 0.9); }); casein.forEach((q, i) => q.attr("cx", 300 + rnd(i) * 400 + Math.sin(lt + i) * 20).attr("cy", 480 + rnd(i + 3) * 80 - mi * 80).attr("opacity", mi * 0.9)); };
+  };
+
+  // ---- turmeric and lime: curcumin is yellow in acid and red-brown in alkali ----   at: bowl, lime, acid
+  MODES.turmeric = (s, k, a) => {
+    const bowl = s.append("path").attr("d", "M 220 560 L 780 560 Q 760 840 500 880 Q 240 840 220 560 Z").attr("fill", "#f3ead0").attr("stroke", "#c9a77a").attr("stroke-width", 10), top = s.append("ellipse").attr("cx", 500).attr("cy", 560).attr("rx", 280).attr("ry", 60).attr("fill", "#f0b81f"), drop = s.append("circle").attr("r", 28).attr("fill", "#fff").attr("stroke", "#c9c2a8").attr("stroke-width", 4), lemon = s.append("circle").attr("r", 28).attr("fill", "#f3e04a").attr("stroke", "#a89020").attr("stroke-width", 4), lab = s.append("text").attr("x", 500).attr("y", 960).attr("text-anchor", "middle").attr("font-size", 62).attr("font-weight", 800).attr("fill", "#2a1a10");
+    return (lt, f, d, S) => { const bo = S("bowl", 0.05), li = S("lime", 0.12), ac = S("acid", 0.12), red = li * (1 - ac);
+      top.attr("fill", d3.interpolateRgb("#f0b81f", "#c8441f")(red)).attr("rx", 280 - 60 * 0); const y1 = lerp(200, 540, E.in ? 0 : 0) || 0; drop.attr("cx", 500).attr("cy", lerp(200, 540, clamp(li * 1.4))).attr("opacity", li > 0 && li < 1 && ac === 0 ? 1 : 0); lemon.attr("cx", 600).attr("cy", lerp(200, 540, clamp(ac * 1.4))).attr("opacity", ac > 0 && ac < 1 ? 1 : 0);
+      lab.text(ac > 0.5 ? "അമ്ലം: വീണ്ടും മഞ്ഞ" : li > 0.5 ? "ക്ഷാരം: ചുവപ്പ്" : "കുർക്കുമിൻ: മഞ്ഞ"); };
+  };
+
+  // ---- puttu: steam from the pot climbs through the tube of flour and coconut and cooks it ----   at: heat, steam, layers, cooked
+  MODES.puttu = (s, k, a) => {
+    const pot = s.append("g"); pot.append("path").attr("d", "M 300 740 L 700 740 L 680 900 L 320 900 Z").attr("fill", "#aab3ba").attr("stroke", "#5e6b78").attr("stroke-width", 8); const w = pot.append("rect").attr("x", 316).attr("y", 840).attr("width", 368).attr("height", 52).attr("fill", "#4fb8e8");
+    s.append("rect").attr("x", 430).attr("y", 380).attr("width", 140).attr("height", 360).attr("rx", 14).attr("fill", "#d9dfe4").attr("fill-opacity", 0.5).attr("stroke", "#5e6b78").attr("stroke-width", 8); const lay = [0, 1, 2, 3, 4, 5, 6].map((i) => s.append("rect").attr("x", 438).attr("y", 396 + i * 48).attr("width", 124).attr("height", 44).attr("fill", i % 2 ? "#fffaf0" : "#f0e0b8").attr("opacity", 0)), steam = dots(s, 24, "#fff", 11, 2), flame = [360, 440, 520, 600, 660].map((x) => s.append("path").attr("d", `M ${x} 960 Q ${x + 20} 920 ${x} 880 Q ${x - 20} 920 ${x} 960 Z`).attr("fill", "#ff9a2e").attr("opacity", 0));
+    return (lt, f, d, S) => { const he = S("heat", 0.05), st = S("steam", 0.1), la = S("layers", 0.1), co = S("cooked", 0.15);
+      flame.forEach((q, i) => q.attr("opacity", he).attr("transform", `scale(1,${0.9 + 0.15 * Math.sin(lt * 9 + i)})`)); steam.forEach((q, i) => { const u = (lt * 0.6 + rnd(i)) % 1; q.attr("cx", 470 + rnd(i + 4) * 60).attr("cy", 840 - u * 460).attr("opacity", st * (1 - u) * 0.85); });
+      lay.forEach((q, i) => q.attr("opacity", la).attr("fill", d3.interpolateRgb(i % 2 ? "#fffaf0" : "#f0e0b8", i % 2 ? "#ffffff" : "#e8c97a")(co))); };
+  };
+
+  // ---- a pappadam in hot oil: trapped water turns to steam and puffs the dough, then the protein sets ----   at: oil, steam, puff, set
+  MODES.pappadam = (s, k, a) => {
+    s.append("rect").attr("x", 150).attr("y", 640).attr("width", 700).attr("height", 260).attr("rx", 24).attr("fill", "#e8a33d").attr("opacity", 0.85); const bub = dots(s, 24, "#fff6c8", 10, 3), pap = s.append("path").attr("fill", "#f3dca0").attr("stroke", "#a8774a").attr("stroke-width", 6), m = dots(s, 16, "#4fb8e8", 7, 6), lab = s.append("text").attr("x", 500).attr("y", 420).attr("text-anchor", "middle").attr("font-size", 60).attr("font-weight", 800).attr("fill", "#2a1a10");
+    return (lt, f, d, S) => { const oi = S("oil", 0.05), st = S("steam", 0.1), pu = S("puff", 0.15), se = S("set", 0.1), h = 14 + 90 * pu, y = 600;
+      pap.attr("d", `M 250 ${y} Q 500 ${y - h * 2} 750 ${y} Q 500 ${y + 24 - h * 0.2} 250 ${y} Z`).attr("fill", d3.interpolateRgb("#f3dca0", "#d8a24a")(se)); m.forEach((q, i) => q.attr("cx", 320 + rnd(i) * 360).attr("cy", y - 6 - rnd(i + 3) * h * 0.8).attr("opacity", (1 - st) * 0.9).attr("r", 7)); bub.forEach((q, i) => { const u = (lt * 0.7 + rnd(i)) % 1; q.attr("cx", 200 + rnd(i + 4) * 600).attr("cy", 860 - u * 240).attr("opacity", oi * (1 - u) * 0.9); });
+      lab.text(pu > 0.4 ? "ആവി വീർപ്പിക്കുന്നു" : st > 0.3 ? "ജലം ആവിയാകുന്നു" : "ചൂടെണ്ണ"); };
+  };
+
+  // ---- a cardamom pod: seeds full of aroma oil that evaporates; crushing releases more ----   at: pod, oil, aroma, crush
+  MODES.cardamom = (s, k, a) => {
+    const pod = s.append("g").attr("transform", "translate(500,600)"); pod.append("path").attr("d", "M -260 0 Q 0 -190 260 0 Q 0 190 -260 0 Z").attr("fill", "#9acb6a").attr("stroke", "#4a7a2a").attr("stroke-width", 10); const seeds = Array.from({ length: 14 }, (_, i) => pod.append("circle").attr("cx", -190 + i * 29).attr("cy", (i % 2 ? 24 : -24)).attr("r", 18).attr("fill", "#3a2a1d").attr("opacity", 0));
+    const oil = dots(s, 14, "#ffd23f", 7, 2), aroma = Array.from({ length: 8 }, (_, i) => s.append("path").attr("fill", "none").attr("stroke", "#c9e85a").attr("stroke-width", 8).attr("stroke-linecap", "round").attr("opacity", 0).datum(i)), bits = dots(s, 16, "#6a8a3a", 12, 5);
+    return (lt, f, d, S) => { const po = S("pod", 0.05), oi = S("oil", 0.1), ar = S("aroma", 0.1), cr = S("crush", 0.12);
+      pod.attr("opacity", po * (1 - cr)).attr("transform", `translate(500,${600}) scale(${1 - 0.3 * cr})`); seeds.forEach((q) => q.attr("opacity", oi)); oil.forEach((q, i) => q.attr("cx", 330 + rnd(i) * 340).attr("cy", 580 + (rnd(i + 3) - 0.5) * 100).attr("opacity", oi * 0.85));
+      aroma.forEach((q, i) => { const u = (lt * (0.5 + 0.5 * cr) + i / 8) % 1, x = 320 + i * 50; q.attr("d", `M ${x} ${520 - u * 260} q 16 -22 0 -44 t 0 -44`).attr("opacity", ar * (1 - u) * (0.7 + 0.5 * cr)); }); bits.forEach((q, i) => q.attr("cx", 330 + rnd(i) * 340).attr("cy", 620 + (rnd(i + 2) - 0.5) * 80).attr("opacity", cr * 0.9)); };
+  };
+
+  // ---- pickle: salt draws water out of the fruit and out of bacteria, so they cannot grow ----   at: salt, water, bacteria, oil
+  MODES.pickle = (s, k, a) => {
+    s.append("path").attr("d", "M 320 380 L 680 380 L 700 880 Q 700 900 680 900 L 320 900 Q 300 900 300 880 Z").attr("fill", "#d9eef7").attr("fill-opacity", 0.4).attr("stroke", "#8fb0b8").attr("stroke-width", 10); s.append("rect").attr("x", 300).attr("y", 340).attr("width", 400).attr("height", 40).attr("rx", 10).attr("fill", "#c8442f");
+    const frs = Array.from({ length: 6 }, (_, i) => s.append("circle").attr("cx", 380 + (i % 3) * 120).attr("cy", 560 + Math.floor(i / 3) * 140).attr("r", 54).attr("fill", "#8fc04a").attr("stroke", "#4a7a2a").attr("stroke-width", 5)), salts = dots(s, 20, "#fff", 8, 3), water = dots(s, 22, "#4fb8e8", 8, 5), bact = Array.from({ length: 6 }, (_, i) => s.append("ellipse").attr("rx", 24).attr("ry", 12).attr("fill", "#d05a5a").attr("opacity", 0).datum(i)), oil = s.append("rect").attr("x", 304).attr("y", 400).attr("width", 392).attr("height", 40).attr("fill", "#e8a33d").attr("opacity", 0);
+    return (lt, f, d, S) => { const sa = S("salt", 0.05), wa = S("water", 0.1), ba = S("bacteria", 0.12), oi = S("oil", 0.1);
+      salts.forEach((q, i) => q.attr("cx", 340 + rnd(i) * 320).attr("cy", 470 + rnd(i + 3) * 380).attr("opacity", sa * 0.9)); water.forEach((q, i) => { const u = (lt * 0.4 + rnd(i)) % 1; q.attr("cx", 360 + rnd(i + 2) * 280).attr("cy", 700 - u * 280).attr("opacity", wa * (1 - u)); });
+      bact.forEach((q) => { const i = q.datum(); q.attr("cx", 360 + (i % 3) * 140 + Math.sin(lt + i) * 10).attr("cy", 480 + Math.floor(i / 3) * 360).attr("rx", 24 - 14 * ba).attr("ry", 12 - 5 * ba).attr("opacity", sa > 0 ? 1 : 0).attr("fill", d3.interpolateRgb("#d05a5a", "#7a5a5a")(ba)); }); oil.attr("opacity", oi); };
+  };
+
   // ================= the scene: background + a mode + tags =================
   K.lab = (g, p, c) => {
     const id = c.id + rid(), k = M.setKit(g, c, id), s = k.set, a = p.at || {};
     BG(s, k, p.bg || (p.mode === "firefly" ? "night" : p.mode === "petrichor" ? "sky" : "kitchen"));
     const mode = (MODES[p.mode] || (() => () => {}))(s, k, a, p), tags = (p.tags || []).map((t) => ({ t, pg: k.pill2(t.x, t.y, t.ml, t.en, t.col || "#c8442f") }));
-    const DEF = { sunshadow: [500, 440, 1.1], tealeaf: [500, 560, 1.5], adenosine: [500, 560, 1.5], steep: [500, 650, 1.8], ferment: [500, 650, 1.8], cooker: [500, 640, 1.7], onion: [620, 600, 1.4], oilsolid: [550, 540, 1.5], tide: [800, 560, 1.0], mudbank: [550, 560, 1.4], sweat: [500, 580, 1.5], snakeboat: [40, 540, 1.1], coconutwater: [620, 570, 1.5], seismic: [510, 640, 1.4], petrichor: [500, 560, 1.5], firefly: [700, 600, 1.35], goli: [500, 560, 1.9], cassette: [520, 640, 1.5], osmosis: [450, 640, 1.7], lamp: [500, 500, 1.9] }[p.mode] || [500, 540, 1.2], tall = c.stage.h > c.stage.w;
+    const DEF = { thermostat: [560, 560, 1.7], hiccup: [500, 560, 1.3], pruning: [500, 620, 1.9], goosebumps: [450, 700, 1.9], yawn: [500, 560, 1.8], soap: [500, 560, 1.7], heart: [500, 640, 1.45], pepperberry: [500, 640, 2.0], muziris: [550, 520, 1.1], receptor: [500, 520, 1.9], turmeric: [500, 640, 1.6], puttu: [500, 660, 1.8], pappadam: [500, 640, 1.9], cardamom: [500, 580, 1.6], pickle: [500, 640, 1.7], seabreeze: [500, 600, 1.2], humid: [500, 560, 1.3], hail: [500, 560, 1.3], cloudweight: [500, 580, 1.3], raindropspeed: [500, 400, 1.2], bluesky: [500, 520, 1.1], twinkle: [500, 500, 1.2], moonillusion: [500, 480, 1.3], ringeclipse: [500, 500, 1.25], iss: [500, 400, 1.2], moonface: [500, 560, 1.3], sunshadow: [500, 440, 1.1], tealeaf: [500, 560, 1.5], adenosine: [500, 560, 1.5], steep: [500, 650, 1.8], ferment: [500, 650, 1.8], cooker: [500, 640, 1.7], onion: [620, 600, 1.4], oilsolid: [550, 540, 1.5], tide: [800, 560, 1.0], mudbank: [550, 560, 1.4], sweat: [500, 580, 1.5], snakeboat: [40, 540, 1.1], coconutwater: [620, 570, 1.5], seismic: [510, 640, 1.4], petrichor: [500, 560, 1.5], firefly: [700, 600, 1.35], goli: [500, 560, 1.9], cassette: [520, 640, 1.5], osmosis: [450, 640, 1.7], lamp: [500, 500, 1.9] }[p.mode] || [500, 540, 1.2], tall = c.stage.h > c.stage.w;
     const move = k.camMover(p.cams || [{ at: 0, x: DEF[0], y: DEF[1], z: DEF[2] * (tall ? 0.8 : 1) }]);
     return (lt, d) => { const f = lt / d; move(f, d); mode(lt, f, d, (name, w = 0.1) => prog(f, at(a, name), w));
       tags.forEach(({ t, pg }, i) => { pop(pg, t.x, t.y, f, d, t.at ?? 9); const nxt = tags[i + 1] ? tags[i + 1].t.at : 9; pg.attr("opacity", +pg.attr("opacity") * (1 - prog(f, Math.min((t.at ?? 9) + 0.2, nxt + 0.02), 0.03))); }); };

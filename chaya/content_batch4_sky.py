@@ -1,5 +1,5 @@
 """Science Chaya batch 4: sky and space (Chandrayaan-3 long; blue sky, twinkling, moon illusion, the 2019 ring eclipse over Kerala, the space station, the moon's one face)."""
-from chaya.quick import ST, TX, S, lg, rich, sh
+from chaya.quick import ST, TX, S, lab, lg, rich, sh
 
 MOON = lg(
     "chandrayaan_long", "ചന്ദ്രയാൻ മൂന്ന് ചന്ദ്രനിൽ ഇറങ്ങിയത് എങ്ങനെ? | ഒരു സോഫ്റ്റ് ലാൻഡിങ്ങിന്റെ ശാസ്ത്രം", "How did Chandrayaan-3 land on the Moon? The science of a soft landing",
@@ -123,5 +123,13 @@ FACTS = [
 # richer scenes: the trip to the Moon and the landing
 rich(MOON, 3, 7, "moonland", {"launch": 0, "orbits": 2, "transfer": 3, "capture": 4}, [(0, -150, 420, 1.1), (1.5, -100, 520, 0.95), (3, 500, 420, 0.8), (4, 1050, 380, 1.3)])
 rich(MOON, 14, 24, "moonland", {"descend": 0, "land": 3, "rover": 6}, [(0, 3300, 340, 1.0, True), (3, 3350, 560, 1.5), (6, 3600, 640, 1.4), (8, 3450, 520, 1.1)])
+
+# richer scenes (lab cut-aways) for the sky Shorts
+lab(BLUE, 0, 5, "bluesky", {"ray": 1, "scatter": 2, "sunset": 4}, [(1, "വെളുത്ത വെളിച്ചം", "WHITE LIGHT HAS ALL COLOURS", 500, 330), (2, "നീല ചിതറുന്നു", "BLUE SCATTERS", 500, 420), (4, "സന്ധ്യയ്ക്ക് ദൂരം കൂടുതൽ", "A LONGER PATH AT SUNSET", 500, 330)])
+lab(TWINKLE, 0, 5, "twinkle", {"ray": 1, "bend": 3, "planet": 5}, [(1, "അന്തരീക്ഷത്തിലൂടെ", "THROUGH OUR AIR", 800, 520), (3, "വെളിച്ചം വളയുന്നു", "THE LIGHT BENDS", 800, 520), (5, "ഗ്രഹം: ചെറിയ വൃത്തം", "A PLANET IS A SMALL DISC", 800, 260)])
+lab(ILLUSION, 0, 5, "moonillusion", {"horizon": 0, "overhead": 2, "tube": 5}, [(2, "അളന്നാൽ ഒരേ വലുപ്പം", "THE SAME SIZE", 500, 480), (4, "മരങ്ങൾ വലുപ്പം തോന്നിക്കുന്നു", "TREES FOOL OUR SENSE OF SCALE", 500, 480)])
+lab(ECLIPSE, 0, 6, "ringeclipse", {"align": 2, "near": 3, "far": 4, "ring": 5}, [(2, "ചന്ദ്രൻ സൂര്യനു മുന്നിൽ", "THE MOON PASSES IN FRONT", 500, 330), (4, "അകലെ, ചെറുത്", "FARTHER AWAY, SO SMALLER", 500, 330)])
+lab(ISS, 0, 6, "iss", {"orbit": 1, "speed": 3, "reflect": 5}, [(1, "ബഹിരാകാശ നിലയം", "THE SPACE STATION", 500, 600), (3, "മണിക്കൂറിൽ 28,000 km", "ABOUT 28,000 KM/H", 500, 260), (5, "സൂര്യപ്രകാശം പ്രതിഫലിക്കുന്നു", "IT REFLECTS SUNLIGHT", 900, 250)])
+lab(MOONFACE, 0, 5, "moonface", {"orbit": 1, "spin": 2, "lock": 3}, [(1, "ഒരു ചുറ്റ് ≈ 27 ദിവസം", "ONE ORBIT ABOUT 27 DAYS", 500, 200), (3, "ഒരേ വശം ഭൂമിയെ നോക്കുന്നു", "THE SAME SIDE FACES EARTH", 500, 200)])
 
 VIDEOS = [MOON, BLUE, TWINKLE, ILLUSION, ECLIPSE, ISS, MOONFACE]

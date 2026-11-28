@@ -1,5 +1,5 @@
 """Science Chaya batch 5: the body (why we get a fever long; hiccups, wrinkled fingers, goosebumps, yawning, soap, the heart Shorts)."""
-from chaya.quick import ST, TX, S, lg, sh
+from chaya.quick import ST, TX, S, lab, lg, sh
 
 FEVER = lg(
     "fever_long", "പനി വരുന്നത് എന്തിന്? | ശരീരത്തിന്റെ ചൂടിന് പിന്നിലെ ശാസ്ത്രം", "Why do we get a fever? The science behind the body's heat",
@@ -116,4 +116,14 @@ FACTS = [
     "Soap molecules disrupt the fatty envelope of many viruses and lift germs off the skin; wash for at least 20 seconds (CDC; WHO).",
     "A resting adult heart beats about 60 to 100 times a minute (American Heart Association).",
 ] + FACTS_FEVER
+# richer scenes (lab cut-aways) for the body videos
+lab(FEVER, 4, 11, "thermostat", {"germ": 1, "signal": 1.5, "raise": 2, "shiver": 4, "hot": 6}, [(0, "തലച്ചോറിലെ തെർമോസ്റ്റാറ്റ്", "THE BRAIN'S THERMOSTAT", 320, 330), (1, "പ്രതിരോധ സന്ദേശങ്ങൾ", "IMMUNE SIGNALS", 540, 330), (2, "താപനില കൂട്ടൂ", "TURN IT UP", 320, 330), (4, "വിറയൽ = ചൂടുണ്ടാക്കൽ", "SHIVERING MAKES HEAT", 760, 330)])
+lab(FEVER, 16, 17, "thermostat", {"germ": 0, "signal": 0, "raise": 0, "lower": 0.4}, [(0, "മരുന്ന് തെർമോസ്റ്റാറ്റ് താഴ്ത്തുന്നു", "MEDICINE LOWERS THE SETTING", 320, 330), (1, "വിയർത്ത് ചൂട് പോകും", "SWEATING CARRIES HEAT OUT", 760, 330)])
+lab(HICCUP, 0, 5, "hiccup", {"breath": 1, "spasm": 2, "close": 3}, [(1, "ഡയഫ്രം പേശി", "THE DIAPHRAGM", 500, 360), (3, "തൊണ്ട അടയുന്നു", "THE VOCAL CORDS SNAP SHUT", 500, 360)])
+lab(WRINKLE, 0, 5, "pruning", {"water": 1, "narrow": 3, "wrinkle": 4, "grip": 5}, [(3, "രക്തക്കുഴലുകൾ ചുരുങ്ങുന്നു", "VESSELS NARROW", 500, 520), (4, "ടയർ പോലെ ചാലുകൾ", "TYRE-LIKE GROOVES", 500, 400)])
+lab(GOOSE, 0, 5, "goosebumps", {"cold": 0, "nerve": 2, "stand": 3}, [(1, "രോമത്തിനടിയിൽ പേശി", "A TINY MUSCLE", 500, 560), (3, "രോമം എഴുന്നുനിൽക്കുന്നു", "THE HAIR STANDS UP", 500, 560)])
+lab(YAWN, 0, 5, "yawn", {"yawn": 0, "tired": 3, "copy": 4}, [(2, "തലച്ചോറിന് തണുപ്പ്?", "COOLING THE BRAIN?", 300, 330), (4, "പകരുന്ന കോട്ടുവായ്", "CONTAGIOUS", 500, 800)])
+lab(SOAP, 0, 5, "soap", {"virus": 1, "soap": 2, "break": 3, "wash": 4}, [(1, "കൊഴുപ്പ് ആവരണം", "A FATTY COAT", 500, 330), (3, "ആവരണം പൊളിയുന്നു", "THE COAT BREAKS", 500, 330), (4, "ഒഴുകിപ്പോകുന്നു", "WASHED AWAY", 500, 330)])
+lab(HEART, 0, 5, "heart", {"beat": 0, "count": 1, "day": 2}, [(1, "മിനിറ്റിൽ ≈ 72", "ABOUT 72 A MINUTE", 500, 300), (2, "ദിവസം ≈ 1 ലക്ഷം", "ABOUT 100,000 A DAY", 500, 300)])
+
 VIDEOS = [FEVER, HICCUP, WRINKLE, GOOSE, YAWN, SOAP, HEART]

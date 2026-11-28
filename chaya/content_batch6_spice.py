@@ -1,5 +1,5 @@
 """Science Chaya batch 6: spice and food (black pepper long; turmeric and lime, chilli, puttu, pappadam, cardamom, pickle Shorts)."""
-from chaya.quick import TX, S, lg, sh
+from chaya.quick import TX, S, lab, lg, sh
 
 PEPPER = lg(
     "pepper_long", "കുരുമുളക്: കേരളത്തെ ലോകം തേടിവന്നത് എന്തിന്? | കറുത്ത പൊന്നിന്റെ ശാസ്ത്രം", "Black pepper: why did the world sail to Kerala? The science of black gold",
@@ -118,4 +118,15 @@ FACTS = [
     "Cardamom (Elettaria cardamomum) seeds hold aromatic oils such as 1,8-cineole and grow in cool, wet hills like Idukki (Wikipedia: Cardamom; Spices Board India).",
     "Salt preserves food by osmosis, drawing water out of microbes and food; acid and oil also hinder spoilage (USDA food preservation guidance).",
 ] + FACTS_PEPPER
+# richer scenes (lab cut-aways) for the spice videos
+lab(PEPPER, 6, 10, "pepperberry", {"green": 0, "red": 1, "black": 2, "white": 4}, [(1, "പഴുക്കുമ്പോൾ ചുവപ്പ്", "RED WHEN RIPE", 500, 300), (2, "ഉണക്കിയാൽ കറുപ്പ്", "DRIED: BLACK", 500, 300), (4, "തൊലി കളഞ്ഞാൽ വെള്ള", "PEELED: WHITE", 500, 300)])
+lab(PEPPER, 12, 15, "receptor", {"bind": 0, "signal": 2}, [(0, "പൈപ്പറിൻ", "PIPERINE", 500, 340), (2, "ചൂടിന്റെ സെൻസർ", "THE HEAT SENSOR", 500, 340)])
+lab(PEPPER, 18, 22, "muziris", {"wind": 2, "sail": 0.5, "trade": 3}, [(0.5, "റോമിൽ നിന്ന് മുസിരിസിലേക്ക്", "FROM ROME TO MUZIRIS", 550, 340), (2, "മൺസൂൺ കാറ്റിൽ", "ON THE MONSOON WINDS", 550, 340), (3, "സ്വർണ്ണത്തിന് പകരം കുരുമുളക്", "GOLD FOR PEPPER", 1050, 440)])
+lab(TURMERIC, 0, 5, "turmeric", {"bowl": 1, "lime": 3, "acid": 4}, [(1, "കുർക്കുമിൻ", "THE DYE CURCUMIN", 500, 380), (2, "ചുണ്ണാമ്പ് = ക്ഷാരം", "LIME IS AN ALKALI", 500, 380)])
+lab(CHILLI, 0, 5, "receptor", {"bind": 1, "signal": 2, "water": 4, "milk": 5}, [(1, "ക്യാപ്സെയ്സിൻ", "CAPSAICIN", 500, 340), (2, "ചൂടിന്റെ സെൻസർ", "THE HEAT SENSOR", 500, 340), (4, "വെള്ളം സഹായിക്കില്ല", "WATER DOES NOT HELP", 500, 340), (5, "പാലിലെ കേസീൻ", "MILK'S CASEIN", 500, 340)])
+lab(PUTTU, 0, 5, "puttu", {"heat": 1, "steam": 1.5, "layers": 3, "cooked": 4}, [(1, "വെള്ളം ആവിയാകുന്നു", "WATER BECOMES STEAM", 500, 360), (3, "അടുക്കുകൾക്കിടയിൽ വഴി", "GAPS BETWEEN LAYERS", 800, 520), (4, "അന്നജം വേവുന്നു", "THE STARCH COOKS", 800, 520)])
+lab(PAPAD, 0, 5, "pappadam", {"oil": 1, "steam": 2, "puff": 3, "set": 4}, [(1, "ഉള്ളിൽ ജലാംശം", "WATER INSIDE", 500, 480), (3, "ആവി വീർപ്പിക്കുന്നു", "STEAM INFLATES IT", 500, 480)])
+lab(CARDAMOM, 0, 5, "cardamom", {"pod": 1, "oil": 2, "aroma": 4, "crush": 5}, [(2, "വിത്തിൽ സുഗന്ധ എണ്ണ", "AROMA OIL IN THE SEEDS", 500, 400), (5, "പൊടിച്ചാൽ മണം കൂടും", "CRUSH FOR MORE AROMA", 500, 400)])
+lab(PICKLE, 0, 5, "pickle", {"salt": 1, "water": 1.5, "bacteria": 3, "oil": 4}, [(1, "ഉപ്പ് വെള്ളം വലിക്കും", "SALT DRAWS WATER OUT", 500, 340), (3, "ബാക്ടീരിയ ഉണങ്ങും", "BACTERIA DRY OUT", 500, 340)])
+
 VIDEOS = [PEPPER, TURMERIC, CHILLI, PUTTU, PAPAD, CARDAMOM, PICKLE]

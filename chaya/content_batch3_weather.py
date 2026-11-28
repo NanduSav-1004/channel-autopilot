@@ -1,5 +1,5 @@
 """Science Chaya batch 3: weather and land (landslides long; rainbow, sea breeze, humidity, hail, cloud weight, raindrop Shorts)."""
-from chaya.quick import ST, TX, S, lg, rich, sh
+from chaya.quick import ST, TX, S, lab, lg, rich, sh
 
 LAND = lg(
     "landslide_long", "ഉരുൾപൊട്ടൽ എങ്ങനെ ഉണ്ടാകുന്നു? | മലയിടിച്ചിലിന്റെ ശാസ്ത്രം", "How do landslides happen? The science behind the slopes that slip",
@@ -122,5 +122,12 @@ rich(LAND, 3, 18, "slope", {"roots": 1, "rain": 3, "wet": 4, "weight": 5, "slide
 rich(LAND, 19, 22, "slope", {"rain": 0, "wet": 0, "gauge": 0, "alert": 1, "crack": 3}, [(0, 1100, 560, 1.25), (1, 1150, 430, 1.5), (3, 250, 400, 1.6)])
 rich(RAINBOW, 0, 6, "rainbow", {"ray": 0, "split": 1, "reflect": 2, "exit": 2.5, "angle": 3, "circle": 4, "ground": 5, "full": 6},
      [(0, 420, 500, 1.1), (2.5, 150, 780, 1.0), (4, 2700, 450, 0.9, True)])
+
+# richer scenes (lab cut-aways) for the weather Shorts
+lab(BREEZE, 0, 5, "seabreeze", {"heat": 1, "rise": 3, "flow": 4, "night": 5}, [(1, "കര വേഗം ചൂടാകുന്നു", "LAND HEATS FAST", 800, 330), (3, "ചൂടുവായു പൊങ്ങുന്നു", "WARM AIR RISES", 700, 330), (4, "കടൽക്കാറ്റ്", "THE SEA BREEZE", 400, 380), (5, "രാത്രി കരക്കാറ്റ്", "NIGHT: THE LAND BREEZE", 500, 330)])
+lab(HUMID, 0, 5, "humid", {"humid": 1, "sweat": 3, "stuck": 4}, [(1, "വായുവിൽ ഈർപ്പം", "WATER IN THE AIR", 500, 250), (4, "വിയർപ്പ് ആവിയാകില്ല", "SWEAT CANNOT EVAPORATE", 500, 520)])
+lab(HAIL, 0, 5, "hail", {"updraft": 1, "rise": 2, "layers": 3, "fall": 4}, [(1, "മുകളിലേക്കുള്ള കാറ്റ്", "A STRONG UPDRAFT", 500, 700), (3, "പാളികളായി വളരുന്നു", "GROWS IN LAYERS", 800, 450), (4, "ഭാരം കൂടി വീഴുന്നു", "TOO HEAVY, IT FALLS", 800, 700)])
+lab(CLOUDW, 0, 5, "cloudweight", {"cloud": 0, "weight": 1, "elephants": 2, "float": 4}, [(1, "≈ 5 ലക്ഷം കിലോ", "ABOUT 500,000 KG", 500, 480), (2, "എൺപത് ആനകൾ", "ABOUT EIGHTY ELEPHANTS", 500, 880), (4, "ചെറിയ തുള്ളികൾ പൊങ്ങിക്കിടക്കുന്നു", "TINY DROPS FLOAT", 500, 480)])
+lab(DROPS, 0, 5, "raindropspeed", {"fall": 0, "drag": 1, "balance": 2}, [(1, "വായുവിന്റെ തടസ്സം", "AIR PUSHES BACK", 500, 500), (2, "ടെർമിനൽ വേഗം", "TERMINAL VELOCITY", 500, 300), (4, "വലിയ തുള്ളി ≈ 32 km/h", "BIG DROPS: ABOUT 32 KM/H", 500, 700)])
 
 VIDEOS = [LAND, RAINBOW, BREEZE, HUMID, HAIL, CLOUDW, DROPS]
