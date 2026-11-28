@@ -1,5 +1,5 @@
 """Science Chaya batch 6: spice and food (black pepper long; turmeric and lime, chilli, puttu, pappadam, cardamom, pickle Shorts)."""
-from chaya.quick import ST, TX, S, lg, sh
+from chaya.quick import TX, S, lg, sh
 
 PEPPER = lg(
     "pepper_long", "കുരുമുളക്: കേരളത്തെ ലോകം തേടിവന്നത് എന്തിന്? | കറുത്ത പൊന്നിന്റെ ശാസ്ത്രം", "Black pepper: why did the world sail to Kerala? The science of black gold",

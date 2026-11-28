@@ -2,7 +2,7 @@
 A row is (narration sentence, card Malayalam, card English[, scene]); the first row needs a scene, a later row gets one where the picture should change.
 S(...) makes a scene from icons of the icon set, ST(...) a counting number, TX(...) a big word."""
 from chaya.content_batch_shorts import outro, short
-from chaya.content_monsoon import BL, BR, DK, GD, GR, LF, OR, RD, SE, B
+from chaya.content_monsoon import BL, BR, DK, GD, LF, OR, RD, SE, B
 from chaya.dsl import LB, PT, C, I, T
 
 COLS = [BR, LF, SE, OR, BL, GD, DK, RD]

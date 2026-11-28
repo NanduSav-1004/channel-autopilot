@@ -1,6 +1,9 @@
 """usage: python chaya/enqueue.py <content suffix> -- appends its videos to chaya/queue.json, Shorts first, the long video third."""
-import importlib, json, sys
+import importlib
+import json
+import sys
 from pathlib import Path
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 name = sys.argv[1]
